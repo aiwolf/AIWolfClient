@@ -39,7 +39,7 @@ public abstract class AbstractWerewolfPlayer extends AbstractPlayer{
 	public abstract void finish();
 
 	public AbstractWerewolfPlayer(){
-		myRole = Role.werewolf;
+		myRole = Role.WEREWOLF;
 	}
 
 	public List<Agent> getWolfList(){
@@ -47,7 +47,7 @@ public abstract class AbstractWerewolfPlayer extends AbstractPlayer{
 
 		Map<Agent, Role> wolfMap = getLatestDayGameInfo().getRoleMap();
 		for(Entry<Agent, Role> set: wolfMap.entrySet()){
-			if(set.getValue() == Role.werewolf){
+			if(set.getValue() == Role.WEREWOLF){
 				wolfList.add(set.getKey());
 			}
 		}

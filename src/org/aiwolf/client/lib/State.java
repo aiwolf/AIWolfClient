@@ -59,19 +59,19 @@ public enum State {
 
 	public static State fromRole(Role role){
 		switch (role) {
-		case bodyguard:
+		case BODYGUARD:
 			return bodyguard;
-		case freemason:
+		case FREEMASON:
 			return freemason;
-		case medium:
+		case MEDIUM:
 			return medium;
-		case possessed:
+		case POSSESSED:
 			return possessed;
-		case seer:
+		case SEER:
 			return seer;
-		case villager:
+		case VILLAGER:
 			return villager;
-		case werewolf:
+		case WEREWOLF:
 			return werewolf;
 		default:
 			return null;
@@ -81,19 +81,19 @@ public enum State {
 	public Role toRole(){
 		switch (this) {
 		case bodyguard:
-			return Role.bodyguard;
+			return Role.BODYGUARD;
 		case freemason:
-			return Role.freemason;
+			return Role.FREEMASON;
 		case medium:
-			return Role.medium;
+			return Role.MEDIUM;
 		case possessed:
-			return Role.possessed;
+			return Role.POSSESSED;
 		case seer:
-			return Role.seer;
+			return Role.SEER;
 		case villager:
-			return Role.villager;
+			return Role.VILLAGER;
 		case werewolf:
-			return Role.werewolf;
+			return Role.WEREWOLF;
 		default:
 			return null;
 		}
@@ -101,9 +101,9 @@ public enum State {
 
 	public static State fromSpecies(Species species){
 		switch (species) {
-		case Human:
+		case HUMAN:
 			return HUMAN;
-		case Werewolf:
+		case WEREWOLF:
 			return werewolf;
 		default:
 			return null;
@@ -113,9 +113,9 @@ public enum State {
 	public Species toSpecies(){
 		switch (this) {
 		case HUMAN:
-			return Species.Human;
+			return Species.HUMAN;
 		case werewolf:
-			return Species.Werewolf;
+			return Species.WEREWOLF;
 		default:
 			return null;
 		}

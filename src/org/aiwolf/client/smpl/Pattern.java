@@ -37,7 +37,7 @@ public class Pattern {
 		this.seerAgent = seerAgent;
 		this.mediumAgent = mediumAgent;
 		for(Entry<Agent, Role> entry: comingoutMap.entrySet()){
-			if(entry.getValue() != Role.seer && entry.getValue() != Role.medium){
+			if(entry.getValue() != Role.SEER && entry.getValue() != Role.MEDIUM){
 				continue;
 			}
 			if(!entry.getKey().equals(seerAgent) && !entry.getKey().equals(mediumAgent)){
@@ -55,7 +55,7 @@ public class Pattern {
 		Agent judgment = judge.getAgent();
 		if(judgment == seerAgent || judgment == mediumAgent){
 			switch (judge.getResult()) {
-			case Human:
+			case HUMAN:
 				Agent target = judge.getTarget();
 				whiteAgentList.add(target);
 				/**
@@ -73,7 +73,7 @@ public class Pattern {
 					enemyMap = enemyMapNew;
 				}
 				break;
-			case Werewolf:
+			case WEREWOLF:
 				enemyMap.put(judge.getTarget(), EnemyCase.black);
 				break;
 			}

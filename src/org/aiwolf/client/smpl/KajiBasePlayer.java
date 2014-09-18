@@ -129,7 +129,7 @@ public abstract class KajiBasePlayer extends AbstractPlayer {
 
 		//まだ暫定投票先を発話していない場合
 		if(toldVoteTarget != voteTarget && voteTarget != null){
-			talkContents.add(TemplateTalkFactory.estimate(voteTarget, Role.werewolf));
+			talkContents.add(TemplateTalkFactory.estimate(voteTarget, Role.WEREWOLF));
 			toldVoteTarget = voteTarget;
 		}
 

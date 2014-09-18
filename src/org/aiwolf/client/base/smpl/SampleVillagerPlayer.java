@@ -52,7 +52,7 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.werewolf);
+			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return u.getText();
 		}else{
@@ -148,7 +148,7 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 		aliveAgentList.remove(getMe());
 
 		for(Judge judge: agi.getInspectJudgeList()){
-			if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.Werewolf){
+			if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF){
 				voteAgentCandidate.add(judge.getTarget());
 			}
 		}

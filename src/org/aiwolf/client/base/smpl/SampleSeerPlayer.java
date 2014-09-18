@@ -69,7 +69,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.werewolf);
+			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
 			utterances.add(u);
 			declaredPlanningVoteAgent = planningVoteAgent;
 		}
@@ -178,7 +178,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 				voteAgentCandidate.add(agent);
 			}else{
 				for(Judge judge: getMyJudgeList()){
-					if(judge.getTarget().equals(agent) && judge.getResult() == Species.Werewolf){
+					if(judge.getTarget().equals(agent) && judge.getResult() == Species.WEREWOLF){
 						voteAgentCandidate.add(agent);
 					}
 				}

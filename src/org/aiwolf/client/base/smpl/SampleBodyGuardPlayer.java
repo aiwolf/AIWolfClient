@@ -52,7 +52,7 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.werewolf);
+			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return u.getText();
 		}else{
@@ -76,7 +76,7 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 
 		for(Agent agent: aliveAgentList){
 			if(agi.getComingoutMap().containsKey(agent)){
-				List<Role> guardRoleList = Arrays.asList(Role.seer, Role.medium);
+				List<Role> guardRoleList = Arrays.asList(Role.SEER, Role.MEDIUM);
 				if(guardRoleList.contains(agi.getComingoutMap().get(agent))){
 					guardAgentCandidate.add(agent);
 				}
@@ -182,7 +182,7 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 		aliveAgentList.remove(getMe());
 
 		for(Judge judge: agi.getInspectJudgeList()){
-			if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.Werewolf){
+			if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF){
 				voteAgentCandidate.add(judge.getTarget());
 			}
 		}

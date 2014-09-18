@@ -36,7 +36,7 @@ public abstract class AbstractPossessedPlayer extends AbstractPlayer{
 	public abstract void finish();
 
 	public AbstractPossessedPlayer(){
-		myRole = Role.possessed;
+		myRole = Role.POSSESSED;
 	}
 
 

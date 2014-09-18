@@ -36,7 +36,7 @@ public abstract class AbstractBodyGuardPlayer extends AbstractPlayer{
 	public abstract void finish();
 
 	public AbstractBodyGuardPlayer(){
-		myRole = Role.bodyguard;
+		myRole = Role.BODYGUARD;
 	}
 
 

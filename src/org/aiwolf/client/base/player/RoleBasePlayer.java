@@ -129,22 +129,22 @@ abstract public class RoleBasePlayer implements Player {
 	final public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		Role myRole = gameInfo.getRole();
 		switch (myRole) {
-		case villager:
+		case VILLAGER:
 			rolePlayer = villagerPlayer;
 			break;
-		case seer:
+		case SEER:
 			rolePlayer = seerPlayer;
 			break;
-		case medium:
+		case MEDIUM:
 			rolePlayer = mediumPlayer;
 			break;
-		case bodyguard:
+		case BODYGUARD:
 			rolePlayer = bodyGuardPlayer;
 			break;
-		case possessed:
+		case POSSESSED:
 			rolePlayer = possesedPlayer;
 			break;
-		case werewolf:
+		case WEREWOLF:
 			rolePlayer = werewolfPlayer;
 			break;
 		default:

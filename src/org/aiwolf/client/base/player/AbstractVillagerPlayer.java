@@ -38,7 +38,7 @@ public abstract class AbstractVillagerPlayer extends AbstractPlayer{
 	public abstract void finish();
 
 	public AbstractVillagerPlayer(){
-		myRole = Role.villager;
+		myRole = Role.VILLAGER;
 	}
 
 

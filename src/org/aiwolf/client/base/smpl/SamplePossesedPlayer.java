@@ -54,12 +54,12 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		super.initialize(gameInfo, gameSetting);
 
-		List<Role> fakeRoleList = Arrays.asList(Role.seer, Role.medium, Role.villager);
+		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
 		fakeRole = fakeRoleList.get(new Random().nextInt(fakeRoleList.size()));
 
 		//占い師，or霊能者なら1~3日目からランダムに選択してCO．村人ならCOしない．
 		comingoutDay = new Random().nextInt(3)+1;
-		if(fakeRole == Role.villager){
+		if(fakeRole == Role.VILLAGER){
 			comingoutDay = 1000;
 		}
 		isCameout = false;
@@ -90,7 +90,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.werewolf);
+			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
 			utterances.add(u);
 			declaredPlanningVoteAgent = planningVoteAgent;
 		}
@@ -98,7 +98,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 		/*
 		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
 		 */
-		if(!isCameout && getDay() >= comingoutDay && fakeRole != Role.villager){
+		if(!isCameout && getDay() >= comingoutDay && fakeRole != Role.VILLAGER){
 			Utterance u2 = TemplateTalkFactory.comingout(getMe(), fakeRole);
 			utterances.add(u2);
 			isCameout = true;
@@ -111,9 +111,9 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 			for(Judge judge: getMyFakeJudgeList()){
 				if(!declaredFakeJudgedAgentList.contains(judge)){
 					Utterance u_result = null;
-					if(fakeRole == Role.seer){
+					if(fakeRole == Role.SEER){
 						u_result = TemplateTalkFactory.inspected(judge.getTarget(), judge.getResult());
-					}else if(fakeRole == Role.medium){
+					}else if(fakeRole == Role.MEDIUM){
 						u_result = TemplateTalkFactory.medium_telled(judge.getTarget(), judge.getResult());
 					}
 					utterances.add(u_result);
@@ -158,7 +158,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 		aliveAgentList.remove(getMe());
 
-		if(fakeRole == Role.villager){
+		if(fakeRole == Role.VILLAGER){
 			if(aliveAgentList.contains(planningVoteAgent)){
 				return;
 			}else{
@@ -177,7 +177,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 			}
 		}
 		for(Judge judge: getMyFakeJudgeList()){
-			if(judge.getResult() == Species.Human){
+			if(judge.getResult() == Species.HUMAN){
 				fakeHumanList.add(judge.getTarget());
 			}else{
 				voteAgentCandidate.add(judge.getTarget());
@@ -245,7 +245,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 
 		Species fakeResult = null;
 
-		if(fakeRole == Role.seer){
+		if(fakeRole == Role.SEER){
 			//偽占い(or霊能)の候補．以下，偽占い候補
 			List<Agent> fakeGiftTargetCandidateList = new ArrayList<>();
 
@@ -270,19 +270,19 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 
 			//30%で黒判定，70%で白判定
 			if(Math.random() < 0.3){
-				fakeResult = Species.Werewolf;
+				fakeResult = Species.WEREWOLF;
 			}else{
-				fakeResult = Species.Human;
+				fakeResult = Species.HUMAN;
 			}
 
 		}
-		else if(fakeRole == Role.medium){
+		else if(fakeRole == Role.MEDIUM){
 			fakeGiftTarget = getLatestDayGameInfo().getExecutedAgent();
 			//30%で黒判定，70%で白判定
 			if(Math.random() < 0.3){
-				fakeResult = Species.Werewolf;
+				fakeResult = Species.WEREWOLF;
 			}else{
-				fakeResult = Species.Human;
+				fakeResult = Species.HUMAN;
 			}
 		}
 		else{

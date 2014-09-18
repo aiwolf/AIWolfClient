@@ -49,7 +49,7 @@ public abstract class AbstractSeerPlayer extends AbstractPlayer{
 
 	public AbstractSeerPlayer(){
 		super();
-		myRole = Role.seer;
+		myRole = Role.SEER;
 	}
 
 	public ArrayList<Judge> getMyJudgeList() {

@@ -78,7 +78,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.werewolf);
+			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
 			utterances.add(u);
 			declaredPlanningVoteAgent = planningVoteAgent;
 		}
@@ -197,7 +197,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 			/*
 			 * 自分以外に霊能COしているプレイヤーがいれば投票候補
 			 */
-			if(agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == Role.medium){
+			if(agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == Role.MEDIUM){
 				voteAgentCandidate.add(agent);
 			}
 /*
@@ -263,7 +263,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 				ArrayList<Agent> subVoteAgentCandidate = new ArrayList<>();
 
 				for(Judge judge: agi.getInspectJudgeList()){
-					if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.Werewolf){
+					if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF){
 						subVoteAgentCandidate.add(judge.getTarget());
 					}
 				}

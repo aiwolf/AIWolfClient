@@ -52,7 +52,7 @@ public abstract class AbstractMediumPlayer extends AbstractPlayer{
 	public abstract void finish();
 
 	public AbstractMediumPlayer(){
-		myRole = Role.medium;
+		myRole = Role.MEDIUM;
 	}
 
 	/**
