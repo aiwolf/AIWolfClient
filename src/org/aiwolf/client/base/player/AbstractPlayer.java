@@ -20,7 +20,7 @@ public abstract class AbstractPlayer implements Player{
 	Agent me;
 
 	Role myRole;
-	
+
 	GameSetting gameSetting;
 
 
@@ -67,6 +67,10 @@ public abstract class AbstractPlayer implements Player{
 
 	public void setAgent(Agent agent){
 		me = agent;
+	}
+
+	public GameSetting getGameSetting(){
+		return gameSetting;
 	}
 
 	@Override

@@ -6,17 +6,11 @@ import org.aiwolf.common.data.Species;
 import org.aiwolf.common.data.Talk;
 
 /**
- * 人狼の囁き用の発話を生成するクラス
+ * 発話を生成するクラス
  * @author kengo
  *
  */
-public class TemplateWhisperFactory {
-
-
-	public String attack(Agent target){
-		String[] split = {Topic.ATTACK.toString(), String.valueOf(target.getAgentIdx())};
-		return wordAttachment(split);
-	}
+public class TemplateTalkFactoryNew {
 
 	public String estimate(Agent target, Role role){
 		String[] split = {Topic.ESTIMATE.toString(), String.valueOf(target.getAgentIdx()), role.toString()};
