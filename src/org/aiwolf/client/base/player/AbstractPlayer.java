@@ -8,6 +8,7 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Player;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 public abstract class AbstractPlayer implements Player{
 
@@ -19,6 +20,8 @@ public abstract class AbstractPlayer implements Player{
 	Agent me;
 
 	Role myRole;
+	
+	GameSetting gameSetting;
 
 
 	@Override
@@ -67,11 +70,12 @@ public abstract class AbstractPlayer implements Player{
 	}
 
 	@Override
-	public void initialize(GameInfo gameInfo){
+	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		gameInfoMap.clear();
 		update(gameInfo);
 		myRole = gameInfo.getRole();
 		me = gameInfo.getAgent();
+		this.gameSetting = gameSetting;
 
 	}
 	@Override

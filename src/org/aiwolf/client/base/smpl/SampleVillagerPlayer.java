@@ -36,10 +36,6 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 	//会話をどこまで読んだか
 	int readTalkListNum;
 
-	@Override
-	public void initialize(GameInfo gameInfo) {
-		super.initialize(gameInfo);
-	}
 
 	@Override
 	public void dayStart() {
@@ -146,7 +142,7 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 		 * 人狼だと占われたプレイヤーがいれば，投票先をそのプレイヤーに設定
 		 * いなければ生存プレイヤーからランダムに選択
 		 */
-		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
+		List<Agent> voteAgentCandidate = new ArrayList<>();
 
 		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 		aliveAgentList.remove(getMe());

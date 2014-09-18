@@ -10,11 +10,13 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Player;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /**
- * 各プレイヤーに使用したいプレイヤーのインスタンスを生成して下さい． 例えば，村人のエージェントだけ自作のエージェントにしたい場合は， Player
- * villagerPlayer = new SampleVillagerPlayer(); ↓ Player villagerPlayer = new
- * [自作プレイヤーのクラス名のコンストラクタ];
+ * 各プレイヤーに使用したいプレイヤーのインスタンスを生成して下さい． 例えば，村人のエージェントだけ自作のエージェントにしたい場合は， <br>
+ * Player villagerPlayer = new SampleVillagerPlayer();<br>  
+ * ↓ <br>
+ * Player villagerPlayer = new [自作プレイヤーのクラス名のコンストラクタ];<br>
  * と変更すれば，村人の役職が割り振られた時は自作のエージェント，それ以外の役職になった時はサンプルエージェントでプレイします．
  *
  * @author tori
@@ -124,7 +126,7 @@ abstract public class RoleBasePlayer implements Player {
 	}
 
 	@Override
-	final public void initialize(GameInfo gameInfo) {
+	final public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		Role myRole = gameInfo.getRole();
 		switch (myRole) {
 		case villager:
@@ -150,7 +152,7 @@ abstract public class RoleBasePlayer implements Player {
 			break;
 
 		}
-		rolePlayer.initialize(gameInfo);
+		rolePlayer.initialize(gameInfo, gameSetting);
 
 	}
 

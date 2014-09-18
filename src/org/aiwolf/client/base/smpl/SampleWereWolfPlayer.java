@@ -27,7 +27,7 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 	boolean isCameout;
 
 	//全体に偽占い(霊能)結果を報告済みのJudge
-	ArrayList<Judge> declaredFakeJudgedAgentList = new ArrayList<Judge>();
+	ArrayList<Judge> declaredFakeJudgedAgentList = new ArrayList<>();
 
 	/*//全体に占い結果を報告済みのプレイヤー
 	ArrayList<Agent> declaredFakeResultAgent = new ArrayList<>();*/
@@ -48,7 +48,7 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 	Role fakeRole;
 
 	//偽の占い(or霊能)結果
-	List<Judge> fakeJudgeList = new ArrayList<Judge>();
+	List<Judge> fakeJudgeList = new ArrayList<>();
 /*
 	//偽の占い(or霊能)結果
 	Map<Agent, Species> fakeResultMap = new HashMap<Agent, Species>();
@@ -56,8 +56,8 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 	//狂人だと思うプレイヤー
 	Agent maybePossesedAgent = null;
 
-	public void initialize(GameInfo gameInfo){
-		super.initialize(gameInfo);
+	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
+		super.initialize(gameInfo, gameSetting);
 
 		List<Role> fakeRoleList = Arrays.asList(Role.seer, Role.medium, Role.villager);
 		fakeRole = fakeRoleList.get(new Random().nextInt(fakeRoleList.size()));
@@ -88,7 +88,7 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 
 	@Override
 	public String talk() {
-		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
+		ArrayList<Utterance> utterances = new ArrayList<>();
 
 		/*
 		 * 今日投票するプレイヤーの報告
@@ -185,7 +185,7 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 		aliveAgentList.removeAll(getWolfList());
 		aliveAgentList.remove(maybePossesedAgent);
 
-		List<Agent> attackCandidatePlayer = new ArrayList<Agent>();
+		List<Agent> attackCandidatePlayer = new ArrayList<>();
 		for(Agent agent: aliveAgentList){
 			if(agi.getComingoutMap().containsKey(agent)){
 				attackCandidatePlayer.add(agent);
@@ -236,9 +236,9 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 
 
 		//偽占いで人間だと判定したプレイヤーのリスト
-		List<Agent> fakeHumanList = new ArrayList<Agent>();
+		List<Agent> fakeHumanList = new ArrayList<>();
 
-		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
+		List<Agent> voteAgentCandidate = new ArrayList<>();
 		for(Agent a: aliveAgentList){
 			if(agi.getComingoutMap().containsKey(a) && agi.getComingoutMap().get(a) == fakeRole){
 				voteAgentCandidate.add(a);
@@ -330,7 +330,7 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 		 */
 
 		//偽占い(or霊能)の候補．以下，偽占い候補
-		List<Agent> fakeGiftTargetCandidateList = new ArrayList<Agent>();
+		List<Agent> fakeGiftTargetCandidateList = new ArrayList<>();
 
 		Agent fakeGiftTarget;
 
