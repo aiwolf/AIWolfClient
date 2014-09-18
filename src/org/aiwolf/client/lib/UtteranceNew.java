@@ -24,6 +24,23 @@ public class UtteranceNew {
 	//TopicがAGREE,DISAGREEの時の対象発話のID
 	int talkID = -1;
 
+	
+	/**
+	 * 発話全体のStringを返す
+	 * @return
+	 */
+	public String getText(){
+		return text;
+	}
+	
+	/**
+	 * 発話のトピックを返す
+	 * @return
+	 */
+	public Topic getTopic(){
+		return topic;
+	}
+	
 	/**
 	 * 発話の対象を返す．対象のない発話の場合はnull
 	 * @return
