@@ -27,7 +27,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 	boolean isCameout;
 
 	//全体に霊能結果を報告済みのJudge
-	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<>();
+	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<Judge>();
 
 //	ArrayList<Agent> declaredMediumTellResultAgent = new ArrayList<>();
 	boolean isSaidMediumTellResultToday;
@@ -71,7 +71,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 	@Override
 	public String talk() {
 
-		ArrayList<Utterance> utterances = new ArrayList<>();
+		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
 
 		/*
 		 * 今日投票するプレイヤーの報告
@@ -188,7 +188,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 		 * いなければ生存プレイヤーからランダムに選択
 		 */
 
-		List<Agent> voteAgentCandidate = new ArrayList<>();
+		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
 
 		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 		aliveAgentList.remove(getMe());
@@ -260,7 +260,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 				/*
 				 * 投票候補がいない場合は占いで黒判定されているプレイヤーからランダムに選択
 				 */
-				ArrayList<Agent> subVoteAgentCandidate = new ArrayList<>();
+				ArrayList<Agent> subVoteAgentCandidate = new ArrayList<Agent>();
 
 				for(Judge judge: agi.getInspectJudgeList()){
 					if(aliveAgentList.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF){

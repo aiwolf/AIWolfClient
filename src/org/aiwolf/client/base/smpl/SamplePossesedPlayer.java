@@ -27,7 +27,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 	boolean isCameout;
 
 	//全体に偽占い(霊能)結果を報告済みのJudge
-	ArrayList<Judge> declaredFakeJudgedAgentList = new ArrayList<>();
+	ArrayList<Judge> declaredFakeJudgedAgentList = new ArrayList<Judge>();
 
 	//全体に占い結果を報告済みのプレイヤー
 //	ArrayList<Agent> declaredFakeResultAgent = new ArrayList<>();
@@ -48,7 +48,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 	Role fakeRole;
 
 	//偽の占い(or霊能)結果
-	List<Judge> fakeJudgeList = new ArrayList<>();
+	List<Judge> fakeJudgeList = new ArrayList<Judge>();
 	//Map<Agent, Species> fakeResultMap = new HashMap<Agent, Species>();
 
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
@@ -83,7 +83,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 
 	@Override
 	public String talk() {
-		ArrayList<Utterance> utterances = new ArrayList<>();
+		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
 
 		/*
 		 * 今日投票するプレイヤーの報告
@@ -168,9 +168,9 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 		}
 
 		//偽占いで人間だと判定したプレイヤーのリスト
-		List<Agent> fakeHumanList = new ArrayList<>();
+		List<Agent> fakeHumanList = new ArrayList<Agent>();
 
-		List<Agent> voteAgentCandidate = new ArrayList<>();
+		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
 		for(Agent a: aliveAgentList){
 			if(agi.getComingoutMap().containsKey(a) && agi.getComingoutMap().get(a) == fakeRole){
 				voteAgentCandidate.add(a);
@@ -247,7 +247,7 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 
 		if(fakeRole == Role.SEER){
 			//偽占い(or霊能)の候補．以下，偽占い候補
-			List<Agent> fakeGiftTargetCandidateList = new ArrayList<>();
+			List<Agent> fakeGiftTargetCandidateList = new ArrayList<Agent>();
 
 			List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 			aliveAgentList.remove(getMe());

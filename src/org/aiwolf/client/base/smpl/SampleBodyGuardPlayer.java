@@ -69,7 +69,7 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 	public Agent guard() {
 		//占い師，もしくは霊能者COしているプレイヤーからランダムに選択(20%の確率で生存プレイヤーの中からランダムに変更)
 
-		List<Agent> guardAgentCandidate = new ArrayList<>();
+		List<Agent> guardAgentCandidate = new ArrayList<Agent>();
 
 		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 		aliveAgentList.remove(getMe());
@@ -176,7 +176,7 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 		 * 人狼だと占われたプレイヤーがいれば，投票先をそのプレイヤーに設定
 		 * いなければ生存プレイヤーからランダムに選択
 		 */
-		List<Agent> voteAgentCandidate = new ArrayList<>();
+		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
 
 		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 		aliveAgentList.remove(getMe());

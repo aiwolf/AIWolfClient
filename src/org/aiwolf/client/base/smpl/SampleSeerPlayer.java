@@ -18,7 +18,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 	boolean isCameout;
 
 	//全体に占い結果を報告済みのプレイヤー
-	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<>();
+	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<Judge>();
 
 	boolean isSaidInspectResultToday;
 
@@ -62,7 +62,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 	@Override
 	public String talk() {
 
-		ArrayList<Utterance> utterances = new ArrayList<>();
+		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
 
 		/*
 		 * 今日投票するプレイヤーの報告
@@ -115,7 +115,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 		/*
 		 * まだ占っていないプレイヤーの中からランダムに選択
 		 */
-		List<Agent> nonInspectedAgentList = new ArrayList<>();
+		List<Agent> nonInspectedAgentList = new ArrayList<Agent>();
 
 		for(Agent agent: getLatestDayGameInfo().getAliveAgentList()){
 			if(!isJudgedAgent(agent)){
@@ -172,7 +172,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
 		aliveAgentList.remove(getMe());
 
-		List<Agent> voteAgentCandidate = new ArrayList<>();
+		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
 		for(Agent agent: aliveAgentList){
 			if(agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == getMyRole()){
 				voteAgentCandidate.add(agent);
