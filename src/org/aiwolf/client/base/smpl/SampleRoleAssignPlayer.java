@@ -1,15 +1,15 @@
 package org.aiwolf.client.base.smpl;
 
-import org.aiwolf.client.base.player.RoleBasePlayer;
+import org.aiwolf.client.base.player.AbstarctRoleAssignPlayer;
 
 /**
  * Sampleのみを使って起動するPlayer
  * @author tori
  *
  */
-public class SamplePlayer extends RoleBasePlayer {
+public class SampleRoleAssignPlayer extends AbstarctRoleAssignPlayer {
 
-	public SamplePlayer(){
+	public SampleRoleAssignPlayer(){
 		setVillagerPlayer(new SampleVillagerPlayer());
 		setSeerPlayer(new SampleSeerPlayer());
 		setMediumPlayer(new SampleMediumPlayer());
@@ -20,6 +20,6 @@ public class SamplePlayer extends RoleBasePlayer {
 
 	@Override
 	public String getName() {
-		return SamplePlayer.class.getSimpleName();
+		return SampleRoleAssignPlayer.class.getSimpleName();
 	}	
 }
