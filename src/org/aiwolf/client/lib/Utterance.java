@@ -5,6 +5,9 @@ import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
 import org.aiwolf.common.data.Talk;
 
+/*
+ * 発話をパースしたもの
+ */
 public class Utterance {
 	//原文
 	String text = null;
@@ -24,7 +27,7 @@ public class Utterance {
 	//TopicがAGREE,DISAGREEの時の対象発話のID
 	int talkID = -1;
 
-	
+
 	/**
 	 * 発話全体のStringを返す
 	 * @return
@@ -32,7 +35,7 @@ public class Utterance {
 	public String getText(){
 		return text;
 	}
-	
+
 	/**
 	 * 発話のトピックを返す
 	 * @return
@@ -40,7 +43,7 @@ public class Utterance {
 	public Topic getTopic(){
 		return topic;
 	}
-	
+
 	/**
 	 * 発話の対象を返す．対象のない発話の場合はnull
 	 * @return
@@ -107,6 +110,14 @@ public class Utterance {
 		//Topicの取得．Topicに存在しない者ならばnullが入る
 		topic = Topic.getTopic(split[0]);
 
+		int agentId = -1;
+
+		if(split.length >= 2 && split[1].startsWith("Agent")){
+			int startNum = split[1].indexOf("[") + 1;
+			int endNum = split[1].indexOf("]");
+			agentId = Integer.parseInt(split[1].substring(startNum, endNum));
+		}
+
 		switch (topic) {
 			//話すこと無し
 		case SKIP:
@@ -123,7 +134,7 @@ public class Utterance {
 			//"Topic Agent Role"
 		case ESTIMATE:
 		case COMINGOUT:
-			target = Agent.getAgent(Integer.parseInt(split[1]));
+			target = Agent.getAgent(agentId);
 			state = State.fromString(split[2]);
 			break;
 
@@ -132,20 +143,21 @@ public class Utterance {
 		case INQUESTED:
 			state = State.fromString(split[2]);
 		case GUARDED:
-			target = Agent.getAgent(Integer.parseInt(split[1]));
+			target = Agent.getAgent(agentId);
 			break;
 
 			//投票系
 		case ATTACK:
 		case VOTE:
-			target = Agent.getAgent(Integer.parseInt(split[1]));
+			target = Agent.getAgent(agentId);
 			break;
 
 		default:
 			break;
 		}
-
-
+		
+		
+		return;
 	}
 
 

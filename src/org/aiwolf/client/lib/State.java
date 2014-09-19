@@ -5,7 +5,12 @@ import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public enum State {
+/**
+ * 役職，陣営等を表すenum．内部の処理で用いる
+ * @author kengo
+ *
+ */
+enum State {
 	/**
 	 * bodyguard
 	 */
