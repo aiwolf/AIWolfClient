@@ -20,7 +20,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 	//全体に占い結果を報告済みのプレイヤー
 	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<Judge>();
 
-	boolean isSaidInspectResultToday;
+	boolean isSaidAllDivineResult;
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();
 
@@ -53,7 +53,7 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 		planningVoteAgent = null;
 		setPlanningVoteAgent();
 
-		isSaidInspectResultToday = false;
+		isSaidAllDivineResult = false;
 
 		readTalkListNum =0;
 
@@ -61,47 +61,43 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 
 	@Override
 	public String talk() {
+		//CO,霊能結果，投票先の順に発話の優先度高
 
-		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
+		/*
+		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
+		 */
+
+		if(!isCameout && getDay() >= comingoutDay){
+			String string = TemplateTalkFactory.comingout(getMe(), getMyRole());
+			isCameout = true;
+			return string;
+		}
+		/*
+		 * COしているなら占い結果の報告
+		 */
+		else if(isCameout && !isSaidAllDivineResult){
+			for(Judge judge: getMyJudgeList()){
+				if(!declaredJudgedAgentList.contains(judge)){
+					String string = TemplateTalkFactory.divined(judge.getTarget(), judge.getResult());
+					declaredJudgedAgentList.add(judge);
+					return string;
+				}
+			}
+			isSaidAllDivineResult = true;
+		}
 
 		/*
 		 * 今日投票するプレイヤーの報告
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
-			utterances.add(u);
+			String string = TemplateTalkFactory.vote(planningVoteAgent);
 			declaredPlanningVoteAgent = planningVoteAgent;
+			return string;
 		}
 
-		/*
-		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
-		 */
-		if(!isCameout && getDay() >= comingoutDay){
-			Utterance u2 = TemplateTalkFactory.comingout(getMe(), getMyRole());
-			utterances.add(u2);
-			isCameout = true;
-		}
-
-		/*
-		 * COしているなら占い結果の報告
-		 */
-		if(isCameout && !isSaidInspectResultToday){
-			for(Judge judge: getMyJudgeList()){
-				if(!declaredJudgedAgentList.contains(judge)){
-					Utterance u_result = TemplateTalkFactory.inspected(judge.getTarget(), judge.getResult());
-					utterances.add(u_result);
-					declaredJudgedAgentList.add(judge);
-				}
-			}
-			isSaidInspectResultToday = true;
-		}
-
-		if(utterances.size() > 0){
-			Protocol p = new Protocol(utterances);
-			return p.getText();
-		}else{
-			return TemplateTalkFactory.over().getText();
+		else{
+			return Talk.OVER;
 		}
 	}
 
@@ -139,25 +135,22 @@ public class SampleSeerPlayer extends AbstractSeerPlayer{
 		super.update(gameInfo);
 
 
-
 		List<Talk> talkList = gameInfo.getTalkList();
-
 		/*
-		 * talkListからCO結果を抽出
-		 * 自分以外で占い師COするプレイヤーが出たら投票先を変える
+		 * talkListからCO，占い結果の抽出
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Protocol protocol = new Protocol(talk.getContent());
-			for(Utterance u: protocol.getUtterances()){
-				Passage p = u.getPassage();
-				if(p.getVerb() == Verb.comingout){
-					agi.getComingoutMap().put(talk.getAgent(), p.getObject());
-					if(p.getObject() == getMyRole() && !talk.getAgent().equals(getMe())){
-						setPlanningVoteAgent();
-					}
-				}
+			Utterance utterance = new Utterance(talk.getContent());
+			switch (utterance.getTopic()) {
 
+			//カミングアウトの発話の場合
+			case COMINGOUT:
+				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				if(utterance.getRole() == getMyRole()){
+					setPlanningVoteAgent();
+				}
+				break;
 			}
 		}
 		readTalkListNum =talkList.size();

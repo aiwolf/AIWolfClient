@@ -9,12 +9,8 @@ import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import org.aiwolf.client.base.player.AbstractVillagerPlayer;
-import org.aiwolf.client.lib.Passage;
-import org.aiwolf.client.lib.Protocol;
-import org.aiwolf.client.lib.State;
-import org.aiwolf.client.lib.TemplateTalkFactory;
-import org.aiwolf.client.lib.Utterance;
-import org.aiwolf.client.lib.Verb;
+import org.aiwolf.client.lib.*;
+
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
@@ -52,11 +48,11 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
+			String string = TemplateTalkFactory.vote(planningVoteAgent);
 			declaredPlanningVoteAgent = planningVoteAgent;
-			return u.getText();
+			return string;
 		}else{
-			return TemplateTalkFactory.over().getText();
+			return TemplateTalkFactory.over();
 		}
 	}
 
@@ -79,34 +75,29 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 		boolean existInspectResult = false;
 
 		/*
-		 * talkListから占い結果の抽出
+		 * talkListからCO，占い結果の抽出
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Protocol protocol = new Protocol(talk.getContent());
-			for(Utterance u: protocol.getUtterances()){
-				Passage p = u.getPassage();
-				if(p.getVerb() == Verb.inspected){
-					Agent seerAgent = talk.getAgent();
-					Agent inspectedAgent = p.getSubject();
-					Species inspectResult = p.getAttribution();
+			Utterance utterance = new Utterance(talk.getContent());
+			switch (utterance.getTopic()) {
 
-					Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
-					agi.addInspectJudgeList(judge);
+			//カミングアウトの発話の場合
+			case COMINGOUT:
+				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				break;
 
-					/*
-					Map<Agent, Map<Agent, Species>> map = agi.getInspectMap();
-					Map<Agent, Species> m;
-					if(map.get(seerAgent) == null){
-						m = new HashMap<Agent, Species>();
-					}else{
-						m = map.get(seerAgent);
-					}
-					m.put(inspectedAgent, inspectResult);
-					map.put(seerAgent, m);*/
+			//占い結果の発話の場合
+			case DIVINED:
+				//AGIのJudgeListに結果を加える
+				Agent seerAgent = talk.getAgent();
+				Agent inspectedAgent = utterance.getTarget();
+				Species inspectResult = utterance.getResult();
+				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
+				agi.addInspectJudgeList(judge);
 
-					existInspectResult =true;
-				}
+				existInspectResult =true;
+				break;
 			}
 		}
 		readTalkListNum =talkList.size();
@@ -118,6 +109,7 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 			setPlanningVoteAgent();
 		}
 	}
+
 
 	public void setPlanningVoteAgent(){
 		/*

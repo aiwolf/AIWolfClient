@@ -9,11 +9,8 @@ import java.util.Random;
 import java.util.Map.Entry;
 
 import org.aiwolf.client.base.player.AbstractBodyGuardPlayer;
-import org.aiwolf.client.lib.Passage;
-import org.aiwolf.client.lib.Protocol;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Utterance;
-import org.aiwolf.client.lib.Verb;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
@@ -33,15 +30,10 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 
 
 	@Override
-	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
-		super.initialize(gameInfo, gameSetting);
-	}
-
-	@Override
 	public void dayStart() {
 		declaredPlanningVoteAgent = null;
 		planningVoteAgent = null;
-		setTodaysVotePlayer();
+		setPlanningVoteAgent();
 
 		readTalkListNum =0;
 
@@ -52,11 +44,11 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
+			String string = TemplateTalkFactory.vote(planningVoteAgent);
 			declaredPlanningVoteAgent = planningVoteAgent;
-			return u.getText();
+			return string;
 		}else{
-			return TemplateTalkFactory.over().getText();
+			return TemplateTalkFactory.over();
 		}
 	}
 
@@ -113,34 +105,25 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Protocol protocol = new Protocol(talk.getContent());
-			for(Utterance u: protocol.getUtterances()){
-				Passage p = u.getPassage();
+			Utterance utterance = new Utterance(talk.getContent());
+			switch (utterance.getTopic()) {
 
-				if(p.getVerb() == Verb.comingout){
-					agi.getComingoutMap().put(talk.getAgent(), p.getObject());
-				}
+			//カミングアウトの発話の場合
+			case COMINGOUT:
+				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				break;
 
-				else if(p.getVerb() == Verb.inspected){
-					Agent seerAgent = talk.getAgent();
-					Agent inspectedAgent = p.getSubject();
-					Species inspectResult = p.getAttribution();
+			//占い結果の発話の場合
+			case DIVINED:
+				//AGIのJudgeListに結果を加える
+				Agent seerAgent = talk.getAgent();
+				Agent inspectedAgent = utterance.getTarget();
+				Species inspectResult = utterance.getResult();
+				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
+				agi.addInspectJudgeList(judge);
 
-					Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
-					agi.addInspectJudgeList(judge);
-
-/*					Map<Agent, Map<Agent, Species>> map = agi.getInspectMap();
-					Map<Agent, Species> m;
-					if(map.get(seerAgent) == null){
-						m = new HashMap<Agent, Species>();
-					}else{
-						m = map.get(seerAgent);
-					}
-					m.put(inspectedAgent, inspectResult);
-					map.put(seerAgent, m);
-*/
-					existInspectResult =true;
-				}
+				existInspectResult =true;
+				break;
 			}
 		}
 		readTalkListNum =talkList.size();
@@ -149,11 +132,11 @@ public class SampleBodyGuardPlayer extends AbstractBodyGuardPlayer {
 		 * 新しい占い結果があれば投票先を変える．(新たに黒判定が出た，または投票先のプレイヤーに白判定が出た場合)
 		 */
 		if(existInspectResult){
-			setTodaysVotePlayer();
+			setPlanningVoteAgent();
 		}
 	}
 
-	public void setTodaysVotePlayer(){
+	public void setPlanningVoteAgent(){
 		/*
 		 * 人狼だと占われたプレイヤーを指定している場合はそのまま
 		 */

@@ -9,11 +9,8 @@ import java.util.Random;
 import java.util.Map.Entry;
 
 import org.aiwolf.client.base.player.AbstractMediumPlayer;
-import org.aiwolf.client.lib.Passage;
-import org.aiwolf.client.lib.Protocol;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Utterance;
-import org.aiwolf.client.lib.Verb;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
@@ -30,7 +27,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<Judge>();
 
 //	ArrayList<Agent> declaredMediumTellResultAgent = new ArrayList<>();
-	boolean isSaidMediumTellResultToday;
+	boolean isSaidAllInquestResult;
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();
 
@@ -62,7 +59,7 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 		planningVoteAgent = null;
 		setPlanningVoteAgent();
 
-		isSaidMediumTellResultToday = false;
+		isSaidAllInquestResult = false;
 
 		readTalkListNum =0;
 
@@ -70,48 +67,45 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 
 	@Override
 	public String talk() {
+		//CO,霊能結果，投票先の順に発話の優先度高
 
-		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
+		/*
+		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
+		 */
+
+		if(!isCameout && getDay() >= comingoutDay){
+			String string = TemplateTalkFactory.comingout(getMe(), getMyRole());
+			isCameout = true;
+			return string;
+		}
+		/*
+		 * COしているなら占い結果の報告
+		 */
+		else if(isCameout && !isSaidAllInquestResult){
+			for(Judge judge: getMyJudgeList()){
+				if(!declaredJudgedAgentList.contains(judge)){
+					String string = TemplateTalkFactory.inquested(judge.getTarget(), judge.getResult());
+					declaredJudgedAgentList.add(judge);
+					return string;
+				}
+			}
+			isSaidAllInquestResult = true;
+		}
 
 		/*
 		 * 今日投票するプレイヤーの報告
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
-			utterances.add(u);
+			String string = TemplateTalkFactory.vote(planningVoteAgent);
 			declaredPlanningVoteAgent = planningVoteAgent;
+			return string;
 		}
 
-		/*
-		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
-		 */
-		if(!isCameout && getDay() >= comingoutDay){
-			Utterance u2 = TemplateTalkFactory.comingout(getMe(), getMyRole());
-			utterances.add(u2);
-			isCameout = true;
+		else{
+			return Talk.OVER;
 		}
 
-		/*
-		 * COしているなら占い結果の報告
-		 */
-		if(isCameout && !isSaidMediumTellResultToday){
-			for(Judge judge: getMyJudgeList()){
-				if(!declaredJudgedAgentList.contains(judge)){
-					Utterance u_result = TemplateTalkFactory.medium_telled(judge.getTarget(), judge.getResult());
-					utterances.add(u_result);
-					declaredJudgedAgentList.add(judge);
-				}
-			}
-			isSaidMediumTellResultToday = true;
-		}
-
-		if(utterances.size() > 0){
-			Protocol p = new Protocol(utterances);
-			return p.getText();
-		}else{
-			return TemplateTalkFactory.over().getText();
-		}
 	}
 
 	@Override
@@ -130,47 +124,41 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 	public void update(GameInfo gameInfo) {
 		super.update(gameInfo);
 
+
 		List<Talk> talkList = gameInfo.getTalkList();
 		boolean existInspectResult = false;
 
 		/*
-		 * talkListから占い結果の抽出
+		 * talkListからCO，占い結果の抽出
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Protocol protocol = new Protocol(talk.getContent());
-			for(Utterance u: protocol.getUtterances()){
-				Passage p = u.getPassage();
-				if(p.getVerb() == Verb.comingout){
-					agi.getComingoutMap().put(talk.getAgent(), p.getObject());
-					if(p.getObject() == getMyRole() && !talk.getAgent().equals(getMe())){
-						setPlanningVoteAgent();
-					}
-				}
+			Utterance utterance = new Utterance(talk.getContent());
+			switch (utterance.getTopic()) {
 
-				if(p.getVerb() == Verb.inspected){
-					Agent seerAgent = talk.getAgent();
-					Agent inspectedAgent = p.getSubject();
-					Species inspectResult = p.getAttribution();
-
-					Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
-					agi.addInspectJudgeList(judge);
-/*
-					Map<Agent, Map<Agent, Species>> map = agi.getInspectMap();
-					Map<Agent, Species> m;
-					if(map.get(seerAgent) == null){
-						m = new HashMap<Agent, Species>();
-					}else{
-						m = map.get(seerAgent);
-					}
-					m.put(inspectedAgent, inspectResult);
-					map.put(seerAgent, m);
-*/
-					existInspectResult =true;
+			//カミングアウトの発話の場合
+			case COMINGOUT:
+				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				if(utterance.getRole() == getMyRole()){
+					setPlanningVoteAgent();
 				}
+				break;
+
+			//占い結果の発話の場合
+			case DIVINED:
+				//AGIのJudgeListに結果を加える
+				Agent seerAgent = talk.getAgent();
+				Agent inspectedAgent = utterance.getTarget();
+				Species inspectResult = utterance.getResult();
+				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
+				agi.addInspectJudgeList(judge);
+
+				existInspectResult =true;
+				break;
 			}
 		}
 		readTalkListNum =talkList.size();
+
 
 		/*
 		 * 新しい占い結果があれば投票先を変える．(新たに黒判定が出た，または投票先のプレイヤーに白判定が出た場合)

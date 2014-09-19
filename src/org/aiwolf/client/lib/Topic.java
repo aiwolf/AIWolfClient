@@ -80,7 +80,7 @@ public enum Topic {
 	 */
 	public static  Topic getTopic(String string){
 		for(Topic topic: Topic.values()){
-			if(topic.toString().equals(string)){
+			if(topic.toString().equalsIgnoreCase(string)){
 				return topic;
 			}
 		}

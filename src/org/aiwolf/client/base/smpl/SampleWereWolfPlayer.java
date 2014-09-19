@@ -9,11 +9,7 @@ import java.util.Random;
 import java.util.Map.Entry;
 
 import org.aiwolf.client.base.player.AbstractWerewolfPlayer;
-import org.aiwolf.client.lib.Passage;
-import org.aiwolf.client.lib.Protocol;
-import org.aiwolf.client.lib.TemplateTalkFactory;
-import org.aiwolf.client.lib.Utterance;
-import org.aiwolf.client.lib.Verb;
+import org.aiwolf.client.lib.*;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
@@ -31,7 +27,7 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 
 	/*//全体に占い結果を報告済みのプレイヤー
 	ArrayList<Agent> declaredFakeResultAgent = new ArrayList<>();*/
-	boolean isSaidFakeResultToday;
+	boolean isSaidAllFakeResult;
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();
 
@@ -81,90 +77,64 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 		if(getDay() >= 1){
 			setFakeResult();
 		}
-		isSaidFakeResultToday = false;
+		isSaidAllFakeResult = false;
 
 		readTalkListNum =0;
 	}
 
 	@Override
 	public String talk() {
-		ArrayList<Utterance> utterances = new ArrayList<Utterance>();
+		//CO,霊能結果，投票先の順に発話の優先度高
+
+		/*
+		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
+		 */
+
+		if(!isCameout && getDay() >= comingoutDay){
+			String string = TemplateTalkFactory.comingout(getMe(), fakeRole);
+			isCameout = true;
+			return string;
+		}
+		/*
+		 * COしているなら偽占い，霊能結果の報告
+		 */
+		else if(isCameout && !isSaidAllFakeResult){
+			for(Judge judge: getMyFakeJudgeList()){
+				if(!declaredFakeJudgedAgentList.contains(judge)){
+					if(fakeRole == Role.SEER){
+						String string = TemplateTalkFactory.divined(judge.getTarget(), judge.getResult());
+						declaredFakeJudgedAgentList.add(judge);
+						return string;
+					}else if(fakeRole == Role.MEDIUM){
+						String string = TemplateTalkFactory.inquested(judge.getTarget(), judge.getResult());
+						declaredFakeJudgedAgentList.add(judge);
+						return string;
+					}
+				}
+			}
+			isSaidAllFakeResult = true;
+		}
 
 		/*
 		 * 今日投票するプレイヤーの報告
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			Utterance u = TemplateTalkFactory.estimate(planningVoteAgent, Role.WEREWOLF);
-			utterances.add(u);
+			String string = TemplateTalkFactory.vote(planningVoteAgent);
 			declaredPlanningVoteAgent = planningVoteAgent;
+			return string;
 		}
 
-		/*
-		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
-		 */
-		if(!isCameout && getDay() >= comingoutDay && fakeRole != Role.VILLAGER){
-			Utterance u2 = TemplateTalkFactory.comingout(getMe(), fakeRole);
-			utterances.add(u2);
-			isCameout = true;
+		else{
+			return Talk.OVER;
 		}
 
-		/*
-		 * COしているなら偽占い(or霊能)結果の報告
-		 */
-		if(isCameout && !isSaidFakeResultToday){
-			for(Judge judge: getMyFakeJudgeList()){
-				if(!declaredFakeJudgedAgentList.contains(judge)){
-					Utterance u_result = null;
-					if(fakeRole == Role.SEER){
-						u_result = TemplateTalkFactory.inspected(judge.getTarget(), judge.getResult());
-					}else if(fakeRole == Role.MEDIUM){
-						u_result = TemplateTalkFactory.medium_telled(judge.getTarget(), judge.getResult());
-					}
-
-					/**
-					 * テスト
-					 */
-
-					if(getWolfList().contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF){
-						for(int i = 0; i < 10;){
-							System.out.println("ここまで");
-						}
-					}
-
-					utterances.add(u_result);
-					declaredFakeJudgedAgentList.add(judge);
-				}
-			}
-			isSaidFakeResultToday = true;
-			/*
-			for(Entry<Agent, Species> map: fakeResultMap.entrySet()){
-				if(!declaredFakeResultAgent.contains(map.getKey())){
-					Utterance u_result = null;
-					if(fakeRole == Role.seer){
-						u_result = TemplateTalkFactory.inspected(map.getKey(), map.getValue());
-					}else if(fakeRole == Role.medium){
-						u_result = TemplateTalkFactory.medium_telled(map.getKey(), map.getValue());
-					}
-					utterances.add(u_result);
-					declaredFakeResultAgent.add(map.getKey());
-				}
-			}
-			isSaidFakeResultToday = true;*/
-		}
-
-		if(utterances.size() > 0){
-			Protocol p = new Protocol(utterances);
-			return p.getText();
-		}else{
-			return TemplateTalkFactory.over().getText();
-		}
 	}
 
 	@Override
 	public String whisper() {
 		//何も発しない
-		return TemplateTalkFactory.over().getText();
+		return TemplateTalkFactory.over();
 	}
 
 	@Override
@@ -285,36 +255,52 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 		List<Talk> talkList = gameInfo.getTalkList();
 
 		/*
-		 * talkListからCO結果を抽出
-		 * 自分以外で占い師COするプレイヤーが出たら投票先を変える
+		 * talkListからCO，占い結果の抽出
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Protocol protocol = new Protocol(talk.getContent());
-			for(Utterance u: protocol.getUtterances()){
-				Passage p = u.getPassage();
-				if(p.getVerb() == Verb.comingout){
-					agi.getComingoutMap().put(talk.getAgent(), p.getObject());
-					if(p.getObject() == fakeRole && !talk.getAgent().equals(getMe())){
+			Utterance utterance = new Utterance(talk.getContent());
+			switch (utterance.getTopic()) {
+
+			/*
+			 * カミングアウトの発話の場合
+			 * 自分以外で占い師COするプレイヤーが出たら投票先を変える
+			 */
+			case COMINGOUT:
+				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				if(utterance.getRole() == fakeRole){
+					setPlanningVoteAgent();
+				}
+				break;
+
+			/*
+			 * 占い結果の発話の場合
+			 * 人狼以外の占い，霊能結果で嘘だった場合は狂人だと判断
+			 */
+			case DIVINED:
+				//AGIのJudgeListに結果を加える
+				Agent seerAgent = talk.getAgent();
+				Agent inspectedAgent = utterance.getTarget();
+				Species inspectResult = utterance.getResult();
+				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
+				agi.addInspectJudgeList(judge);
+
+				//ジャッジしたのが人狼以外の場合
+				if(!getWolfList().contains(judge.getAgent())){
+					Species judgeSpecies = judge.getResult();
+					Species realSpecies;
+					if(getWolfList().contains(judge.getTarget())){
+						realSpecies = Species.WEREWOLF;
+					}else{
+						realSpecies = Species.HUMAN;
+					}
+					if(judgeSpecies != realSpecies){
+						maybePossesedAgent = judge.getAgent();
 						setPlanningVoteAgent();
 					}
 				}
-				/*
-				 * 人狼以外による占い，霊能結果で嘘の結果を出しているプレイヤーがいれば狂人認定．
-				 */
-				else if(p.getVerb() == Verb.inspected || p.getVerb() == Verb.medium_telled){
-					if(p.getAttribution() == Species.HUMAN){
-						if(getWolfList().contains(p.getSubject())){
-							maybePossesedAgent = talk.getAgent();
-							setPlanningVoteAgent();
-						}
-					}else{
-						if(!getWolfList().contains(p.getSubject())){
-							maybePossesedAgent = talk.getAgent();
-							setPlanningVoteAgent();
-						}
-					}
-				}
+
+				break;
 			}
 		}
 		readTalkListNum =talkList.size();
