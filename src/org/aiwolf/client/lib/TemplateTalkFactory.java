@@ -43,8 +43,8 @@ public class TemplateTalkFactory {
 	}
 
 	public enum TalkType{
-		talk(false),
-		whisper(true);
+		TALK(false),
+		WHISPER(true);
 
 		private boolean isWhisper;
 		private TalkType(boolean isWhisper) {
@@ -53,9 +53,9 @@ public class TemplateTalkFactory {
 
 		public static TalkType parseTalkType(String input){
 			if(input.equalsIgnoreCase("talk")){
-				return talk;
+				return TALK;
 			}else if(input.equalsIgnoreCase("whisper")){
-				return whisper;
+				return WHISPER;
 			}else{
 				return null;
 			}
