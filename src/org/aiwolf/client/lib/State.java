@@ -62,7 +62,7 @@ enum State {
 		return enumType;
 	}
 
-	public static State fromRole(Role role){
+	public static State parseState(Role role){
 		switch (role) {
 		case BODYGUARD:
 			return bodyguard;
@@ -104,7 +104,7 @@ enum State {
 		}
 	}
 
-	public static State fromSpecies(Species species){
+	public static State parseState(Species species){
 		switch (species) {
 		case HUMAN:
 			return HUMAN;
@@ -126,9 +126,9 @@ enum State {
 		}
 	}
 
-	public static State fromString(String input){
+	public static State parseState(String input){
 		for(State noun: State.values()){
-			if(noun.name().equals(input)){
+			if(noun.name().equalsIgnoreCase(input)){
 				return noun;
 			}
 		}

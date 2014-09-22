@@ -42,13 +42,33 @@ public class TemplateTalkFactory {
 		return wordAttachment(split);
 	}
 
-	public static String agree(int day, int id){
-		String[] split = {Topic.AGREE.toString(), String.valueOf(day), String.valueOf(id)};
+	public enum TalkType{
+		talk(false),
+		whisper(true);
+
+		private boolean isWhisper;
+		private TalkType(boolean isWhisper) {
+			this.isWhisper = isWhisper;
+		}
+
+		public static TalkType parseTalkType(String input){
+			if(input.equalsIgnoreCase("talk")){
+				return talk;
+			}else if(input.equalsIgnoreCase("whisper")){
+				return whisper;
+			}else{
+				return null;
+			}
+		}
+	}
+
+	public static String agree(TalkType talkType, int day, int id){
+		String[] split = {Topic.AGREE.toString(), talkType.toString(), String.valueOf(day), String.valueOf(id)};
 		return wordAttachment(split);
 	}
 
-	public static String disagree(int day, int id){
-		String[] split = {Topic.DISAGREE.toString(), String.valueOf(day), String.valueOf(id)};
+	public static String disagree(TalkType talkType, int day, int id){
+		String[] split = {Topic.DISAGREE.toString(), talkType.toString(), String.valueOf(day), String.valueOf(id)};
 		return wordAttachment(split);
 	}
 

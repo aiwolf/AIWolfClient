@@ -1,5 +1,6 @@
 package org.aiwolf.client.lib;
 
+import org.aiwolf.client.lib.TemplateTalkFactory.TalkType;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
@@ -20,6 +21,9 @@ public class Utterance {
 
 	//カミングアウト結果や占い結果等
 	State state = null;
+
+	//TopicがAGREE,DISAGREEの時の対象発話のログの種類（囁きかどうか）
+	TalkType talkType = null;
 
 	//TopicがAGREE,DISAGREEの時の対象発話の日にち
 	int talkDay = -1;
@@ -80,6 +84,10 @@ public class Utterance {
 		}
 	}
 
+	public TalkType getTalkType(){
+		return talkType;
+	}
+
 	/**
 	 * TopicがAGREE,DISAGREEの時，対象発話の発話日を返す．それ以外は-1
 	 * @return
@@ -127,21 +135,23 @@ public class Utterance {
 			//同意系
 		case AGREE:
 		case DISAGREE:
-			talkDay = Integer.parseInt(split[1]);
-			talkID = Integer.parseInt(split[2]);
+			//Talk day4 ID38 みたいな形でくるので数字だけ取得
+			talkType = TalkType.parseTalkType(split[1]);
+			talkDay = Integer.parseInt(split[2].substring(3));
+			talkID = Integer.parseInt(split[3].substring(2));
 			break;
 
 			//"Topic Agent Role"
 		case ESTIMATE:
 		case COMINGOUT:
 			target = Agent.getAgent(agentId);
-			state = State.fromString(split[2]);
+			state = State.parseState(split[2]);
 			break;
 
 			//RESULT系
 		case DIVINED:
 		case INQUESTED:
-			state = State.fromString(split[2]);
+			state = State.parseState(split[2]);
 		case GUARDED:
 			target = Agent.getAgent(agentId);
 			break;
@@ -155,8 +165,8 @@ public class Utterance {
 		default:
 			break;
 		}
-		
-		
+
+
 		return;
 	}
 
