@@ -76,10 +76,10 @@ public abstract class AbstractPlayer implements Player{
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		gameInfoMap.clear();
-		update(gameInfo);
 		myRole = gameInfo.getRole();
 		me = gameInfo.getAgent();
 		this.gameSetting = gameSetting;
+		update(gameInfo);
 
 	}
 	@Override
