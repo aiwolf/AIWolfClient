@@ -124,29 +124,26 @@ public abstract class AbstractKajiWolfSideAgent extends AbstractGiftedPlayer {
 		 * 人狼を見つける
 		 * 投票先に選ばれそう（全体の2/3が投票かつ全投票中で1/4以上が自分に投票）
 		 */
-		if(isComingout){
+		if(isComingout || fakeRole == Role.VILLAGER){
 			return null;
 		}else{
 			//日数によるカミングアウト
 			if(getDay() == comingoutDay){
-				isComingout = true;
-				return TemplateTalkFactory.comingout(getMe(), getMyRole());
+				return comingoutFakeRole();
 			}
 
 			//偽CO出現
 			Map<Agent, Role> comingoutMap = advanceGameInfo.getComingoutMap();
 			for(Entry<Agent, Role> set: comingoutMap.entrySet()){
-				if(set.getValue() == getMyRole() && !set.getKey().equals(getMe())){
-					isComingout = true;
-					return TemplateTalkFactory.comingout(getMe(), getMyRole());
+				if(set.getValue() == fakeRole && !set.getKey().equals(getMe())){
+					return comingoutFakeRole();
 				}
 			}
 
 			//人狼見つける
 			for(Judge judge: notToldjudges){
 				if(judge.getResult() == Species.WEREWOLF){
-					isComingout = true;
-					return TemplateTalkFactory.comingout(getMe(), getMyRole());
+					return comingoutFakeRole();
 				}
 			}
 
@@ -160,13 +157,20 @@ public abstract class AbstractKajiWolfSideAgent extends AbstractGiftedPlayer {
 					}
 				}
 				if((double)voteToMe * 4 > votes.size()){
-					isComingout = true;
-					return TemplateTalkFactory.comingout(getMe(), getMyRole());
+					return comingoutFakeRole();
 				}
 			}
 		}
 		return null;
+	}
 
+	/**
+	 * fakeRoleをカミングアウトする
+	 * @return
+	 */
+	private String comingoutFakeRole(){
+		isComingout = true;
+		return TemplateTalkFactory.comingout(getMe(), fakeRole);
 	}
 
 	/**

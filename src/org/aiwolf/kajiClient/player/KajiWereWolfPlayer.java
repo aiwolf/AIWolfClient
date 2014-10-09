@@ -64,6 +64,7 @@ public class KajiWereWolfPlayer extends AbstractKajiWolfSideAgent {
 			}
 		}
 		wolfsPatterns = new ArrayList<Pattern>(fakePatterns);
+		comingoutDay = new Random().nextInt(4);
 	}
 
 
@@ -80,8 +81,8 @@ public class KajiWereWolfPlayer extends AbstractKajiWolfSideAgent {
 		 * カミングアウトについてはパターンの拡張
 		 * 能力結果の発話についてはパターン情報の更新
 		 */
-		for(; readTalkNumber < whisperList.size(); readTalkNumber++){
-			Talk talk = whisperList.get(readTalkNumber);
+		for(; readWhisperNumber < whisperList.size(); readWhisperNumber++){
+			Talk talk = whisperList.get(readWhisperNumber);
 			Utterance utterance = new Utterance(talk.getContent());
 			switch (utterance.getTopic()) {
 			case COMINGOUT:
@@ -174,6 +175,8 @@ public class KajiWereWolfPlayer extends AbstractKajiWolfSideAgent {
 
 			patternMaker.updateJudgeData(hypotheticPatterns, todaysFakeJudge);
 			if(hypotheticPatterns.size() == 0){
+				notToldjudges.remove(todaysFakeJudge);
+				System.out.println();
 				switch (fakeRole) {
 				case SEER:
 					setFakeDivineJudge();
@@ -382,6 +385,8 @@ public class KajiWereWolfPlayer extends AbstractKajiWolfSideAgent {
 		else {
 			fakeJudge = getMaxEntropyInquestJudge(generalPatterns);
 		}
+		notToldjudges.add(fakeJudge);
+		todaysFakeJudge = fakeJudge;
 	}
 
 	private Judge getMaxEntropyInquestJudge(List<Pattern> patterns){

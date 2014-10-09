@@ -30,6 +30,13 @@ public class KajiPossessedPlayer extends AbstractKajiWolfSideAgent {
 	private static final double BLACK_DIVINEJUDGE_PROBABILITY = 0.25;
 	private static final double BLACK_INQUESTJUDGE_PROBABILITY = 0.25;
 
+	@Override
+	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
+		super.initialize(gameInfo, gameSetting);
+		//カミングアウトする日数をランダムに設定(0なら日数経過ではカミングアウトしない)
+		comingoutDay = new Random().nextInt(4);
+	}
+
 
 	@Override
 	protected void setFakeDivineJudge() {

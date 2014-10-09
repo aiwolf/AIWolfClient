@@ -40,22 +40,28 @@ public class PatternMaker {
 		List<Pattern> newPatterns = new ArrayList<Pattern>();
 
 		for(Pattern pattern: patterns){
-			boolean isGenuineCO = false;
+			boolean isExistGenuineCO = false;
 			switch (coRole) {
 			case SEER:
 				if(pattern.getSeerAgent() != null){
-					isGenuineCO = true;
+					if(pattern.getSeerAgent().equals(coAgent)){
+						return;
+					}
+					isExistGenuineCO = true;
 				}
 				break;
 
 			case MEDIUM:
 				if(pattern.getMediumAgent() != null){
-					isGenuineCO = true;
+					if(pattern.getMediumAgent().equals(coAgent)){
+						return;
+					}
+					isExistGenuineCO = true;
 				}
 				break;
 			}
 			//真能力者がいる場合
-			if(isGenuineCO == true){
+			if(isExistGenuineCO){
 				Pattern newPattern = pattern.clone();
 				//enemyMapにまだ入っていない
 				if(!newPattern.getEnemyMap().containsKey(coAgent)){
@@ -89,11 +95,16 @@ public class PatternMaker {
 
 				//newPattern2について
 				newPattern2.getEnemyMap().put(coAgent, EnemyCase.gray);
+				
+				newPatterns.add(newPattern1);
+				newPatterns.add(newPattern2);
 			}
 		}
 
 		//newPatternsの矛盾ないものをpatternに入れる．
+		List<Pattern> clonePatterns = new ArrayList<Pattern>(newPatterns);
 		removeContradictPatterns(newPatterns);
+
 		patterns.clear();
 		patterns.addAll(newPatterns);
 		return;
@@ -150,7 +161,7 @@ public class PatternMaker {
 			Map<Agent, EnemyCase> enemyMap = pattern.getEnemyMap();
 
 			//真占い師が真霊媒師
-			if(pattern.getSeerAgent() == pattern.getMediumAgent()){
+			if(pattern.getSeerAgent() != null && pattern.getSeerAgent().equals(pattern.getMediumAgent())){
 				isContradict = true;
 			}
 			//enemyMapに真占い師，霊媒師が含まれている
