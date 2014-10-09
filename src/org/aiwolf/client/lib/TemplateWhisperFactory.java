@@ -14,37 +14,37 @@ public class TemplateWhisperFactory {
 
 
 	public static String attack(Agent target){
-		String[] split = {Topic.ATTACK.toString(), String.valueOf(target.getAgentIdx())};
+		String[] split = {Topic.ATTACK.toString(), String.valueOf(target.toString())};
 		return wordAttachment(split);
 	}
 
 	public static String estimate(Agent target, Role role){
-		String[] split = {Topic.ESTIMATE.toString(), String.valueOf(target.getAgentIdx()), role.toString()};
+		String[] split = {Topic.ESTIMATE.toString(), String.valueOf(target.toString()), role.toString()};
 		return wordAttachment(split);
 	}
 
 	public static String comingout(Agent target, Role role){
-		String[] split = {Topic.COMINGOUT.toString(), String.valueOf(target.getAgentIdx()), role.toString()};
+		String[] split = {Topic.COMINGOUT.toString(), String.valueOf(target.toString()), role.toString()};
 		return wordAttachment(split);
 	}
 
 	public static String divined(Agent target, Species species){
-		String[] split = {Topic.DIVINED.toString(), String.valueOf(target.getAgentIdx()), species.toString()};
+		String[] split = {Topic.DIVINED.toString(), String.valueOf(target.toString()), species.toString()};
 		return wordAttachment(split);
 	}
 
 	public static String inquested(Agent target, Species species){
-		String[] split = {Topic.INQUESTED.toString(), String.valueOf(target.getAgentIdx()), species.toString()};
+		String[] split = {Topic.INQUESTED.toString(), String.valueOf(target.toString()), species.toString()};
 		return wordAttachment(split);
 	}
 
 	public static String guarded(Agent target){
-		String[] split = {Topic.GUARDED.toString(), String.valueOf(target.getAgentIdx())};
+		String[] split = {Topic.GUARDED.toString(), String.valueOf(target.toString())};
 		return wordAttachment(split);
 	}
 
 	public static String vote(Agent target){
-		String[] split = {Topic.VOTE.toString(), String.valueOf(target.getAgentIdx())};
+		String[] split = {Topic.VOTE.toString(), String.valueOf(target.toString())};
 		return wordAttachment(split);
 	}
 
