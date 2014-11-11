@@ -1,5 +1,6 @@
 package org.aiwolf.client.lib;
 
+import org.aiwolf.client.lib.TemplateTalkFactory.TalkType;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
@@ -48,15 +49,16 @@ public class TemplateWhisperFactory {
 		return wordAttachment(split);
 	}
 
-	public static String agree(int day, int id){
-		String[] split = {Topic.AGREE.toString(), String.valueOf(day), String.valueOf(id)};
+	public static String agree(TalkType talkType, int day, int id){
+		String[] split = {Topic.AGREE.toString(), talkType.toString(), "day"+String.valueOf(day), "ID:"+String.valueOf(id)};
 		return wordAttachment(split);
 	}
 
-	public static String disagree(int day, int id){
-		String[] split = {Topic.DISAGREE.toString(), String.valueOf(day), String.valueOf(id)};
+	public static String disagree(TalkType talkType, int day, int id){
+		String[] split = {Topic.DISAGREE.toString(), talkType.toString(), "day"+String.valueOf(day), "ID:"+String.valueOf(id)};
 		return wordAttachment(split);
 	}
+
 
 	public static String over(){
 		return Talk.OVER;

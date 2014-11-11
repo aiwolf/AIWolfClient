@@ -138,7 +138,7 @@ public class Utterance {
 			//Talk day4 ID38 みたいな形でくるので数字だけ取得
 			talkType = TalkType.parseTalkType(split[1]);
 			talkDay = Integer.parseInt(split[2].substring(3));
-			talkID = Integer.parseInt(split[3].substring(2));
+			talkID = Integer.parseInt(split[3].substring(3));
 			break;
 
 			//"Topic Agent Role"

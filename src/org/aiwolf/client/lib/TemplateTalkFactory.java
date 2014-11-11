@@ -63,12 +63,12 @@ public class TemplateTalkFactory {
 	}
 
 	public static String agree(TalkType talkType, int day, int id){
-		String[] split = {Topic.AGREE.toString(), talkType.toString(), String.valueOf(day), String.valueOf(id)};
+		String[] split = {Topic.AGREE.toString(), talkType.toString(), "day"+String.valueOf(day), "ID:"+String.valueOf(id)};
 		return wordAttachment(split);
 	}
 
 	public static String disagree(TalkType talkType, int day, int id){
-		String[] split = {Topic.DISAGREE.toString(), talkType.toString(), String.valueOf(day), String.valueOf(id)};
+		String[] split = {Topic.DISAGREE.toString(), talkType.toString(), "day"+String.valueOf(day), "ID:"+String.valueOf(id)};
 		return wordAttachment(split);
 	}
 
