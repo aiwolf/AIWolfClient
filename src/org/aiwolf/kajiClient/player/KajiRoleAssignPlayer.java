@@ -1,6 +1,7 @@
 package org.aiwolf.kajiClient.player;
 
 import org.aiwolf.client.base.player.AbstractRoleAssignPlayer;
+
 import org.aiwolf.client.base.smpl.*;
 import org.aiwolf.common.net.GameInfo;
 
