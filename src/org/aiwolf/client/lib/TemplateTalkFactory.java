@@ -6,37 +6,72 @@ import org.aiwolf.common.data.Species;
 import org.aiwolf.common.data.Talk;
 
 /**
- * 発話を生成するクラス
+ * Factory to create template talk contents
  * @author kengo
  *
  */
 public class TemplateTalkFactory {
 
+	/**
+	 * Talk one's estimation
+	 * @param target
+	 * @param role
+	 * @return
+	 */
 	public static String estimate(Agent target, Role role){
 		String[] split = {Topic.ESTIMATE.toString(), String.valueOf(target.toString()), role.toString()};
 		return wordAttachment(split);
 	}
 
+	/**
+	 * Comingout someone's role
+	 * @param target
+	 * @param role
+	 * @return
+	 */
 	public static String comingout(Agent target, Role role){
 		String[] split = {Topic.COMINGOUT.toString(), String.valueOf(target.toString()), role.toString()};
 		return wordAttachment(split);
 	}
 
+	/**
+	 * Report result of divine
+	 * @param target
+	 * @param species
+	 * @return
+	 */
 	public static String divined(Agent target, Species species){
 		String[] split = {Topic.DIVINED.toString(), String.valueOf(target.toString()), species.toString()};
 		return wordAttachment(split);
 	}
 
+	
+	/**
+	 * Report result of inquest
+	 * @param target
+	 * @param species
+	 * @return
+	 */
 	public static String inquested(Agent target, Species species){
 		String[] split = {Topic.INQUESTED.toString(), String.valueOf(target.toString()), species.toString()};
 		return wordAttachment(split);
 	}
 
+	/**
+	 * Report guarded agent
+	 * @param target
+	 * @return
+	 */
 	public static String guarded(Agent target){
 		String[] split = {Topic.GUARDED.toString(), String.valueOf(target.toString())};
 		return wordAttachment(split);
 	}
 
+	/**
+	 * Declare vote target
+	 * @param target
+	 * @return
+	 */
 	public static String vote(Agent target){
 		String[] split = {Topic.VOTE.toString(), String.valueOf(target.toString())};
 		return wordAttachment(split);
