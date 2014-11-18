@@ -404,7 +404,9 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 			return;
 		}
 
-		fakeJudgeList.add(new Judge(getDay(), getMe(), fakeGiftTarget, fakeResult));
+		if(fakeGiftTarget != null){
+			fakeJudgeList.add(new Judge(getDay(), getMe(), fakeGiftTarget, fakeResult));
+		}
 	}
 
 	public List<Judge> getMyFakeJudgeList(){

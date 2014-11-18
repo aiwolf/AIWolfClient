@@ -22,7 +22,7 @@ import org.aiwolf.common.net.GameSetting;
  * @author tori
  *
  */
-abstract public class AbstarctRoleAssignPlayer implements Player {
+abstract public class AbstractRoleAssignPlayer implements Player {
 
 	private Player villagerPlayer = new SampleVillagerPlayer();
 	private Player seerPlayer = new SampleSeerPlayer();

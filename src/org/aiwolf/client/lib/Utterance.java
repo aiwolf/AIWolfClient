@@ -1,5 +1,8 @@
 package org.aiwolf.client.lib;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.aiwolf.client.lib.TemplateTalkFactory.TalkType;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Role;
@@ -121,9 +124,10 @@ public class Utterance {
 		int agentId = -1;
 
 		if(split.length >= 2 && split[1].startsWith("Agent")){
-			int startNum = split[1].indexOf("[") + 1;
-			int endNum = split[1].indexOf("]");
-			agentId = Integer.parseInt(split[1].substring(startNum, endNum));
+//			int startNum = split[1].indexOf("[") + 1;
+//			int endNum = split[1].indexOf("]");
+//			agentId = Integer.parseInt(split[1].substring(startNum, endNum));
+			agentId = getInt(split[1]);
 		}
 
 		switch (topic) {
@@ -137,8 +141,10 @@ public class Utterance {
 		case DISAGREE:
 			//Talk day4 ID38 みたいな形でくるので数字だけ取得
 			talkType = TalkType.parseTalkType(split[1]);
-			talkDay = Integer.parseInt(split[2].substring(3));
-			talkID = Integer.parseInt(split[3].substring(2));
+//			talkDay = Integer.parseInt(split[2].substring(3));
+//			talkID = Integer.parseInt(split[3].substring(3));
+			talkDay = getInt(split[2]);
+			talkID = getInt(split[3]);
 			break;
 
 			//"Topic Agent Role"
@@ -170,5 +176,13 @@ public class Utterance {
 		return;
 	}
 
+	static final private Pattern intPattern = Pattern.compile("-?[\\d]+");
 
+	protected int getInt(String text){
+		Matcher m = intPattern.matcher(text);
+		if(m.find()){
+			return Integer.parseInt(m.group());
+		}
+		return -1;
+	}
 }

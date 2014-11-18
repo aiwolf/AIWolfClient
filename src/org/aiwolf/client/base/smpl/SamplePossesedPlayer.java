@@ -307,7 +307,9 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 			return;
 		}
 
-		fakeJudgeList.add(new Judge(getDay(), getMe(), fakeGiftTarget, fakeResult));
+		if(fakeGiftTarget != null){
+			fakeJudgeList.add(new Judge(getDay(), getMe(), fakeGiftTarget, fakeResult));
+		}
 	}
 
 	public List<Judge> getMyFakeJudgeList(){
