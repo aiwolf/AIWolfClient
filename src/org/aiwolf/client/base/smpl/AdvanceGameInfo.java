@@ -19,49 +19,9 @@ public class AdvanceGameInfo {
 	 */
 	private List<Judge> mediumJudgeList = new ArrayList<Judge>();
 
-	//Map<占い師, Map<占われたプレイヤー, 占い結果> >
-/*	private Map<Agent, Map<Agent, Species>> inspectMap = new HashMap<Agent, Map<Agent,Species>>();
-
-	private Map<Agent, Map<Agent, Species>> mediumTellingMap = new HashMap<Agent, Map<Agent,Species>>();
-*/
 	private Map<Agent, Role> comingoutMap = new HashMap<Agent, Role>();
 
-/*	public Map<Agent, Map<Agent, Species>> getInspectMap() {
-		return inspectMap;
-	}
 
-	public void putInspectMap(Agent seerAgent, Agent inspectedAgent, Species species){
-		if(inspectMap.containsKey(seerAgent)){
-			inspectMap.get(seerAgent).put(inspectedAgent, species);
-		}else{
-			Map<Agent, Species> newMap = new HashMap<Agent, Species>();
-			newMap.put(inspectedAgent, species);
-			inspectMap.put(seerAgent, newMap);
-		}
-	}
-
-	public void setInspectMap(Map<Agent, Map<Agent, Species>> inspectMap) {
-		this.inspectMap = inspectMap;
-	}
-
-	public Map<Agent, Map<Agent, Species>> getMediumTellingMap() {
-		return mediumTellingMap;
-	}
-
-	public void putMediumTellingMap(Agent MediumAgent, Agent TelledAgent, Species species){
-		if(mediumTellingMap.containsKey(MediumAgent)){
-			mediumTellingMap.get(MediumAgent).put(TelledAgent, species);
-		}else{
-			Map<Agent, Species> newMap = new HashMap<Agent, Species>();
-			newMap.put(TelledAgent, species);
-			mediumTellingMap.put(MediumAgent, newMap);
-		}
-	}
-
-	public void setMediumTellingMap(Map<Agent, Map<Agent, Species>> mediumTellingMap) {
-		this.mediumTellingMap = mediumTellingMap;
-	}
-*/
 	public Map<Agent, Role> getComingoutMap() {
 		return comingoutMap;
 	}

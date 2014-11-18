@@ -188,29 +188,6 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 			if(agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == Role.MEDIUM){
 				voteAgentCandidate.add(agent);
 			}
-/*
-			else{
-
-				 * 自分の霊能結果と違う占い結果を出している占い師がいれば投票候補
-
-
-				Map<Agent, Map<Agent, Species>> inspectMap = agi.getInspectMap();
-				if(!inspectMap.containsKey(agent)){
-					continue;
-				}else{
-					Map<Agent, Species> tellResultMap = getMediumTellinResultMap();
-
-					 * 占い師の占い結果Listを参照
-
-					for(Entry<Agent, Species> set: inspectMap.get(agent).entrySet()){
-						//霊能したプレイヤーが占われており，かつ霊能結果と占い結果が違うとき投票候補
-						if(tellResultMap.containsKey(set.getKey()) && !tellResultMap.get(set.getKey()).equals(set.getValue())){
-							voteAgentCandidate.add(agent);
-						}
-					}
-				}
-			}
-*/
 		}
 
 		for(Judge myJudge: getMyJudgeList()){
@@ -256,14 +233,6 @@ public class SampleMediumPlayer extends AbstractMediumPlayer {
 					}
 				}
 
-/*				for(Entry<Agent, Map<Agent, Species>> m: agi.getInspectMap().entrySet()){
-					for(Entry<Agent, Species> m2: m.getValue().entrySet()){
-						if(aliveAgentList.contains(m2) && m2.getValue() == Species.Werewolf){
-							subVoteAgentCandidate.add(m2.getKey());
-						}
-					}
-				}
-*/
 				if(subVoteAgentCandidate.size() > 0){
 					Random rand = new Random();
 					planningVoteAgent = subVoteAgentCandidate.get(rand.nextInt(subVoteAgentCandidate.size()));

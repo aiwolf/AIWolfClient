@@ -121,13 +121,7 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 					return;
 				}
 			}
-/*			for(Entry<Agent, Map<Agent, Species>> m: agi.getInspectMap().entrySet()){
-				if(m.getValue().get(planningVoteAgent) == Species.Werewolf){
-					return;
-				}
-			}
-*/
-			}
+		}
 
 		/*
 		 * 投票先を未設定，または人狼だと占われたプレイヤー以外を投票先にしている場合
@@ -145,15 +139,6 @@ public class SampleVillagerPlayer extends AbstractVillagerPlayer{
 			}
 		}
 
-
-/*		for(Entry<Agent, Map<Agent, Species>> m: agi.getInspectMap().entrySet()){
-			for(Entry<Agent, Species> m2: m.getValue().entrySet()){
-				if(aliveAgentList.contains(m2) && m2.getValue() == Species.Werewolf){
-					voteAgentCandidate.add(m2.getKey());
-				}
-			}
-		}
-*/
 		if(voteAgentCandidate.size() > 0){
 			Random rand = new Random();
 			planningVoteAgent = voteAgentCandidate.get(rand.nextInt(voteAgentCandidate.size()));

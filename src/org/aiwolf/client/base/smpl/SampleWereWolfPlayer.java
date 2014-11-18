@@ -374,6 +374,9 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 
 		else if(fakeRole == Role.MEDIUM){
 			fakeGiftTarget = getLatestDayGameInfo().getExecutedAgent();
+			if(fakeGiftTarget == null){
+				return;
+			}
 			/*
 			 * 人狼が偽占い対象の場合
 			 */
