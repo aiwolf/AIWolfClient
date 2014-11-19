@@ -169,7 +169,7 @@ public class Utterance {
 			break;
 
 		default:
-			break;
+			return;
 		}
 
 
