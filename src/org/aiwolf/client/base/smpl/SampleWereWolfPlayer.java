@@ -55,8 +55,15 @@ public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		super.initialize(gameInfo, gameSetting);
 
-		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
+/*		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
 		fakeRole = fakeRoleList.get(new Random().nextInt(fakeRoleList.size()));
+*/
+		List<Role> fakeRoles = new ArrayList(gameSetting.getRoleNumMap().keySet());
+		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF);
+		fakeRoles.removeAll(nonFakeRoleList);
+		fakeRole = fakeRoles.get(new Random().nextInt(fakeRoles.size()));
+
+
 
 		//占い師，or霊能者なら1~3日目からランダムに選択してCO．村人ならCOしない．
 		comingoutDay = new Random().nextInt(3)+1;

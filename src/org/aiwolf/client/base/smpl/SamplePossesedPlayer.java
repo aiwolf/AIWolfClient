@@ -2,18 +2,20 @@ package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import org.aiwolf.client.base.player.AbstractPossessedPlayer;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Utterance;
-import org.aiwolf.common.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 
@@ -51,8 +53,12 @@ public class SamplePossesedPlayer extends AbstractPossessedPlayer {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		super.initialize(gameInfo, gameSetting);
 
-		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
-		fakeRole = fakeRoleList.get(new Random().nextInt(fakeRoleList.size()));
+//		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
+		List<Role> fakeRoles = new ArrayList(gameSetting.getRoleNumMap().keySet());
+		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF);
+		fakeRoles.removeAll(nonFakeRoleList);
+
+		fakeRole = fakeRoles.get(new Random().nextInt(fakeRoles.size()));
 
 		//占い師，or霊能者なら1~3日目からランダムに選択してCO．村人ならCOしない．
 		comingoutDay = new Random().nextInt(3)+1;
