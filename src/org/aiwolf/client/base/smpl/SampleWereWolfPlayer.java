@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
 
-import org.aiwolf.client.base.player.AbstractWerewolfPlayer;
+import org.aiwolf.client.base.player.AbstractWerewolf;
 import org.aiwolf.client.lib.*;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleWereWolfPlayer extends AbstractWerewolfPlayer {
+public class SampleWereWolfPlayer extends AbstractWerewolf {
 
 	//COする日にち
 	int comingoutDay;

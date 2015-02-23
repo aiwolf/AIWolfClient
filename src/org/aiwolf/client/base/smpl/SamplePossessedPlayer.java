@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.aiwolf.client.base.player.AbstractPossessedPlayer;
+import org.aiwolf.client.base.player.AbstractPossessed;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Utterance;
 import org.aiwolf.common.data.Agent;
@@ -17,7 +17,7 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
-public class SamplePossessedPlayer extends AbstractPossessedPlayer {
+public class SamplePossessedPlayer extends AbstractPossessed {
 
 	//COする日にち
 	int comingoutDay;

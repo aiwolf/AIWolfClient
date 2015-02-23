@@ -8,14 +8,14 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import org.aiwolf.client.base.player.AbstractVillagerPlayer;
+import org.aiwolf.client.base.player.AbstractVillager;
 import org.aiwolf.client.lib.*;
 
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleVillagerPlayer extends AbstractVillagerPlayer{
+public class SampleVillagerPlayer extends AbstractVillager{
 	/*
 	 * 投票アルゴリズム：人狼だと占われたエージェント，いなければ，ランダム
 	 * 発話：その日に投票しようとしているエージェントを報告．変化すれば報告．

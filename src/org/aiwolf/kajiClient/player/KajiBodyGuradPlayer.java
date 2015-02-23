@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.base.player.AbstractBodyguardPlayer;
-import org.aiwolf.client.base.player.AbstractVillagerPlayer;
+import org.aiwolf.client.base.player.AbstractBodyguard;
+import org.aiwolf.client.base.player.AbstractVillager;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.kajiClient.lib.Pattern;
 

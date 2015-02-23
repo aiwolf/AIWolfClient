@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
 
-import org.aiwolf.client.base.player.AbstractSeerPlayer;
-import org.aiwolf.client.base.player.AbstractVillagerPlayer;
+import org.aiwolf.client.base.player.AbstractSeer;
+import org.aiwolf.client.base.player.AbstractVillager;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;

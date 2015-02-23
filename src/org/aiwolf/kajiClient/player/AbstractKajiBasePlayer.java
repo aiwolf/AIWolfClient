@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import org.aiwolf.client.base.player.AbstractPlayer;
+import org.aiwolf.client.base.player.AbstractRole;
 import org.aiwolf.client.lib.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
@@ -27,7 +27,7 @@ import org.aiwolf.kajiClient.lib.PatternMaker;
  * @author kengo
  *
  */
-public abstract class AbstractKajiBasePlayer extends AbstractPlayer {
+public abstract class AbstractKajiBasePlayer extends AbstractRole {
 
 	//CO,能力の結果などのデータ集合
 	AdvanceGameInfo advanceGameInfo = new AdvanceGameInfo();

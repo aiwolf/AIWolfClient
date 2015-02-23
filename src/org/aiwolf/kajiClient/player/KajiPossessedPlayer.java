@@ -9,8 +9,8 @@ import java.util.Random;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.aiwolf.client.base.player.AbstractPossessedPlayer;
-import org.aiwolf.client.base.player.AbstractVillagerPlayer;
+import org.aiwolf.client.base.player.AbstractPossessed;
+import org.aiwolf.client.base.player.AbstractVillager;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Utterance;
 import org.aiwolf.common.data.Agent;

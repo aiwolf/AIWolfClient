@@ -3,13 +3,13 @@ package org.aiwolf.client.base.smpl;
 import java.util.*;
 import java.util.Map.Entry;
 
-import org.aiwolf.client.base.player.AbstractSeerPlayer;
+import org.aiwolf.client.base.player.AbstractSeer;
 import org.aiwolf.client.lib.*;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleSeerPlayer extends AbstractSeerPlayer{
+public class SampleSeerPlayer extends AbstractSeer{
 
 	//COする日にち
 	int comingoutDay;

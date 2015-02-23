@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
 
-import org.aiwolf.client.base.player.AbstractBodyguardPlayer;
+import org.aiwolf.client.base.player.AbstractBodyguard;
 import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Utterance;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleBodyguardPlayer extends AbstractBodyguardPlayer {
+public class SampleBodyguardPlayer extends AbstractBodyguard {
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();
 

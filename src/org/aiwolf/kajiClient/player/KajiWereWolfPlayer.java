@@ -13,8 +13,8 @@ import java.util.Random;
 
 import javax.print.attribute.standard.Media;
 
-import org.aiwolf.client.base.player.AbstractVillagerPlayer;
-import org.aiwolf.client.base.player.AbstractWerewolfPlayer;
+import org.aiwolf.client.base.player.AbstractVillager;
+import org.aiwolf.client.base.player.AbstractWerewolf;
 import org.aiwolf.client.lib.TemplateWhisperFactory;
 import org.aiwolf.client.lib.Utterance;
 import org.aiwolf.common.data.Agent;

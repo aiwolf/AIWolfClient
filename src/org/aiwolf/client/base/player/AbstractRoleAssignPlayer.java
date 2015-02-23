@@ -24,96 +24,96 @@ import org.aiwolf.common.net.GameSetting;
  */
 abstract public class AbstractRoleAssignPlayer implements Player {
 
-	private AbstractPlayer villagerPlayer = new SampleVillagerPlayer();
-	private AbstractPlayer seerPlayer = new SampleSeerPlayer();
-	private AbstractPlayer mediumPlayer = new SampleMediumPlayer();
-	private AbstractPlayer bodyguardPlayer = new SampleBodyguardPlayer();
-	private AbstractPlayer possessedPlayer = new SamplePossessedPlayer();
-	private AbstractPlayer werewolfPlayer = new SampleWereWolfPlayer();
+	private AbstractRole villagerPlayer = new SampleVillagerPlayer();
+	private AbstractRole seerPlayer = new SampleSeerPlayer();
+	private AbstractRole mediumPlayer = new SampleMediumPlayer();
+	private AbstractRole bodyguardPlayer = new SampleBodyguardPlayer();
+	private AbstractRole possessedPlayer = new SamplePossessedPlayer();
+	private AbstractRole werewolfPlayer = new SampleWereWolfPlayer();
 
-	private AbstractPlayer rolePlayer;
+	private AbstractRole rolePlayer;
 
 	/**
 	 * @return villagerPlayer
 	 */
-	final public AbstractPlayer getVillagerPlayer() {
+	final public AbstractRole getVillagerPlayer() {
 		return villagerPlayer;
 	}
 
 	/**
 	 * @param villagerPlayer セットする villagerPlayer
 	 */
-	final public void setVillagerPlayer(AbstractPlayer villagerPlayer) {
+	final public void setVillagerPlayer(AbstractRole villagerPlayer) {
 		this.villagerPlayer = villagerPlayer;
 	}
 
 	/**
 	 * @return seerPlayer
 	 */
-	final public AbstractPlayer getSeerPlayer() {
+	final public AbstractRole getSeerPlayer() {
 		return seerPlayer;
 	}
 
 	/**
 	 * @param seerPlayer セットする seerPlayer
 	 */
-	final public void setSeerPlayer(AbstractPlayer seerPlayer) {
+	final public void setSeerPlayer(AbstractRole seerPlayer) {
 		this.seerPlayer = seerPlayer;
 	}
 
 	/**
 	 * @return mediumPlayer
 	 */
-	final public AbstractPlayer getMediumPlayer() {
+	final public AbstractRole getMediumPlayer() {
 		return mediumPlayer;
 	}
 
 	/**
 	 * @param mediumPlayer セットする mediumPlayer
 	 */
-	final public void setMediumPlayer(AbstractPlayer mediumPlayer) {
+	final public void setMediumPlayer(AbstractRole mediumPlayer) {
 		this.mediumPlayer = mediumPlayer;
 	}
 
 	/**
 	 * @return bodyGuardPlayer
 	 */
-	final public AbstractPlayer getBodyguardPlayer() {
+	final public AbstractRole getBodyguardPlayer() {
 		return bodyguardPlayer;
 	}
 
 	/**
 	 * @param bodyGuardPlayer セットする bodyGuardPlayer
 	 */
-	final public void setBodyguardPlayer(AbstractPlayer bodyGuardPlayer) {
+	final public void setBodyguardPlayer(AbstractRole bodyGuardPlayer) {
 		this.bodyguardPlayer = bodyGuardPlayer;
 	}
 
 	/**
 	 * @return possesedPlayer
 	 */
-	final public AbstractPlayer getPossessedPlayer() {
+	final public AbstractRole getPossessedPlayer() {
 		return possessedPlayer;
 	}
 
 	/**
 	 * @param possesedPlayer セットする possesedPlayer
 	 */
-	final public void setPossessedPlayer(AbstractPlayer possesedPlayer) {
+	final public void setPossessedPlayer(AbstractRole possesedPlayer) {
 		this.possessedPlayer = possesedPlayer;
 	}
 
 	/**
 	 * @return werewolfPlayer
 	 */
-	final public AbstractPlayer getWerewolfPlayer() {
+	final public AbstractRole getWerewolfPlayer() {
 		return werewolfPlayer;
 	}
 
 	/**
 	 * @param werewolfPlayer セットする werewolfPlayer
 	 */
-	final public void setWerewolfPlayer(AbstractPlayer werewolfPlayer) {
+	final public void setWerewolfPlayer(AbstractRole werewolfPlayer) {
 		this.werewolfPlayer = werewolfPlayer;
 	}
 
