@@ -10,7 +10,7 @@ import org.aiwolf.common.data.Role;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
-public abstract class AbstractPlayer implements Player{
+public abstract class AbstractPlayer{
 
 	//Index:day, content:GameInfo MApで
 	Map<Integer, GameInfo> gameInfoMap = new HashMap<Integer, GameInfo>();
@@ -24,12 +24,12 @@ public abstract class AbstractPlayer implements Player{
 	GameSetting gameSetting;
 
 
-	@Override
+
 	public String getName() {
 		return myRole.name() + "Player:ID=" + me.getAgentIdx();
 	}
 
-	@Override
+
 	public void update(GameInfo gameInfo) {
 		day = gameInfo.getDay();
 
@@ -73,7 +73,7 @@ public abstract class AbstractPlayer implements Player{
 		return gameSetting;
 	}
 
-	@Override
+
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		gameInfoMap.clear();
 		this.gameSetting = gameSetting;
@@ -83,27 +83,27 @@ public abstract class AbstractPlayer implements Player{
 		me = gameInfo.getAgent();
 		return;
 	}
-	@Override
+
 	public abstract void dayStart();
 
-	@Override
+
 	public abstract String talk();
 
-	@Override
+
 	public abstract String whisper();
 
-	@Override
+
 	public abstract Agent vote();
 
-	@Override
+
 	public abstract Agent attack();
 
-	@Override
+
 	public abstract Agent divine();
 
-	@Override
+
 	public abstract Agent guard();
 
-	@Override
+
 	public abstract void finish();
 }

@@ -14,7 +14,7 @@ import org.aiwolf.common.net.GameSetting;
 
 /**
  * 各プレイヤーに使用したいプレイヤーのインスタンスを生成して下さい． 例えば，村人のエージェントだけ自作のエージェントにしたい場合は， <br>
- * Player villagerPlayer = new SampleVillagerPlayer();<br>  
+ * Player villagerPlayer = new SampleVillagerPlayer();<br>
  * ↓ <br>
  * Player villagerPlayer = new [自作プレイヤーのクラス名のコンストラクタ];<br>
  * と変更すれば，村人の役職が割り振られた時は自作のエージェント，それ以外の役職になった時はサンプルエージェントでプレイします．
@@ -24,96 +24,96 @@ import org.aiwolf.common.net.GameSetting;
  */
 abstract public class AbstractRoleAssignPlayer implements Player {
 
-	private Player villagerPlayer = new SampleVillagerPlayer();
-	private Player seerPlayer = new SampleSeerPlayer();
-	private Player mediumPlayer = new SampleMediumPlayer();
-	private Player bodyguardPlayer = new SampleBodyguardPlayer();
-	private Player possessedPlayer = new SamplePossessedPlayer();
-	private Player werewolfPlayer = new SampleWereWolfPlayer();
+	private AbstractPlayer villagerPlayer = new SampleVillagerPlayer();
+	private AbstractPlayer seerPlayer = new SampleSeerPlayer();
+	private AbstractPlayer mediumPlayer = new SampleMediumPlayer();
+	private AbstractPlayer bodyguardPlayer = new SampleBodyguardPlayer();
+	private AbstractPlayer possessedPlayer = new SamplePossessedPlayer();
+	private AbstractPlayer werewolfPlayer = new SampleWereWolfPlayer();
 
-	private Player rolePlayer;
+	private AbstractPlayer rolePlayer;
 
 	/**
 	 * @return villagerPlayer
 	 */
-	final public Player getVillagerPlayer() {
+	final public AbstractPlayer getVillagerPlayer() {
 		return villagerPlayer;
 	}
 
 	/**
 	 * @param villagerPlayer セットする villagerPlayer
 	 */
-	final public void setVillagerPlayer(Player villagerPlayer) {
+	final public void setVillagerPlayer(AbstractPlayer villagerPlayer) {
 		this.villagerPlayer = villagerPlayer;
 	}
 
 	/**
 	 * @return seerPlayer
 	 */
-	final public Player getSeerPlayer() {
+	final public AbstractPlayer getSeerPlayer() {
 		return seerPlayer;
 	}
 
 	/**
 	 * @param seerPlayer セットする seerPlayer
 	 */
-	final public void setSeerPlayer(Player seerPlayer) {
+	final public void setSeerPlayer(AbstractPlayer seerPlayer) {
 		this.seerPlayer = seerPlayer;
 	}
 
 	/**
 	 * @return mediumPlayer
 	 */
-	final public Player getMediumPlayer() {
+	final public AbstractPlayer getMediumPlayer() {
 		return mediumPlayer;
 	}
 
 	/**
 	 * @param mediumPlayer セットする mediumPlayer
 	 */
-	final public void setMediumPlayer(Player mediumPlayer) {
+	final public void setMediumPlayer(AbstractPlayer mediumPlayer) {
 		this.mediumPlayer = mediumPlayer;
 	}
 
 	/**
 	 * @return bodyGuardPlayer
 	 */
-	final public Player getBodyguardPlayer() {
+	final public AbstractPlayer getBodyguardPlayer() {
 		return bodyguardPlayer;
 	}
 
 	/**
 	 * @param bodyGuardPlayer セットする bodyGuardPlayer
 	 */
-	final public void setBodyguardPlayer(Player bodyGuardPlayer) {
+	final public void setBodyguardPlayer(AbstractPlayer bodyGuardPlayer) {
 		this.bodyguardPlayer = bodyGuardPlayer;
 	}
 
 	/**
 	 * @return possesedPlayer
 	 */
-	final public Player getPossessedPlayer() {
+	final public AbstractPlayer getPossessedPlayer() {
 		return possessedPlayer;
 	}
 
 	/**
 	 * @param possesedPlayer セットする possesedPlayer
 	 */
-	final public void setPossessedPlayer(Player possesedPlayer) {
+	final public void setPossessedPlayer(AbstractPlayer possesedPlayer) {
 		this.possessedPlayer = possesedPlayer;
 	}
 
 	/**
 	 * @return werewolfPlayer
 	 */
-	final public Player getWerewolfPlayer() {
+	final public AbstractPlayer getWerewolfPlayer() {
 		return werewolfPlayer;
 	}
 
 	/**
 	 * @param werewolfPlayer セットする werewolfPlayer
 	 */
-	final public void setWerewolfPlayer(Player werewolfPlayer) {
+	final public void setWerewolfPlayer(AbstractPlayer werewolfPlayer) {
 		this.werewolfPlayer = werewolfPlayer;
 	}
 
