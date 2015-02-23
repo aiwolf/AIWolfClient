@@ -10,9 +10,9 @@ public class KajiRoleAssignPlayer extends AbstractRoleAssignPlayer{
 
 	public KajiRoleAssignPlayer(){
 		setVillagerPlayer(new KajiVillagerPlayer());
-		setBodyGuardPlayer(new KajiBodyGuradPlayer());
+		setBodyguardPlayer(new KajiBodyGuradPlayer());
 		setMediumPlayer(new KajiMediumPlayer());
-		setPossesedPlayer(new KajiPossessedPlayer());
+		setPossessedPlayer(new KajiPossessedPlayer());
 		setSeerPlayer(new KajiSeerPlayer());
 		setWerewolfPlayer(new KajiWereWolfPlayer());
 	}

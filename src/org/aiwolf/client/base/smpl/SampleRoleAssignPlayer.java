@@ -12,8 +12,8 @@ public class SampleRoleAssignPlayer extends AbstractRoleAssignPlayer {
 		setVillagerPlayer(new SampleVillagerPlayer());
 		setSeerPlayer(new SampleSeerPlayer());
 		setMediumPlayer(new SampleMediumPlayer());
-		setBodyGuardPlayer(new SampleBodyGuardPlayer());
-		setPossesedPlayer(new SamplePossesedPlayer());
+		setBodyguardPlayer(new SampleBodyguardPlayer());
+		setPossessedPlayer(new SamplePossessedPlayer());
 		setWerewolfPlayer(new SampleWereWolfPlayer());
 	}
 

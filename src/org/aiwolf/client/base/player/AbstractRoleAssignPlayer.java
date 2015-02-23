@@ -1,8 +1,8 @@
 package org.aiwolf.client.base.player;
 
-import org.aiwolf.client.base.smpl.SampleBodyGuardPlayer;
+import org.aiwolf.client.base.smpl.SampleBodyguardPlayer;
 import org.aiwolf.client.base.smpl.SampleMediumPlayer;
-import org.aiwolf.client.base.smpl.SamplePossesedPlayer;
+import org.aiwolf.client.base.smpl.SamplePossessedPlayer;
 import org.aiwolf.client.base.smpl.SampleSeerPlayer;
 import org.aiwolf.client.base.smpl.SampleVillagerPlayer;
 import org.aiwolf.client.base.smpl.SampleWereWolfPlayer;
@@ -27,8 +27,8 @@ abstract public class AbstractRoleAssignPlayer implements Player {
 	private Player villagerPlayer = new SampleVillagerPlayer();
 	private Player seerPlayer = new SampleSeerPlayer();
 	private Player mediumPlayer = new SampleMediumPlayer();
-	private Player bodyGuardPlayer = new SampleBodyGuardPlayer();
-	private Player possesedPlayer = new SamplePossesedPlayer();
+	private Player bodyguardPlayer = new SampleBodyguardPlayer();
+	private Player possessedPlayer = new SamplePossessedPlayer();
 	private Player werewolfPlayer = new SampleWereWolfPlayer();
 
 	private Player rolePlayer;
@@ -78,29 +78,29 @@ abstract public class AbstractRoleAssignPlayer implements Player {
 	/**
 	 * @return bodyGuardPlayer
 	 */
-	final public Player getBodyGuardPlayer() {
-		return bodyGuardPlayer;
+	final public Player getBodyguardPlayer() {
+		return bodyguardPlayer;
 	}
 
 	/**
 	 * @param bodyGuardPlayer セットする bodyGuardPlayer
 	 */
-	final public void setBodyGuardPlayer(Player bodyGuardPlayer) {
-		this.bodyGuardPlayer = bodyGuardPlayer;
+	final public void setBodyguardPlayer(Player bodyGuardPlayer) {
+		this.bodyguardPlayer = bodyGuardPlayer;
 	}
 
 	/**
 	 * @return possesedPlayer
 	 */
-	final public Player getPossesedPlayer() {
-		return possesedPlayer;
+	final public Player getPossessedPlayer() {
+		return possessedPlayer;
 	}
 
 	/**
 	 * @param possesedPlayer セットする possesedPlayer
 	 */
-	final public void setPossesedPlayer(Player possesedPlayer) {
-		this.possesedPlayer = possesedPlayer;
+	final public void setPossessedPlayer(Player possesedPlayer) {
+		this.possessedPlayer = possesedPlayer;
 	}
 
 	/**
@@ -139,10 +139,10 @@ abstract public class AbstractRoleAssignPlayer implements Player {
 			rolePlayer = mediumPlayer;
 			break;
 		case BODYGUARD:
-			rolePlayer = bodyGuardPlayer;
+			rolePlayer = bodyguardPlayer;
 			break;
 		case POSSESSED:
-			rolePlayer = possesedPlayer;
+			rolePlayer = possessedPlayer;
 			break;
 		case WEREWOLF:
 			rolePlayer = werewolfPlayer;
