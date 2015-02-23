@@ -15,7 +15,7 @@ import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleMediumPlayer extends AbstractMedium {
+public class SampleMedium extends AbstractMedium {
 
 	//COする日にち
 	int comingoutDay;

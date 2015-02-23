@@ -24,7 +24,7 @@ import org.aiwolf.common.net.GameSetting;
 import org.aiwolf.kajiClient.lib.Pattern;
 import org.aiwolf.kajiClient.lib.PatternMaker;
 
-public class KajiPossessedPlayer extends AbstractKajiWolfSideAgent {
+public class KajiPossessed extends AbstractKajiWolfSide {
 
 	//黒判定を出す確率
 	private static final double BLACK_DIVINEJUDGE_PROBABILITY = 0.25;

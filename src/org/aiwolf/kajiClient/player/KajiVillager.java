@@ -9,7 +9,7 @@ import org.aiwolf.client.lib.Utterance;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.kajiClient.lib.Pattern;
 
-public class KajiVillagerPlayer extends AbstractKajiBasePlayer {
+public class KajiVillager extends AbstractKajiBase {
 
 
 

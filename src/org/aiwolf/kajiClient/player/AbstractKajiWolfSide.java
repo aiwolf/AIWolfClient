@@ -20,7 +20,7 @@ import org.aiwolf.common.net.GameSetting;
 import org.aiwolf.kajiClient.lib.Pattern;
 import org.aiwolf.kajiClient.lib.PatternMaker;
 
-public abstract class AbstractKajiWolfSideAgent extends AbstractGiftedPlayer {
+public abstract class AbstractKajiWolfSide extends AbstractGifted {
 
 
 	//騙る役職

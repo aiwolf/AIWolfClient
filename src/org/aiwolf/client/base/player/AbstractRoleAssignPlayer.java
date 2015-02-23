@@ -1,11 +1,11 @@
 package org.aiwolf.client.base.player;
 
-import org.aiwolf.client.base.smpl.SampleBodyguardPlayer;
-import org.aiwolf.client.base.smpl.SampleMediumPlayer;
-import org.aiwolf.client.base.smpl.SamplePossessedPlayer;
-import org.aiwolf.client.base.smpl.SampleSeerPlayer;
-import org.aiwolf.client.base.smpl.SampleVillagerPlayer;
-import org.aiwolf.client.base.smpl.SampleWereWolfPlayer;
+import org.aiwolf.client.base.smpl.SampleBodyguard;
+import org.aiwolf.client.base.smpl.SampleMedium;
+import org.aiwolf.client.base.smpl.SamplePossessed;
+import org.aiwolf.client.base.smpl.SampleSeer;
+import org.aiwolf.client.base.smpl.SampleVillager;
+import org.aiwolf.client.base.smpl.SampleWerewolf;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Player;
 import org.aiwolf.common.data.Role;
@@ -24,12 +24,12 @@ import org.aiwolf.common.net.GameSetting;
  */
 abstract public class AbstractRoleAssignPlayer implements Player {
 
-	private AbstractRole villagerPlayer = new SampleVillagerPlayer();
-	private AbstractRole seerPlayer = new SampleSeerPlayer();
-	private AbstractRole mediumPlayer = new SampleMediumPlayer();
-	private AbstractRole bodyguardPlayer = new SampleBodyguardPlayer();
-	private AbstractRole possessedPlayer = new SamplePossessedPlayer();
-	private AbstractRole werewolfPlayer = new SampleWereWolfPlayer();
+	private AbstractRole villagerPlayer = new SampleVillager();
+	private AbstractRole seerPlayer = new SampleSeer();
+	private AbstractRole mediumPlayer = new SampleMedium();
+	private AbstractRole bodyguardPlayer = new SampleBodyguard();
+	private AbstractRole possessedPlayer = new SamplePossessed();
+	private AbstractRole werewolfPlayer = new SampleWerewolf();
 
 	private AbstractRole rolePlayer;
 

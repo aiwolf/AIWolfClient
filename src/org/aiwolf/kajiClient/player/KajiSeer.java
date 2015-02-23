@@ -18,7 +18,7 @@ import org.aiwolf.common.data.Vote;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
-public class KajiSeerPlayer extends AbstractGiftedPlayer {
+public class KajiSeer extends AbstractGifted {
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {

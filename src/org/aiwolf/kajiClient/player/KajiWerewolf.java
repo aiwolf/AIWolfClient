@@ -27,7 +27,7 @@ import org.aiwolf.common.net.GameSetting;
 import org.aiwolf.kajiClient.lib.Pattern;
 import org.aiwolf.kajiClient.lib.Strategies;
 
-public class KajiWereWolfPlayer extends AbstractKajiWolfSideAgent {
+public class KajiWerewolf extends AbstractKajiWolfSide {
 
 	//狂人のAgent．不確定の時はnull
 	Agent possessedAgent = null;

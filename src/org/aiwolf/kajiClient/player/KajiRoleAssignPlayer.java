@@ -9,12 +9,12 @@ import org.aiwolf.common.net.GameInfo;
 public class KajiRoleAssignPlayer extends AbstractRoleAssignPlayer{
 
 	public KajiRoleAssignPlayer(){
-		setVillagerPlayer(new KajiVillagerPlayer());
-		setBodyguardPlayer(new KajiBodyGuradPlayer());
-		setMediumPlayer(new KajiMediumPlayer());
-		setPossessedPlayer(new KajiPossessedPlayer());
-		setSeerPlayer(new KajiSeerPlayer());
-		setWerewolfPlayer(new KajiWereWolfPlayer());
+		setVillagerPlayer(new KajiVillager());
+		setBodyguardPlayer(new KajiBodygurad());
+		setMediumPlayer(new KajiMedium());
+		setPossessedPlayer(new KajiPossessed());
+		setSeerPlayer(new KajiSeer());
+		setWerewolfPlayer(new KajiWerewolf());
 	}
 
 	@Override

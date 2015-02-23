@@ -9,7 +9,7 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.kajiClient.lib.Pattern;
 
-public abstract class AbstractGiftedPlayer extends AbstractKajiBasePlayer{
+public abstract class AbstractGifted extends AbstractKajiBase{
 	//まだ報告していないjudge
 	List<Judge> notToldjudges = new ArrayList<Judge>();
 

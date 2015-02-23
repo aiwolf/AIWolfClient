@@ -9,7 +9,7 @@ import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleSeerPlayer extends AbstractSeer{
+public class SampleSeer extends AbstractSeer{
 
 	//COする日にち
 	int comingoutDay;

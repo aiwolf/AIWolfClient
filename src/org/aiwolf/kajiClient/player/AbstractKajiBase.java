@@ -27,7 +27,7 @@ import org.aiwolf.kajiClient.lib.PatternMaker;
  * @author kengo
  *
  */
-public abstract class AbstractKajiBasePlayer extends AbstractRole {
+public abstract class AbstractKajiBase extends AbstractRole {
 
 	//CO,能力の結果などのデータ集合
 	AdvanceGameInfo advanceGameInfo = new AdvanceGameInfo();

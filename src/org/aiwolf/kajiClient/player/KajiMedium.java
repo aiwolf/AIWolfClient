@@ -11,7 +11,7 @@ import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
-public class KajiMediumPlayer extends AbstractGiftedPlayer {
+public class KajiMedium extends AbstractGifted {
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {

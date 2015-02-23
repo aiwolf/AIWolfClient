@@ -9,7 +9,7 @@ import org.aiwolf.client.base.player.AbstractVillager;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.kajiClient.lib.Pattern;
 
-public class KajiBodyGuradPlayer extends AbstractKajiBasePlayer {
+public class KajiBodygurad extends AbstractKajiBase {
 
 	@Override
 	public String getJudgeText() {

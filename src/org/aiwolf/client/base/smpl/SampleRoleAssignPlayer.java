@@ -9,12 +9,12 @@ import org.aiwolf.client.base.player.AbstractRoleAssignPlayer;
 public class SampleRoleAssignPlayer extends AbstractRoleAssignPlayer {
 
 	public SampleRoleAssignPlayer(){
-		setVillagerPlayer(new SampleVillagerPlayer());
-		setSeerPlayer(new SampleSeerPlayer());
-		setMediumPlayer(new SampleMediumPlayer());
-		setBodyguardPlayer(new SampleBodyguardPlayer());
-		setPossessedPlayer(new SamplePossessedPlayer());
-		setWerewolfPlayer(new SampleWereWolfPlayer());
+		setVillagerPlayer(new SampleVillager());
+		setSeerPlayer(new SampleSeer());
+		setMediumPlayer(new SampleMedium());
+		setBodyguardPlayer(new SampleBodyguard());
+		setPossessedPlayer(new SamplePossessed());
+		setWerewolfPlayer(new SampleWerewolf());
 	}
 
 	@Override

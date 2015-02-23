@@ -1,25 +1,21 @@
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Map.Entry;
 
-import org.aiwolf.client.base.player.AbstractVillager;
-import org.aiwolf.client.lib.*;
-
+import org.aiwolf.client.base.player.AbstractBodyguard;
+import org.aiwolf.client.lib.TemplateTalkFactory;
+import org.aiwolf.client.lib.Utterance;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
 
-public class SampleVillagerPlayer extends AbstractVillager{
-	/*
-	 * 投票アルゴリズム：人狼だと占われたエージェント，いなければ，ランダム
-	 * 発話：その日に投票しようとしているエージェントを報告．変化すれば報告．
-	 */
+public class SampleBodyguard extends AbstractBodyguard {
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();
 
@@ -59,6 +55,36 @@ public class SampleVillagerPlayer extends AbstractVillager{
 	@Override
 	public Agent vote() {
 		return planningVoteAgent;
+	}
+
+	@Override
+	public Agent guard() {
+		//占い師，もしくは霊能者COしているプレイヤーからランダムに選択(20%の確率で生存プレイヤーの中からランダムに変更)
+
+		List<Agent> guardAgentCandidate = new ArrayList<Agent>();
+
+		List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
+		aliveAgentList.remove(getMe());
+
+		for(Agent agent: aliveAgentList){
+			if(agi.getComingoutMap().containsKey(agent)){
+				List<Role> guardRoleList = Arrays.asList(Role.SEER, Role.MEDIUM);
+				if(guardRoleList.contains(agi.getComingoutMap().get(agent))){
+					guardAgentCandidate.add(agent);
+				}
+			}
+		}
+
+		Agent guardAgent;
+
+		if(guardAgentCandidate.size() > 0 && Math.random() < 0.8){
+			Random rand = new Random();
+			guardAgent = guardAgentCandidate.get(rand.nextInt(guardAgentCandidate.size()));
+		}else{
+			Random rand = new Random();
+			guardAgent = aliveAgentList.get(rand.nextInt(aliveAgentList.size()));
+		}
+		return guardAgent;
 	}
 
 	@Override
@@ -110,7 +136,6 @@ public class SampleVillagerPlayer extends AbstractVillager{
 		}
 	}
 
-
 	public void setPlanningVoteAgent(){
 		/*
 		 * 人狼だと占われたプレイヤーを指定している場合はそのまま
@@ -148,6 +173,5 @@ public class SampleVillagerPlayer extends AbstractVillager{
 		}
 		return;
 	}
-
 
 }
