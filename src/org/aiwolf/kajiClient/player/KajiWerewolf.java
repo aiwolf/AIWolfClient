@@ -163,6 +163,12 @@ public class KajiWerewolf extends AbstractKajiWolfSide {
 		 * 人狼同士が協調可能Patternがあるときに，それが消えたら自分のJudgeを書き換え
 		 * 村人騙りなら何もしない
 		 */
+		/**
+		 * 0日目なら占いは無いので無視
+		 */
+		if(getDay() == 0){
+			return;
+		}
 		Judge judge = new Judge(getDay(), talk.getAgent(), utterance.getTarget(), utterance.getResult());
 		whisperedJudges.add(judge);
 		patternMaker.updateJudgeData(wolfsPatterns, judge);
