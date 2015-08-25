@@ -65,7 +65,7 @@ public abstract class AbstractSeer extends AbstractRole{
 	 */
 	public boolean isJudgedAgent(Agent agent){
 		for(Judge judge: myJudgeList){
-			if(judge.getAgent() == agent){
+			if(judge.getTarget() == agent){
 				return true;
 			}
 		}

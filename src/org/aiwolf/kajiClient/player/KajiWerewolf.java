@@ -166,7 +166,7 @@ public class KajiWerewolf extends AbstractKajiWolfSide {
 		/**
 		 * 0日目なら占いは無いので無視
 		 */
-		if(getDay() == 0){
+		if(getDay() < 2){
 			return;
 		}
 		Judge judge = new Judge(getDay(), talk.getAgent(), utterance.getTarget(), utterance.getResult());
