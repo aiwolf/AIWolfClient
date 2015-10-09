@@ -57,6 +57,16 @@ public class KajiWerewolf extends AbstractKajiWolfSide {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 
+		possessedAgent = null;
+		hasWhisperedFakeRole = false;
+		wolfsPatterns.clear();
+		wolfsFakeRoleMap.clear();
+		hasWhisperTodaysFakeJudge = false;
+		todaysFakeJudge = null;
+		whisperedJudges.clear();
+
+
+
 		//myPatternsに仲間の人狼をセットする
 		for(Entry<Agent, Role> set: gameInfo.getRoleMap().entrySet()){
 			if(!set.getKey().equals(getMe())){

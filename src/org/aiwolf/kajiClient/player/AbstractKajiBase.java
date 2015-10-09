@@ -61,6 +61,12 @@ public abstract class AbstractKajiBase extends AbstractRole {
 		 * パターン生成
 		 */
 		super.initialize(gameInfo, gameSetting);
+
+		/*
+		 * 前ゲーム情報の初期化
+		 */
+		clearData();
+
 		//初期パターンの作成
 		patternMaker = new PatternMaker(gameSetting);
 		generalPatterns.add(new Pattern(null, null, new HashMap<Agent, Role>()));
@@ -79,6 +85,15 @@ public abstract class AbstractKajiBase extends AbstractRole {
 
 		setRolePoint();
 
+	}
+
+	private void clearData(){
+		advanceGameInfo = new AdvanceGameInfo();
+		generalPatterns.clear();
+		myPatterns.clear();
+		readTalkNumber = 0;
+		voteTarget = null;
+		toldVoteTarget = null;
 	}
 
 	/**

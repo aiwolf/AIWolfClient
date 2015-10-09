@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 import org.aiwolf.kajiClient.lib.Pattern;
 
 public abstract class AbstractGifted extends AbstractKajiBase{
@@ -21,6 +23,15 @@ public abstract class AbstractGifted extends AbstractKajiBase{
 
 	//カミングアウトする日数
 	int comingoutDay = -1;
+
+	@Override
+	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
+		super.initialize(gameInfo, gameSetting);
+		notToldjudges.clear();
+		toldjudges.clear();
+		isComingout = false;
+		comingoutDay = -1;
+	}
 
 	public boolean isJudged(Agent agent){
 
