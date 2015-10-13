@@ -36,7 +36,7 @@ public class KajiWerewolf extends AbstractKajiWolfSide {
 	boolean hasWhisperedFakeRole = false;
 
 	//人狼達のfakeRoleに矛盾が起こらないPatterns
-	List<Pattern> wolfsPatterns;
+	List<Pattern> wolfsPatterns = new ArrayList<Pattern>();
 
 	//仲間人狼のfakeRole
 	Map<Agent, Role> wolfsFakeRoleMap = new HashMap<Agent, Role>();

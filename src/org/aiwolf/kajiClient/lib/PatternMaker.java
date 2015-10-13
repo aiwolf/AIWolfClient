@@ -213,7 +213,6 @@ public class PatternMaker {
 	 * @param role
 	 */
 	public static void settleAgentRole(List<Pattern> patterns, Agent agent, Role role){
-
 		//除外するパターン
 		List<Pattern> subPatterns = new ArrayList<Pattern>();
 
