@@ -26,6 +26,7 @@ public class Utterance {
 	State state = null;
 
 	//TopicがAGREE,DISAGREEの時の対象発話のログの種類（囁きかどうか）
+	@Deprecated
 	TalkType talkType = null;
 
 	//TopicがAGREE,DISAGREEの時の対象発話の日にち
@@ -87,7 +88,12 @@ public class Utterance {
 		}
 	}
 
-	public TalkType getTalkType(){
+	 /**
+	  * 
+	  * @deprecated
+	  * @return
+	  */
+	 public TalkType getTalkType(){
 		return talkType;
 	}
 

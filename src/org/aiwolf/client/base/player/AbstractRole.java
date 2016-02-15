@@ -10,6 +10,11 @@ import org.aiwolf.common.data.Role;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
+/**
+ * Base of Agent's behaviros by Role
+ * @author tori
+ *
+ */
 public abstract class AbstractRole{
 
 	//Index:day, content:GameInfo MApで
@@ -36,10 +41,19 @@ public abstract class AbstractRole{
 		gameInfoMap.put(day, gameInfo);
 	}
 
+	/**
+	 * Get this day's GameInfo
+	 * @return
+	 */
 	public GameInfo getLatestDayGameInfo(){
 		return gameInfoMap.get(day);
 	}
 
+	/**
+	 * Get GameInfo of the day
+	 * @param day
+	 * @return
+	 */
 	public GameInfo getGameInfo(int day){
 		try {
 			return gameInfoMap.get(day);
