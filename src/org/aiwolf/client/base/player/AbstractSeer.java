@@ -5,23 +5,12 @@ import java.util.ArrayList;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
-import org.aiwolf.common.net.GameInfo;
-import org.aiwolf.common.net.GameSetting;
 
 public abstract class AbstractSeer extends AbstractRole{
 
 	//占い結果のリスト
 	ArrayList<Judge> myJudgeList = new ArrayList<Judge>();
 
-
-	/* (非 Javadoc)
-	 * @see org.aiwolf.client.base.player.AbstractRole#initialize(org.aiwolf.common.net.GameInfo, org.aiwolf.common.net.GameSetting)
-	 */
-	@Override
-	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
-		myJudgeList = new ArrayList<Judge>();
-		super.initialize(gameInfo, gameSetting);
-	}
 
 	@Override
 	public  void dayStart(){
@@ -82,6 +71,8 @@ public abstract class AbstractSeer extends AbstractRole{
 		}
 		return false;
 	}
+
+
 
 
 }
