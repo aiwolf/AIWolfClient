@@ -8,7 +8,7 @@ import org.aiwolf.common.data.Talk;
 /**
  * Factory to create template talk contents
  * @author kengo
- *
+ * //TODO @deprecated
  */
 public class TemplateTalkFactory {
 
