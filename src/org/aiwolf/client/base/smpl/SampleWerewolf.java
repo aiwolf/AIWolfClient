@@ -380,7 +380,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		}
 
 		else if(fakeRole == Role.MEDIUM){
-			fakeGiftTarget = getLatestDayGameInfo().getExecutedAgent();
+			fakeGiftTarget = getLatestDayGameInfo().getBanishedAgent();
 			if(fakeGiftTarget == null){
 				return;
 			}

@@ -58,8 +58,8 @@ public abstract class AbstractKajiWolfSide extends AbstractGifted {
 
 		//霊能者騙りの場合，襲撃されたAgentがいればfakeJudgeをいれる
 		case MEDIUM:
-			if(getLatestDayGameInfo().getExecutedAgent() != null){
-				setFakeInquestJudge(getLatestDayGameInfo().getExecutedAgent());
+			if(getLatestDayGameInfo().getBanishedAgent() != null){
+				setFakeInquestJudge(getLatestDayGameInfo().getBanishedAgent());
 			}
 			break;
 

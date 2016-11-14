@@ -198,7 +198,7 @@ public class KajiWerewolf extends AbstractKajiWolfSide {
 					setFakeDivineJudge();
 					break;
 				case MEDIUM:
-					setFakeInquestJudge(getLatestDayGameInfo().getExecutedAgent());
+					setFakeInquestJudge(getLatestDayGameInfo().getBanishedAgent());
 				}
 			}
 		}
@@ -409,7 +409,7 @@ public class KajiWerewolf extends AbstractKajiWolfSide {
 		Map<Judge, Integer> remainPatternNumMap = new HashMap<Judge, Integer>();
 
 		for(Species species: Species.values()){
-			Judge judge = new Judge(getDay(), getMe(), getLatestDayGameInfo().getExecutedAgent(), species);
+			Judge judge = new Judge(getDay(), getMe(), getLatestDayGameInfo().getBanishedAgent(), species);
 			List<Pattern> hypotheticalPatterns = getHypotheticalPatterns(patterns, judge);
 			remainPatternNumMap.put(judge, hypotheticalPatterns.size());
 		}

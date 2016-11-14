@@ -311,7 +311,7 @@ public abstract class AbstractKajiBase extends AbstractRole {
 			patternMaker.updateAttackedData(myPatterns, attackedAgent);
 		}
 
-		Agent executedAgent = getLatestDayGameInfo().getExecutedAgent();
+		Agent executedAgent = getLatestDayGameInfo().getBanishedAgent();
 		if(executedAgent != null){
 			DeadCondition executeddAgentCondition = new DeadCondition(executedAgent, getDay(), CauseOfDeath.executed);
 			advanceGameInfo.addDeadConditions(executeddAgentCondition);
