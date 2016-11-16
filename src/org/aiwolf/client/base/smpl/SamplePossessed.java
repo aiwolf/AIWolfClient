@@ -223,7 +223,7 @@ public class SamplePossessed extends AbstractPossessed {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Utterance utterance = new Utterance(talk.getContent());
+			Utterance utterance = new Utterance(talk.getText());
 			switch (utterance.getTopic()) {
 
 			/*
