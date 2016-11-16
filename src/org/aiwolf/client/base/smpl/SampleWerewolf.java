@@ -266,7 +266,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Utterance utterance = new Utterance(talk.getText());
+			Content utterance = new Content(talk.getText());
 			switch (utterance.getTopic()) {
 
 			/*

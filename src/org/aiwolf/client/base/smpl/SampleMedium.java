@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 
 import org.aiwolf.client.base.player.AbstractMedium;
 import org.aiwolf.client.lib.TemplateTalkFactory;
-import org.aiwolf.client.lib.Utterance;
+import org.aiwolf.client.lib.Content;
 import org.aiwolf.common.*;
 import org.aiwolf.common.data.*;
 import org.aiwolf.common.net.*;
@@ -133,7 +133,7 @@ public class SampleMedium extends AbstractMedium {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Utterance utterance = new Utterance(talk.getText());
+			Content utterance = new Content(talk.getText());
 			switch (utterance.getTopic()) {
 
 			//カミングアウトの発話の場合
