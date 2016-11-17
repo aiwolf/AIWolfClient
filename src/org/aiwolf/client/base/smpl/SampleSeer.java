@@ -141,13 +141,13 @@ public class SampleSeer extends AbstractSeer{
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = Content.parse(talk.getText());
+			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
-				if(utterance.getRole() == getMyRole()){
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
+				if(content.getRole() == getMyRole()){
 					setPlanningVoteAgent();
 				}
 				break;

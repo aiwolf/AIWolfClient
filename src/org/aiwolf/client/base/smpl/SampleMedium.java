@@ -133,13 +133,13 @@ public class SampleMedium extends AbstractMedium {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = Content.parse(talk.getText());
+			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
-				if(utterance.getRole() == getMyRole()){
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
+				if(content.getRole() == getMyRole()){
 					setPlanningVoteAgent();
 				}
 				break;
@@ -148,8 +148,8 @@ public class SampleMedium extends AbstractMedium {
 			case DIVINED:
 				//AGIのJudgeListに結果を加える
 				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = utterance.getTarget();
-				Species inspectResult = utterance.getResult();
+				Agent inspectedAgent = content.getTarget();
+				Species inspectResult = content.getResult();
 				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
 				agi.addInspectJudgeList(judge);
 

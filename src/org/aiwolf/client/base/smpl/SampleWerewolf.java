@@ -266,16 +266,16 @@ public class SampleWerewolf extends AbstractWerewolf {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = Content.parse(talk.getText());
+			switch (content.getTopic()) {
 
 			/*
 			 * カミングアウトの発話の場合
 			 * 自分以外で占い師COするプレイヤーが出たら投票先を変える
 			 */
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
-				if(utterance.getRole() == fakeRole){
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
+				if(content.getRole() == fakeRole){
 					setPlanningVoteAgent();
 				}
 				break;
@@ -287,8 +287,8 @@ public class SampleWerewolf extends AbstractWerewolf {
 			case DIVINED:
 				//AGIのJudgeListに結果を加える
 				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = utterance.getTarget();
-				Species inspectResult = utterance.getResult();
+				Agent inspectedAgent = content.getTarget();
+				Species inspectResult = content.getResult();
 				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
 				agi.addInspectJudgeList(judge);
 
