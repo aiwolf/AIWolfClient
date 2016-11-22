@@ -1,19 +1,17 @@
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import org.aiwolf.client.base.player.AbstractVillager;
-import org.aiwolf.client.lib.*;
-
-import org.aiwolf.common.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
 
 public class SampleVillager extends AbstractVillager{
 	/*
@@ -48,11 +46,11 @@ public class SampleVillager extends AbstractVillager{
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			String string = TemplateTalkFactory.vote(planningVoteAgent);
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}else{
-			return TemplateTalkFactory.over();
+			return Talk.OVER;
 		}
 	}
 
@@ -63,8 +61,6 @@ public class SampleVillager extends AbstractVillager{
 
 	@Override
 	public void finish() {
-		// TODO 自動生成されたメソッド・スタブ
-
 	}
 
 	@Override
@@ -79,24 +75,27 @@ public class SampleVillager extends AbstractVillager{
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = new Content(talk.getText());
+			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
 				break;
 
 			//占い結果の発話の場合
 			case DIVINED:
 				//AGIのJudgeListに結果を加える
 				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = utterance.getTarget();
-				Species inspectResult = utterance.getResult();
+				Agent inspectedAgent = content.getTarget();
+				Species inspectResult = content.getResult();
 				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
 				agi.addInspectJudgeList(judge);
 
 				existInspectResult =true;
+				break;
+				
+			default:
 				break;
 			}
 		}

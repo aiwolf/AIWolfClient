@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import org.aiwolf.client.base.player.AbstractPossessed;
-import org.aiwolf.client.lib.TemplateTalkFactory;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
@@ -50,11 +52,12 @@ public class SamplePossessed extends AbstractPossessed {
 	List<Judge> fakeJudgeList = new ArrayList<Judge>();
 	//Map<Agent, Species> fakeResultMap = new HashMap<Agent, Species>();
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting){
 		super.initialize(gameInfo, gameSetting);
 
 //		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
-		List<Role> fakeRoles = new ArrayList(gameSetting.getRoleNumMap().keySet());
+		List<Role> fakeRoles = new ArrayList<>(gameSetting.getRoleNumMap().keySet());
 		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF);
 		fakeRoles.removeAll(nonFakeRoleList);
 
@@ -93,7 +96,7 @@ public class SamplePossessed extends AbstractPossessed {
 		 */
 
 		if(!isCameout && getDay() >= comingoutDay){
-			String string = TemplateTalkFactory.comingout(getMe(), fakeRole);
+			String string = new Content(new ComingoutContentBuilder(getMe(), fakeRole)).getText();
 			isCameout = true;
 			return string;
 		}
@@ -104,11 +107,11 @@ public class SamplePossessed extends AbstractPossessed {
 			for(Judge judge: getMyFakeJudgeList()){
 				if(!declaredFakeJudgedAgentList.contains(judge)){
 					if(fakeRole == Role.SEER){
-						String string = TemplateTalkFactory.divined(judge.getTarget(), judge.getResult());
+						String string = new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())).getText();
 						declaredFakeJudgedAgentList.add(judge);
 						return string;
 					}else if(fakeRole == Role.MEDIUM){
-						String string = TemplateTalkFactory.inquested(judge.getTarget(), judge.getResult());
+						String string = new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())).getText();
 						declaredFakeJudgedAgentList.add(judge);
 						return string;
 					}
@@ -122,7 +125,7 @@ public class SamplePossessed extends AbstractPossessed {
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			String string = TemplateTalkFactory.vote(planningVoteAgent);
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}
@@ -140,8 +143,6 @@ public class SamplePossessed extends AbstractPossessed {
 
 	@Override
 	public void finish() {
-		// TODO 自動生成されたメソッド・スタブ
-
 	}
 
 
@@ -223,16 +224,16 @@ public class SamplePossessed extends AbstractPossessed {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = new Content(talk.getText());
+			switch (content.getTopic()) {
 
 			/*
 			 * カミングアウトの発話の場合
 			 * 自分以外で占い師COするプレイヤーが出たら投票先を変える
 			 */
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
-				if(utterance.getRole() == fakeRole){
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
+				if (content.getRole() == fakeRole) {
 					setPlanningVoteAgent();
 				}
 				break;
@@ -241,12 +242,15 @@ public class SamplePossessed extends AbstractPossessed {
 			case DIVINED:
 				//AGIのJudgeListに結果を加える
 				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = utterance.getTarget();
-				Species inspectResult = utterance.getResult();
+				Agent inspectedAgent = content.getTarget();
+				Species inspectResult = content.getResult();
 				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
 				agi.addInspectJudgeList(judge);
 
 				existInspectResult =true;
+				break;
+
+			default:
 				break;
 			}
 		}
