@@ -1,20 +1,30 @@
+/**
+ * SampleBodyguard.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Map.Entry;
 
 import org.aiwolf.client.base.player.AbstractBodyguard;
-import org.aiwolf.client.lib.TemplateTalkFactory;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.common.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
 
+/**
+ * <div lang="ja">狩人エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample bodyguard agent</div>
+ */
 public class SampleBodyguard extends AbstractBodyguard {
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();
@@ -44,11 +54,11 @@ public class SampleBodyguard extends AbstractBodyguard {
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			String string = TemplateTalkFactory.vote(planningVoteAgent);
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}else{
-			return TemplateTalkFactory.over();
+			return Talk.OVER;
 		}
 	}
 
@@ -89,8 +99,6 @@ public class SampleBodyguard extends AbstractBodyguard {
 
 	@Override
 	public void finish() {
-		// TODO 自動生成されたメソッド・スタブ
-
 	}
 
 	@Override
@@ -105,24 +113,27 @@ public class SampleBodyguard extends AbstractBodyguard {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = new Content(talk.getText());
+			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
 				break;
 
 			//占い結果の発話の場合
 			case DIVINED:
 				//AGIのJudgeListに結果を加える
 				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = utterance.getTarget();
-				Species inspectResult = utterance.getResult();
+				Agent inspectedAgent = content.getTarget();
+				Species inspectResult = content.getResult();
 				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
 				agi.addInspectJudgeList(judge);
 
 				existInspectResult =true;
+				break;
+
+			default:
 				break;
 			}
 		}

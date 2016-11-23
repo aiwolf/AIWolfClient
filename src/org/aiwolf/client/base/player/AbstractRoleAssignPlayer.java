@@ -1,3 +1,8 @@
+/**
+ * AbstractRoleAssignPlayer.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import org.aiwolf.client.base.smpl.SampleBodyguard;

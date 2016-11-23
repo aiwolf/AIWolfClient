@@ -1,14 +1,31 @@
+/**
+ * SampleSeer.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import org.aiwolf.client.base.player.AbstractSeer;
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">占い師エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample seer agent</div>
+ */
 public class SampleSeer extends AbstractSeer{
 
 	//COする日にち
@@ -68,7 +85,7 @@ public class SampleSeer extends AbstractSeer{
 		 */
 
 		if(!isCameout && getDay() >= comingoutDay){
-			String string = TemplateTalkFactory.comingout(getMe(), getMyRole());
+			String string = new Content(new ComingoutContentBuilder(getMe(), getMyRole())).getText();
 			isCameout = true;
 			return string;
 		}
@@ -78,7 +95,7 @@ public class SampleSeer extends AbstractSeer{
 		else if(isCameout && !isSaidAllDivineResult){
 			for(Judge judge: getMyJudgeList()){
 				if(!declaredJudgedAgentList.contains(judge)){
-					String string = TemplateTalkFactory.divined(judge.getTarget(), judge.getResult());
+					String string = new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())).getText();
 					declaredJudgedAgentList.add(judge);
 					return string;
 				}
@@ -91,7 +108,7 @@ public class SampleSeer extends AbstractSeer{
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			String string = TemplateTalkFactory.vote(planningVoteAgent);
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}
@@ -141,15 +158,18 @@ public class SampleSeer extends AbstractSeer{
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = new Content(talk.getText());
+			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
-				if(utterance.getRole() == getMyRole()){
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
+				if (content.getRole() == getMyRole()) {
 					setPlanningVoteAgent();
 				}
+				break;
+
+			default:
 				break;
 			}
 		}
@@ -192,6 +212,5 @@ public class SampleSeer extends AbstractSeer{
 		}
 		return;
 	}
-
 
 }

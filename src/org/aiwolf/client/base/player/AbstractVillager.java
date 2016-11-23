@@ -1,8 +1,18 @@
+/**
+ * AbstractVillager.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Role;
 
+/**
+ * <div lang="ja">村人用抽象クラス</div>
+ *
+ * <div lang="en">Abstract class for villager</div>
+ */
 public abstract class AbstractVillager extends AbstractRole{
 
 	@Override
@@ -40,7 +50,5 @@ public abstract class AbstractVillager extends AbstractRole{
 	public AbstractVillager(){
 		myRole = Role.VILLAGER;
 	}
-
-
 
 }

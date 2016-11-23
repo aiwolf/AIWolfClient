@@ -1,8 +1,18 @@
+/**
+ * AbstractPossessed.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Role;
 
+/**
+ * <div lang="ja">裏切り者用抽象クラス</div>
+ *
+ * <div lang="en">Abstract class for possessed</div>
+ */
 public abstract class AbstractPossessed extends AbstractRole{
 
 
@@ -38,7 +48,5 @@ public abstract class AbstractPossessed extends AbstractRole{
 	public AbstractPossessed(){
 		myRole = Role.POSSESSED;
 	}
-
-
 
 }

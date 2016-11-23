@@ -1,3 +1,8 @@
+/**
+ * AbstractRole.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import java.util.HashMap;
@@ -10,6 +15,11 @@ import org.aiwolf.common.data.Role;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">役職抽象クラスのスーパークラス</div>
+ *
+ * <div lang="en">Super class for abstract class for each role</div>
+ */
 public abstract class AbstractRole{
 
 	//Index:day, content:GameInfo MApで

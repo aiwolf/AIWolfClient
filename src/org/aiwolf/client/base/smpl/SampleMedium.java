@@ -1,20 +1,32 @@
+/**
+ * SampleMedium.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Map.Entry;
 
 import org.aiwolf.client.base.player.AbstractMedium;
-import org.aiwolf.client.lib.TemplateTalkFactory;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.common.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">霊媒師エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample medium agent</div>
+ */
 public class SampleMedium extends AbstractMedium {
 
 	//COする日にち
@@ -74,7 +86,7 @@ public class SampleMedium extends AbstractMedium {
 		 */
 
 		if(!isCameout && getDay() >= comingoutDay){
-			String string = TemplateTalkFactory.comingout(getMe(), getMyRole());
+			String string = new Content(new ComingoutContentBuilder(getMe(), getMyRole())).getText();
 			isCameout = true;
 			return string;
 		}
@@ -84,7 +96,7 @@ public class SampleMedium extends AbstractMedium {
 		else if(isCameout && !isSaidAllInquestResult){
 			for(Judge judge: getMyJudgeList()){
 				if(!declaredJudgedAgentList.contains(judge)){
-					String string = TemplateTalkFactory.inquested(judge.getTarget(), judge.getResult());
+					String string = new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())).getText();
 					declaredJudgedAgentList.add(judge);
 					return string;
 				}
@@ -97,7 +109,7 @@ public class SampleMedium extends AbstractMedium {
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			String string = TemplateTalkFactory.vote(planningVoteAgent);
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}
@@ -115,8 +127,6 @@ public class SampleMedium extends AbstractMedium {
 
 	@Override
 	public void finish() {
-		// TODO 自動生成されたメソッド・スタブ
-
 	}
 
 
@@ -133,13 +143,13 @@ public class SampleMedium extends AbstractMedium {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content utterance = new Content(talk.getText());
-			switch (utterance.getTopic()) {
+			Content content = new Content(talk.getText());
+			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
 			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), utterance.getRole());
-				if(utterance.getRole() == getMyRole()){
+				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
+				if (content.getRole() == getMyRole()) {
 					setPlanningVoteAgent();
 				}
 				break;
@@ -148,12 +158,15 @@ public class SampleMedium extends AbstractMedium {
 			case DIVINED:
 				//AGIのJudgeListに結果を加える
 				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = utterance.getTarget();
-				Species inspectResult = utterance.getResult();
+				Agent inspectedAgent = content.getTarget();
+				Species inspectResult = content.getResult();
 				Judge judge = new Judge(getDay(), seerAgent, inspectedAgent, inspectResult);
 				agi.addInspectJudgeList(judge);
 
 				existInspectResult =true;
+				break;
+
+			default:
 				break;
 			}
 		}
@@ -245,11 +258,6 @@ public class SampleMedium extends AbstractMedium {
 				}
 			}
 		}
-
-
-
-
-
 	}
 
 }

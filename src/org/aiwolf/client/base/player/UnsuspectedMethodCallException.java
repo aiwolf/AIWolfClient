@@ -1,5 +1,7 @@
 /**
+ * UnsuspectedMethodCallException.java
  * 
+ * Copyright (c) 2016 人狼知能プロジェクト
  */
 package org.aiwolf.client.base.player;
 

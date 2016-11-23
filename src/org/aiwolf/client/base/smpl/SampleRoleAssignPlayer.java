@@ -1,6 +1,12 @@
+/**
+ * SampleRoleAssignPlayer.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import org.aiwolf.client.base.player.AbstractRoleAssignPlayer;
+
 /**
  * Sampleのみを使って起動するPlayer
  * @author tori
