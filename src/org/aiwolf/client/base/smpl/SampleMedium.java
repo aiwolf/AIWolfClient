@@ -1,3 +1,8 @@
+/**
+ * SampleMedium.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
@@ -17,6 +22,11 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">霊媒師エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample medium agent</div>
+ */
 public class SampleMedium extends AbstractMedium {
 
 	//COする日にち
@@ -248,11 +258,6 @@ public class SampleMedium extends AbstractMedium {
 				}
 			}
 		}
-
-
-
-
-
 	}
 
 }

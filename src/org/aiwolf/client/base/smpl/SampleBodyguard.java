@@ -1,3 +1,8 @@
+/**
+ * SampleBodyguard.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
@@ -15,6 +20,11 @@ import org.aiwolf.common.data.Species;
 import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 
+/**
+ * <div lang="ja">狩人エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample bodyguard agent</div>
+ */
 public class SampleBodyguard extends AbstractBodyguard {
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();

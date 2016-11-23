@@ -1,3 +1,8 @@
+/**
+ * AdvanceGameInfo.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 
@@ -10,6 +15,11 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
 
+/**
+ * <div lang="ja">アドバンストゲーム情報</div>
+ *
+ * <div lang="en">Advanced game information</div>
+ */
 public class AdvanceGameInfo {
 
 	/**
@@ -65,6 +75,5 @@ public class AdvanceGameInfo {
 	public void addMediumJudgeList(Judge judge) {
 		this.mediumJudgeList.add(judge);
 	}
-
 
 }

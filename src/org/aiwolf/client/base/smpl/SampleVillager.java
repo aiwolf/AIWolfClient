@@ -1,3 +1,8 @@
+/**
+ * SampleVillager.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
@@ -13,6 +18,11 @@ import org.aiwolf.common.data.Species;
 import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 
+/**
+ * <div lang="ja">村人エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample villager agent</div>
+ */
 public class SampleVillager extends AbstractVillager{
 	/*
 	 * 投票アルゴリズム：人狼だと占われたエージェント，いなければ，ランダム
@@ -147,6 +157,5 @@ public class SampleVillager extends AbstractVillager{
 		}
 		return;
 	}
-
 
 }

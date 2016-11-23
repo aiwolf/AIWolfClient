@@ -1,3 +1,8 @@
+/**
+ * SamplePossessed.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
@@ -19,6 +24,11 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">裏切り者エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample possessed agent</div>
+ */
 public class SamplePossessed extends AbstractPossessed {
 
 	//COする日にち

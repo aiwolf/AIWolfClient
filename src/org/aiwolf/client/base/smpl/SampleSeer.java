@@ -1,3 +1,8 @@
+/**
+ * SampleSeer.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.smpl;
 
 import java.util.ArrayList;
@@ -16,6 +21,11 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">占い師エージェントのサンプル</div>
+ *
+ * <div lang="en">Sample seer agent</div>
+ */
 public class SampleSeer extends AbstractSeer{
 
 	//COする日にち
@@ -202,6 +212,5 @@ public class SampleSeer extends AbstractSeer{
 		}
 		return;
 	}
-
 
 }
