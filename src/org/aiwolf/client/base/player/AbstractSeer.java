@@ -1,3 +1,8 @@
+/**
+ * AbstractSeer.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import java.util.ArrayList;
@@ -8,6 +13,11 @@ import org.aiwolf.common.data.Role;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
+/**
+ * <div lang="ja">占い師用抽象クラス</div>
+ *
+ * <div lang="en">Abstract class for seer</div>
+ */
 public abstract class AbstractSeer extends AbstractRole{
 
 	//占い結果のリスト
@@ -82,8 +92,5 @@ public abstract class AbstractSeer extends AbstractRole{
 		}
 		return false;
 	}
-
-
-
 
 }

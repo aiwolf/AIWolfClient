@@ -1,3 +1,8 @@
+/**
+ * AbstractMedium.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import java.util.ArrayList;
@@ -6,6 +11,11 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
 
+/**
+ * <div lang="ja">霊媒師用抽象クラス</div>
+ *
+ * <div lang="en">Abstract class for medium</div>
+ */
 public abstract class AbstractMedium extends AbstractRole{
 
 	//占い結果のリスト

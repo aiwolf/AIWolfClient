@@ -1,3 +1,8 @@
+/**
+ * AbstractWerewolf.java
+ * 
+ * Copyright (c) 2016 人狼知能プロジェクト
+ */
 package org.aiwolf.client.base.player;
 
 import java.util.ArrayList;
@@ -8,6 +13,11 @@ import java.util.Map.Entry;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Role;
 
+/**
+ * <div lang="ja">人狼用抽象クラス</div>
+ *
+ * <div lang="en">Abstract class for werewolf</div>
+ */
 public abstract class AbstractWerewolf extends AbstractRole{
 
 	@Override
@@ -53,8 +63,6 @@ public abstract class AbstractWerewolf extends AbstractRole{
 		}
 
 		return wolfList;
-
 	}
-
 
 }
