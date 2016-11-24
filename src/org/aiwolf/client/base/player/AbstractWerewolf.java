@@ -18,7 +18,7 @@ import org.aiwolf.common.data.Role;
  *
  * <div lang="en">Abstract class for werewolf</div>
  */
-public abstract class AbstractWerewolf extends AbstractRole{
+public abstract class AbstractWerewolf extends AbstractRole {
 
 	@Override
 	public abstract void dayStart();
@@ -36,32 +36,45 @@ public abstract class AbstractWerewolf extends AbstractRole{
 	public abstract Agent attack();
 
 	@Override
-	final public Agent divine(){
+	public final Agent divine() {
 		throw new UnsuspectedMethodCallException();
 	}
 
 	@Override
-	final public Agent guard(){
+	public final Agent guard() {
 		throw new UnsuspectedMethodCallException();
 	}
 
 	@Override
 	public abstract void finish();
 
-	public AbstractWerewolf(){
+	/**
+	 * <div lang="ja">このクラスの新しいインスタンスを初期化する．</div>
+	 *
+	 * <div lang="en">Initializes a new instance of this class.</div>
+	 */
+	public AbstractWerewolf() {
 		myRole = Role.WEREWOLF;
 	}
 
-	public List<Agent> getWolfList(){
+	/**
+	 * <div lang="ja">人狼のリストを返す．</div>
+	 *
+	 * <div lang="en">Returns the list of werewolves.</div>
+	 * 
+	 * @return <div lang="ja">人狼のリスト</div>
+	 *
+	 *         <div lang="en">the list of werewolves</div>
+	 */
+	public List<Agent> getWolfList() {
 		List<Agent> wolfList = new ArrayList<Agent>();
 
 		Map<Agent, Role> wolfMap = getLatestDayGameInfo().getRoleMap();
-		for(Entry<Agent, Role> set: wolfMap.entrySet()){
-			if(set.getValue() == Role.WEREWOLF){
+		for (Entry<Agent, Role> set : wolfMap.entrySet()) {
+			if (set.getValue() == Role.WEREWOLF) {
 				wolfList.add(set.getKey());
 			}
 		}
-
 		return wolfList;
 	}
 

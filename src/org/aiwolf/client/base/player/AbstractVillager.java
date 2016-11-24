@@ -13,7 +13,7 @@ import org.aiwolf.common.data.Role;
  *
  * <div lang="en">Abstract class for villager</div>
  */
-public abstract class AbstractVillager extends AbstractRole{
+public abstract class AbstractVillager extends AbstractRole {
 
 	@Override
 	public abstract void dayStart();
@@ -22,7 +22,7 @@ public abstract class AbstractVillager extends AbstractRole{
 	public abstract String talk();
 
 	@Override
-	final public String whisper(){
+	public final String whisper() {
 		throw new UnsuspectedMethodCallException();
 	}
 
@@ -30,24 +30,29 @@ public abstract class AbstractVillager extends AbstractRole{
 	public abstract Agent vote();
 
 	@Override
-	final public Agent attack(){
+	public final Agent attack() {
 		throw new UnsuspectedMethodCallException();
 	}
 
 	@Override
-	final public Agent divine(){
+	public final Agent divine() {
 		throw new UnsuspectedMethodCallException();
 	}
 
 	@Override
-	final public Agent guard(){
+	public final Agent guard() {
 		throw new UnsuspectedMethodCallException();
 	}
 
 	@Override
 	public abstract void finish();
 
-	public AbstractVillager(){
+	/**
+	 * <div lang="ja">このクラスの新しいインスタンスを初期化する．</div>
+	 *
+	 * <div lang="en">Initializes a new instance of this class.</div>
+	 */
+	public AbstractVillager() {
 		myRole = Role.VILLAGER;
 	}
 

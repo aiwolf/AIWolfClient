@@ -20,22 +20,16 @@ import org.aiwolf.common.net.GameSetting;
  */
 public abstract class AbstractSeer extends AbstractRole{
 
-	//占い結果のリスト
 	ArrayList<Judge> myJudgeList = new ArrayList<Judge>();
 
-
-	/* (非 Javadoc)
-	 * @see org.aiwolf.client.base.player.AbstractRole#initialize(org.aiwolf.common.net.GameInfo, org.aiwolf.common.net.GameSetting)
-	 */
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
-		myJudgeList = new ArrayList<Judge>();
+		myJudgeList.clear();
 		super.initialize(gameInfo, gameSetting);
 	}
 
 	@Override
 	public  void dayStart(){
-		//占い結果をjudgeListに格納
 		if(gameInfoMap.get(getDay()).getDivineResult() != null){
 			myJudgeList.add(getLatestDayGameInfo().getDivineResult());
 		}
@@ -45,7 +39,7 @@ public abstract class AbstractSeer extends AbstractRole{
 	public abstract String talk();
 
 	@Override
-	final public String whisper(){
+	public final String whisper(){
 		throw new UnsuspectedMethodCallException();
 	}
 
@@ -53,7 +47,7 @@ public abstract class AbstractSeer extends AbstractRole{
 	public abstract Agent vote();
 
 	@Override
-	final public Agent attack(){
+	public final Agent attack(){
 		throw new UnsuspectedMethodCallException();
 	}
 
@@ -61,28 +55,49 @@ public abstract class AbstractSeer extends AbstractRole{
 	public abstract Agent divine();
 
 	@Override
-	final public Agent guard(){
+	public final Agent guard(){
 		throw new UnsuspectedMethodCallException();
 	}
 
 	@Override
 	public abstract void finish();
 
+	/**
+	 * <div lang="ja">このクラスの新しいインスタンスを初期化する．</div>
+	 *
+	 * <div lang="en">Initializes a new instance of this class.</div>
+	 */
 	public AbstractSeer(){
-		super();
 		myRole = Role.SEER;
 	}
 
+	/**
+	 * <div lang="ja">この占い師のこれまでの占い結果のリストを返す．</div>
+	 *
+	 * <div lang="en">Returns the list of divinations this seer done until now.</div>
+	 * 
+	 * @return <div lang="ja">この占い師のこれまでの占い結果のリスト</div>
+	 *
+	 *         <div lang="en">the list of divinations this seer done until now</div>
+	 */
 	public ArrayList<Judge> getMyJudgeList() {
 		return myJudgeList;
 	}
 
 
 	/**
-	 * すでに占い(or霊能)対象にしたプレイヤーならtrue,まだ占っていない(霊能していない)ならばfalseを返す．
-	 * @param myJudgeList
+	 * <div lang="ja">与えられたプレイヤーが占い判定済みかどうかを返す．</div>
+	 *
+	 * <div lang="en">Returns whether or not the given player is judged by this seer.</div>
+	 * 
 	 * @param agent
-	 * @return
+	 *            <div lang="ja">プレイヤー</div>
+	 *
+	 *            <div lang="en">player</div>
+	 * 
+	 * @return <div lang="ja">与えられたプレイヤーが占い判定済みかどうか</div>
+	 *
+	 *         <div lang="en">whether or not the given player is judged by this seer</div>
 	 */
 	public boolean isJudgedAgent(Agent agent){
 		for(Judge judge: myJudgeList){

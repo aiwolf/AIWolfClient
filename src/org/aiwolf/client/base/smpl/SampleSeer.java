@@ -22,7 +22,7 @@ import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
 /**
- * <div lang="ja">占い師エージェントのサンプル</div>
+ * <div lang="ja">占い師プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample seer agent</div>
  */
@@ -78,7 +78,7 @@ public class SampleSeer extends AbstractSeer{
 
 	@Override
 	public String talk() {
-		//CO,霊能結果，投票先の順に発話の優先度高
+		//CO,霊媒結果，投票先の順に発話の優先度高
 
 		/*
 		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
