@@ -18,17 +18,19 @@ import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
 /**
- * 各プレイヤーに使用したいプレイヤーのインスタンスを生成して下さい． 例えば，村人のエージェントだけ自作のエージェントにしたい場合は， <br>
- * Player villagerPlayer = new SampleVillagerPlayer();<br>
- * ↓ <br>
- * Player villagerPlayer = new [自作プレイヤーのクラス名のコンストラクタ];<br>
- * と変更すれば，村人の役職が割り振られた時は自作のエージェント，それ以外の役職になった時はサンプルエージェントでプレイします．
+ * <div lang="ja">役職ごとに実際に使用するプレイヤーを切り替えるプレイヤーの抽象クラス</div>
  *
- * @author tori
- *
+ * <div lang="en">Abstract player class which switches player actually used according to its role.</div>
  */
-abstract public class AbstractRoleAssignPlayer implements Player {
+public abstract class AbstractRoleAssignPlayer implements Player {
 
+	// 各役職で実際に使用するAbstructRoleクラスのプレイヤーインスタンスを生成して下さい．
+	// 例えば村人プレイヤーだけ自作のプレイヤーにしたい場合は
+	// AbstractRole villagerPlayer = new SampleVillagerPlayer();
+	// を
+	// AbstractRole villagerPlayer = new [自作プレイヤークラスのコンストラクタ];
+	// と変更すれば，村人の役職が割り振られた時は自作のプレイヤーで
+	// それ以外の役職になった時はサンプルプレイヤーでプレイします．
 	private AbstractRole villagerPlayer = new SampleVillager();
 	private AbstractRole seerPlayer = new SampleSeer();
 	private AbstractRole mediumPlayer = new SampleMedium();
@@ -39,99 +41,177 @@ abstract public class AbstractRoleAssignPlayer implements Player {
 	private AbstractRole rolePlayer;
 
 	/**
-	 * @return villagerPlayer
+	 * <div lang="ja">村人用プレイヤーを返す．</div>
+	 *
+	 * <div lang="en">Returns the player actually used in case of villager.</div>
+	 * 
+	 * @return <div lang="ja">村人用プレイヤー</div>
+	 *
+	 *         <div lang="en">the player actually used in case of villager</div>
 	 */
-	final public AbstractRole getVillagerPlayer() {
+	public final AbstractRole getVillagerPlayer() {
 		return villagerPlayer;
 	}
 
 	/**
-	 * @param villagerPlayer セットする villagerPlayer
+	 * <div lang="ja">村人用プレイヤーをセットする．</div>
+	 *
+	 * <div lang="en">Sets the player actually used in case of villager.</div>
+	 * 
+	 * @param villagerPlayer
+	 *            <div lang="ja">実際の村人プレイヤー</div>
+	 *
+	 *            <div lang="en">the actual villager player</div>
 	 */
-	final public void setVillagerPlayer(AbstractRole villagerPlayer) {
+	public final void setVillagerPlayer(AbstractRole villagerPlayer) {
 		this.villagerPlayer = villagerPlayer;
 	}
 
 	/**
-	 * @return seerPlayer
+	 * <div lang="ja">占い師用プレイヤーを返す．</div>
+	 *
+	 * <div lang="en">Returns the player actually used in case of seer.</div>
+	 * 
+	 * @return <div lang="ja">占い師用プレイヤー</div>
+	 *
+	 *         <div lang="en">the player actually used in case of seer</div>
 	 */
-	final public AbstractRole getSeerPlayer() {
+	public final AbstractRole getSeerPlayer() {
 		return seerPlayer;
 	}
 
 	/**
-	 * @param seerPlayer セットする seerPlayer
+	 * <div lang="ja">占い師用プレイヤーをセットする．</div>
+	 *
+	 * <div lang="en">Sets the player actually used in case of seer.</div>
+	 * 
+	 * @param seerPlayer
+	 *            <div lang="ja">実際の占い師プレイヤー</div>
+	 *
+	 *            <div lang="en">the actual seer player</div>
 	 */
-	final public void setSeerPlayer(AbstractRole seerPlayer) {
+	public final void setSeerPlayer(AbstractRole seerPlayer) {
 		this.seerPlayer = seerPlayer;
 	}
 
 	/**
-	 * @return mediumPlayer
+	 * <div lang="ja">霊媒師用プレイヤーを返す．</div>
+	 *
+	 * <div lang="en">Returns the player actually used in case of medium.</div>
+	 * 
+	 * @return <div lang="ja">霊媒師用プレイヤー</div>
+	 *
+	 *         <div lang="en">the player actually used in case of medium</div>
 	 */
-	final public AbstractRole getMediumPlayer() {
+	public final AbstractRole getMediumPlayer() {
 		return mediumPlayer;
 	}
 
 	/**
-	 * @param mediumPlayer セットする mediumPlayer
+	 * <div lang="ja">霊媒師用プレイヤーをセットする．</div>
+	 *
+	 * <div lang="en">Sets the player actually used in case of medium.</div>
+	 * 
+	 * @param mediumPlayer
+	 *            <div lang="ja">実際の霊媒師プレイヤー</div>
+	 *
+	 *            <div lang="en">the actual medium player</div>
 	 */
-	final public void setMediumPlayer(AbstractRole mediumPlayer) {
+	public final void setMediumPlayer(AbstractRole mediumPlayer) {
 		this.mediumPlayer = mediumPlayer;
 	}
 
 	/**
-	 * @return bodyGuardPlayer
+	 * <div lang="ja">狩人用プレイヤーを返す．</div>
+	 *
+	 * <div lang="en">Returns the player actually used in case of bodyguard.</div>
+	 * 
+	 * @return <div lang="ja">狩人用プレイヤー</div>
+	 *
+	 *         <div lang="en">the player actually used in case of bodyguard</div>
 	 */
-	final public AbstractRole getBodyguardPlayer() {
+	public final AbstractRole getBodyguardPlayer() {
 		return bodyguardPlayer;
 	}
 
 	/**
-	 * @param bodyGuardPlayer セットする bodyGuardPlayer
+	 * <div lang="ja">狩人用プレイヤーをセットする．</div>
+	 *
+	 * <div lang="en">Sets the player actually used in case of bodyguard.</div>
+	 * 
+	 * @param bodyguardPlayer
+	 *            <div lang="ja">実際の狩人プレイヤー</div>
+	 *
+	 *            <div lang="en">the actual bodyguard player</div>
 	 */
-	final public void setBodyguardPlayer(AbstractRole bodyGuardPlayer) {
+	public final void setBodyguardPlayer(AbstractRole bodyGuardPlayer) {
 		this.bodyguardPlayer = bodyGuardPlayer;
 	}
 
 	/**
-	 * @return possesedPlayer
+	 * <div lang="ja">裏切り者用プレイヤーを返す．</div>
+	 *
+	 * <div lang="en">Returns the player actually used in case of possessed.</div>
+	 * 
+	 * @return <div lang="ja">裏切り者用プレイヤー</div>
+	 *
+	 *         <div lang="en">the player actually used in case of possessed</div>
 	 */
-	final public AbstractRole getPossessedPlayer() {
+	public final AbstractRole getPossessedPlayer() {
 		return possessedPlayer;
 	}
 
 	/**
-	 * @param possesedPlayer セットする possesedPlayer
+	 * <div lang="ja">裏切り者用プレイヤーをセットする．</div>
+	 *
+	 * <div lang="en">Sets the player actually used in case of possessed.</div>
+	 * 
+	 * @param possessedPlayer
+	 *            <div lang="ja">実際の裏切り者プレイヤー</div>
+	 *
+	 *            <div lang="en">the actual possessed player</div>
 	 */
-	final public void setPossessedPlayer(AbstractRole possesedPlayer) {
+	public final void setPossessedPlayer(AbstractRole possesedPlayer) {
 		this.possessedPlayer = possesedPlayer;
 	}
 
 	/**
-	 * @return werewolfPlayer
+	 * <div lang="ja">人狼用プレイヤーを返す．</div>
+	 *
+	 * <div lang="en">Returns the player actually used in case of werewolf.</div>
+	 * 
+	 * @return <div lang="ja">人狼用プレイヤー</div>
+	 *
+	 *         <div lang="en">the player actually used in case of werewolf</div>
 	 */
-	final public AbstractRole getWerewolfPlayer() {
+	public final AbstractRole getWerewolfPlayer() {
 		return werewolfPlayer;
 	}
 
 	/**
-	 * @param werewolfPlayer セットする werewolfPlayer
+	 * <div lang="ja">人狼用プレイヤーをセットする．</div>
+	 *
+	 * <div lang="en">Sets the player actually used in case of werewolf.</div>
+	 * 
+	 * @param werewolfPlayer
+	 *            <div lang="ja">実際の人狼プレイヤー</div>
+	 *
+	 *            <div lang="en">the actual werewolf player</div>
 	 */
-	final public void setWerewolfPlayer(AbstractRole werewolfPlayer) {
+	public final void setWerewolfPlayer(AbstractRole werewolfPlayer) {
 		this.werewolfPlayer = werewolfPlayer;
 	}
 
 	@Override
-	abstract public String getName();
+	public abstract String getName();
 
 	@Override
-	final public void update(GameInfo gameInfo) {
+	public final void update(GameInfo gameInfo) {
 		rolePlayer.update(gameInfo);
 	}
 
 	@Override
-	final public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
+	public final void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		Role myRole = gameInfo.getRole();
 		switch (myRole) {
 		case VILLAGER:
@@ -155,49 +235,47 @@ abstract public class AbstractRoleAssignPlayer implements Player {
 		default:
 			rolePlayer = villagerPlayer;
 			break;
-
 		}
 		rolePlayer.initialize(gameInfo, gameSetting);
-
 	}
 
 	@Override
-	final public void dayStart() {
+	public final void dayStart() {
 		rolePlayer.dayStart();
 	}
 
 	@Override
-	final public String talk() {
+	public final String talk() {
 		return rolePlayer.talk();
 	}
 
 	@Override
-	final public String whisper() {
+	public final String whisper() {
 		return rolePlayer.whisper();
 	}
 
 	@Override
-	final public Agent vote() {
+	public final Agent vote() {
 		return rolePlayer.vote();
 	}
 
 	@Override
-	final public Agent attack() {
+	public final Agent attack() {
 		return rolePlayer.attack();
 	}
 
 	@Override
-	final public Agent divine() {
+	public final Agent divine() {
 		return rolePlayer.divine();
 	}
 
 	@Override
-	final public Agent guard() {
+	public final Agent guard() {
 		return rolePlayer.guard();
 	}
 
 	@Override
-	final public void finish() {
+	public final void finish() {
 		rolePlayer.finish();
 	}
 
