@@ -23,7 +23,7 @@ import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
 /**
- * <div lang="ja">霊媒師エージェントのサンプル</div>
+ * <div lang="ja">霊媒師プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample medium agent</div>
  */
@@ -35,7 +35,7 @@ public class SampleMedium extends AbstractMedium {
 	//CO済みか否か
 	boolean isCameout;
 
-	//全体に霊能結果を報告済みのJudge
+	//全体に霊媒結果を報告済みのJudge
 	ArrayList<Judge> declaredJudgedAgentList = new ArrayList<Judge>();
 
 //	ArrayList<Agent> declaredMediumTellResultAgent = new ArrayList<>();
@@ -79,7 +79,7 @@ public class SampleMedium extends AbstractMedium {
 
 	@Override
 	public String talk() {
-		//CO,霊能結果，投票先の順に発話の優先度高
+		//CO,霊媒結果，投票先の順に発話の優先度高
 
 		/*
 		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
@@ -196,7 +196,7 @@ public class SampleMedium extends AbstractMedium {
 
 		for(Agent agent: aliveAgentList){
 			/*
-			 * 自分以外に霊能COしているプレイヤーがいれば投票候補
+			 * 自分以外に霊媒師COしているプレイヤーがいれば投票候補
 			 */
 			if(agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == Role.MEDIUM){
 				voteAgentCandidate.add(agent);
@@ -214,7 +214,7 @@ public class SampleMedium extends AbstractMedium {
 				 */
 				if(myJudge.getTarget().equals(otherJudge.getTarget())){
 					/*
-					 * 自分の占い(霊能)結果と異なる結果を出していたら投票候補
+					 * 自分の占い(霊媒)結果と異なる結果を出していたら投票候補
 					 */
 					if(myJudge.getResult() != otherJudge.getResult()){
 						voteAgentCandidate.add(otherJudge.getAgent());

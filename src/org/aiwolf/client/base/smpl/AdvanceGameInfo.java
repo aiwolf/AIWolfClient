@@ -28,7 +28,7 @@ public class AdvanceGameInfo {
 	private List<Judge> inspectJudgeList = new ArrayList<Judge>();
 
 	/**
-	 * 発話で伝えられた霊能結果のリスト．今回のプロトコルでは何日目に霊能したのか分からないので，発話日に設定．
+	 * 発話で伝えられた霊媒結果のリスト．今回のプロトコルでは何日目に霊媒したのか分からないので，発話日に設定．
 	 */
 	private List<Judge> mediumJudgeList = new ArrayList<Judge>();
 

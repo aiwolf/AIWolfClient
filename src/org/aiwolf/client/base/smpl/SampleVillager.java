@@ -19,14 +19,14 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 
 /**
- * <div lang="ja">村人エージェントのサンプル</div>
+ * <div lang="ja">村人プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample villager agent</div>
  */
 public class SampleVillager extends AbstractVillager{
 	/*
-	 * 投票アルゴリズム：人狼だと占われたエージェント，いなければ，ランダム
-	 * 発話：その日に投票しようとしているエージェントを報告．変化すれば報告．
+	 * 投票アルゴリズム：人狼だと占われたプレイヤー，いなければ，ランダム
+	 * 発話：その日に投票しようとしているプレイヤーを報告．変化すれば報告．
 	 */
 
 	AdvanceGameInfo agi = new AdvanceGameInfo();

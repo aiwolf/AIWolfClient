@@ -21,7 +21,7 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 
 /**
- * <div lang="ja">狩人エージェントのサンプル</div>
+ * <div lang="ja">狩人プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample bodyguard agent</div>
  */
@@ -69,7 +69,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 
 	@Override
 	public Agent guard() {
-		//占い師，もしくは霊能者COしているプレイヤーからランダムに選択(20%の確率で生存プレイヤーの中からランダムに変更)
+		// 占い師，もしくは霊媒師COしているプレイヤーからランダムに選択(20%の確率で生存プレイヤーの中からランダムに変更)
 
 		List<Agent> guardAgentCandidate = new ArrayList<Agent>();
 

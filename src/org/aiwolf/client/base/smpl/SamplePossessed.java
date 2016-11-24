@@ -25,7 +25,7 @@ import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
 /**
- * <div lang="ja">裏切り者エージェントのサンプル</div>
+ * <div lang="ja">裏切り者プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample possessed agent</div>
  */
@@ -37,7 +37,7 @@ public class SamplePossessed extends AbstractPossessed {
 	//CO済みか否か
 	boolean isCameout;
 
-	//全体に偽占い(霊能)結果を報告済みのJudge
+	//全体に偽占い(霊媒)結果を報告済みのJudge
 	ArrayList<Judge> declaredFakeJudgedAgentList = new ArrayList<Judge>();
 
 	//全体に占い結果を報告済みのプレイヤー
@@ -58,7 +58,7 @@ public class SamplePossessed extends AbstractPossessed {
 	//騙る役職
 	Role fakeRole;
 
-	//偽の占い(or霊能)結果
+	//偽の占い(or霊媒)結果
 	List<Judge> fakeJudgeList = new ArrayList<Judge>();
 	//Map<Agent, Species> fakeResultMap = new HashMap<Agent, Species>();
 
@@ -73,7 +73,7 @@ public class SamplePossessed extends AbstractPossessed {
 
 		fakeRole = fakeRoles.get(new Random().nextInt(fakeRoles.size()));
 
-		//占い師，or霊能者なら1~3日目からランダムに選択してCO．村人ならCOしない．
+		//占い師，or霊媒師なら1~3日目からランダムに選択してCO．村人ならCOしない．
 		comingoutDay = new Random().nextInt(3)+1;
 		if(fakeRole == Role.VILLAGER){
 			comingoutDay = 1000;
@@ -99,7 +99,7 @@ public class SamplePossessed extends AbstractPossessed {
 
 	@Override
 	public String talk() {
-		//CO,霊能結果，投票先の順に発話の優先度高
+		//CO,霊媒結果，投票先の順に発話の優先度高
 
 		/*
 		 * 未CO，かつ設定したCOする日にちを過ぎていたらCO
@@ -111,7 +111,7 @@ public class SamplePossessed extends AbstractPossessed {
 			return string;
 		}
 		/*
-		 * COしているなら偽占い，霊能結果の報告
+		 * COしているなら偽占い，霊媒結果の報告
 		 */
 		else if(isCameout && !isSaidAllFakeResult){
 			for(Judge judge: getMyFakeJudgeList()){
@@ -276,7 +276,7 @@ public class SamplePossessed extends AbstractPossessed {
 	}
 
 	/**
-	 * 能力者騙りをする際に，偽の占い(or霊能)結果を作成する．
+	 * 能力者騙りをする際に，偽の占い(or霊媒)結果を作成する．
 	 */
 	public void setFakeResult(){
 		Agent fakeGiftTarget = null;
@@ -284,7 +284,7 @@ public class SamplePossessed extends AbstractPossessed {
 		Species fakeResult = null;
 
 		if(fakeRole == Role.SEER){
-			//偽占い(or霊能)の候補．以下，偽占い候補
+			//偽占い(or霊媒)の候補．以下，偽占い候補
 			List<Agent> fakeGiftTargetCandidateList = new ArrayList<Agent>();
 
 			List<Agent> aliveAgentList = getLatestDayGameInfo().getAliveAgentList();
@@ -338,7 +338,7 @@ public class SamplePossessed extends AbstractPossessed {
 
 
 	/**
-	 * すでに占い(or霊能)対象にしたプレイヤーならtrue,まだ占っていない(霊能していない)ならばfalseを返す．
+	 * すでに占い(or霊媒)対象にしたプレイヤーならtrue,まだ占っていない(霊媒していない)ならばfalseを返す．
 	 * @param myJudgeList
 	 * @param agent
 	 * @return
