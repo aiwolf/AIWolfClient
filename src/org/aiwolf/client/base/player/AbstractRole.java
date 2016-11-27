@@ -222,11 +222,11 @@ public abstract class AbstractRole {
 	/**
 	 * <div lang="ja">このプレイヤーが追放したいプレイヤーを返す．</div>
 	 * 
-	 * <div lang="en">Returns the player this player wants to banish.</div>
+	 * <div lang="en">Returns the player this player wants to execute.</div>
 	 * 
 	 * @return <div lang="ja">このプレイヤーが追放したいプレイヤー</div>
 	 * 
-	 *         <div lang="en">the player this player wants to banish</div>
+	 *         <div lang="en">the player this player wants to execute</div>
 	 */
 	public abstract Agent vote();
 
