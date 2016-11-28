@@ -315,7 +315,7 @@ public class SamplePossessed extends AbstractPossessed {
 
 		}
 		else if(fakeRole == Role.MEDIUM){
-			fakeGiftTarget = getLatestDayGameInfo().getBanishedAgent();
+			fakeGiftTarget = getLatestDayGameInfo().getExecutedAgent();
 			//30%で黒判定，70%で白判定
 			if(Math.random() < 0.3){
 				fakeResult = Species.WEREWOLF;
