@@ -68,7 +68,7 @@ public class SamplePossessed extends AbstractPossessed {
 
 //		List<Role> fakeRoleList = Arrays.asList(Role.SEER, Role.MEDIUM, Role.VILLAGER);
 		List<Role> fakeRoles = new ArrayList<>(gameSetting.getRoleNumMap().keySet());
-		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF);
+		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF, Role.FOX);
 		fakeRoles.removeAll(nonFakeRoleList);
 
 		fakeRole = fakeRoles.get(new Random().nextInt(fakeRoles.size()));
