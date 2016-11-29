@@ -75,7 +75,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		fakeRole = fakeRoleList.get(new Random().nextInt(fakeRoleList.size()));
 */
 		List<Role> fakeRoles = new ArrayList<>(gameSetting.getRoleNumMap().keySet());
-		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF);
+		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF, Role.FOX);
 		fakeRoles.removeAll(nonFakeRoleList);
 		fakeRole = fakeRoles.get(new Random().nextInt(fakeRoles.size()));
 
