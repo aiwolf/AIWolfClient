@@ -8,13 +8,21 @@ package org.aiwolf.sample.player;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
+import org.aiwolf.client.lib.AgreeContentBuilder;
+import org.aiwolf.client.lib.AttackContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DisagreeContentBuilder;
 import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.TalkType;
+import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
@@ -24,6 +32,7 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.data.Vote;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
+import org.aiwolf.common.util.Counter;
 import org.aiwolf.sample.lib.AbstractWerewolf;
 
 /**
@@ -38,20 +47,28 @@ public class SampleWerewolf extends AbstractWerewolf {
 	Agent me;
 	Role myRole;
 	AdditionalGameInfo agi;
-	Agent planningVoteAgent; // 今日投票しようと思っているプレイヤー
-	Agent declaredPlanningVoteAgent; // 自分が最後に宣言した「投票しようと思っているプレイヤー」
-	int readTalkListNum; // 会話をどこまで読んだか
-	Vote lastVote;
-	Vote lastAttackVote;
+	Agent voteCandidate; // 投票先候補
+	Agent declaredVoteCandidate; // 宣言した投票先候補
+	Agent attackCandidate; // 襲撃先候補
+	Agent declaredAttackCandidate; // 宣言した襲撃先候補
+	Vote lastVote; // 再投票における前回の投票
+	Vote lastAttackVote; // 襲撃再投票における前回の投票
+	Deque<Content> talkQueue = new LinkedList<>();
+	Deque<Content> whisperQueue = new LinkedList<>();
+	Agent possessed; // 裏切り者と思われるプレイヤー
+	List<Agent> werewolves; // 人狼リスト
+	List<Agent> humans; // 人間リスト
 
-	int comingoutDay; // COする日にち
-	boolean isCameout; // CO済みか否か
-	List<Judge> declaredFakeJudgedAgentList = new ArrayList<>(); // 全体に偽占い(霊媒)結果を報告済みのJudge
-	boolean isSaidAllFakeResult;
+	int talkTurn; // talk()のターン
+	int comingoutDay; // カミングアウトする日
+	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
+	int comingoutTurn; // カミングアウトするターン
+	List<Integer> comingoutTurns = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5));
+	boolean isCameout; // カミングアウト済みか否か
+	Deque<Judge> divinationQueue = new LinkedList<>(); // 偽占い結果のFIFO
+	Deque<Judge> inquestQueue = new LinkedList<>(); // 偽霊媒結果のFIFO
+	List<Agent> divinedAgents = new ArrayList<>(); // 偽占い済みエージェントのリスト
 	Role fakeRole; // 騙る役職
-	List<Judge> fakeJudgeList = new ArrayList<>(); // 偽の占い(or霊媒)結果
-	Agent maybePossesedAgent = null; // 裏切り者だと思うプレイヤー
-	List<Agent> wolfList;
 
 	@Override
 	public String getName() {
@@ -60,191 +77,286 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
-		currentGameInfo = gameInfo;
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
+		werewolves = new ArrayList<>(gameInfo.getRoleMap().keySet());
+		humans = new ArrayList<>(agi.getAliveOthers());
+		humans.removeAll(werewolves);
 
-		List<Role> fakeRoles = new ArrayList<>(gameSetting.getRoleNumMap().keySet());
-		List<Role> nonFakeRoleList = Arrays.asList(Role.BODYGUARD, Role.FREEMASON, Role.POSSESSED, Role.WEREWOLF, Role.FOX);
-		fakeRoles.removeAll(nonFakeRoleList);
-		fakeRole = fakeRoles.get(new Random().nextInt(fakeRoles.size()));
-
-		wolfList = new ArrayList<Agent>();
-		for (Agent agent : currentGameInfo.getAgentList()) {
-			if (currentGameInfo.getRoleMap().get(agent) == Role.WEREWOLF) {
-				wolfList.add(agent);
+		List<Role> fakeRoles = new ArrayList<>(Arrays.asList(Role.VILLAGER));
+		for (Role role : gameInfo.getExistingRoles()) {
+			if (role == Role.SEER || role == Role.MEDIUM) {
+				fakeRoles.add(role);
 			}
 		}
-
-		// 占い師，or霊媒師なら1~3日目からランダムに選択してCO．村人ならCOしない．
-		comingoutDay = new Random().nextInt(3) + 1;
+		Collections.shuffle(fakeRoles);
+		fakeRole = fakeRoles.get(0);
+		enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+		// 占い師か霊媒師なら1～3日目からランダム，村人ならカミングアウトなし
 		if (fakeRole == Role.VILLAGER) {
-			comingoutDay = 1000;
+			comingoutDay = 10000;
+		} else {
+			Collections.shuffle(comingoutDays);
+			comingoutDay = comingoutDays.get(0);
+			Collections.shuffle(comingoutTurns);
+			comingoutTurn = comingoutTurns.get(0);
 		}
+
 		isCameout = false;
+		inquestQueue.clear();
+		divinationQueue.clear();
+		divinedAgents.clear();
 	}
 
 	@Override
 	public void dayStart() {
-		declaredPlanningVoteAgent = null;
-		planningVoteAgent = null;
-		setPlanningVoteAgent();
-
-		if (day >= 1) {
-			setFakeResult();
-		}
-		isSaidAllFakeResult = false;
-
-		readTalkListNum = 0;
-		lastVote = null;
-		lastAttackVote = null;
+		// このメソッドの前に呼ばれるupdate()に任せて，何もしない
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
-		currentGameInfo = gameInfo;
-		day = gameInfo.getDay();
-		List<Talk> talkList = gameInfo.getTalkList();
-		// talkListからCO，占い結果，霊媒結果の抽出
-		for (int i = readTalkListNum; i < talkList.size(); i++) {
-			Talk talk = talkList.get(i);
-			Content content = new Content(talk.getText());
-			switch (content.getTopic()) {
 
-			// カミングアウトの発話の場合 自分以外で占い師COするプレイヤーが出たら投票先を変える
-			case COMINGOUT:
-				agi.getComingoutMap().put(talk.getAgent(), content.getRole());
-				if (content.getRole() == fakeRole) {
-					setPlanningVoteAgent();
-				}
-				break;
+		// 1日の最初のupdate()でdayStart()の機能を代行する
+		if (gameInfo.getDay() == day + 1) { // 1日の最初のupdate()
+			day = gameInfo.getDay();
+			declaredVoteCandidate = null;
+			voteCandidate = null;
+			declaredAttackCandidate = null;
+			attackCandidate = null;
+			lastVote = null;
+			lastAttackVote = null;
+			talkQueue.clear();
+			whisperQueue.clear();
+			talkTurn = 0;
 
-			// 占い結果の発話の場合
-			// 人狼以外の占い，霊媒結果で嘘だった場合は狂人だと判断
-			case DIVINED:
-				Agent seerAgent = talk.getAgent();
-				Agent inspectedAgent = content.getTarget();
-				Species inspectResult = content.getResult();
-				Judge judge = new Judge(day, seerAgent, inspectedAgent, inspectResult);
-				agi.addDivination(judge);
-
-				// ジャッジしたのが人狼以外の場合
-				if (!wolfList.contains(judge.getAgent())) {
-					Species judgeSpecies = judge.getResult();
-					Species realSpecies;
-					if (wolfList.contains(judge.getTarget())) {
-						realSpecies = Species.WEREWOLF;
-					} else {
-						realSpecies = Species.HUMAN;
-					}
-					if (judgeSpecies != realSpecies) {
-						maybePossesedAgent = judge.getAgent();
-						setPlanningVoteAgent();
+			// 偽の判定
+			if (day > 0) {
+				// カミングアウト前は占い結果と霊媒結果の両方用意
+				if (!isCameout || fakeRole == Role.SEER) {
+					Judge divination = getFakeJudge(Role.SEER);
+					if (divination != null) {
+						divinationQueue.offer(divination);
+						divinedAgents.add(divination.getTarget());
+						enqueueWhisper(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
 					}
 				}
-				break;
-
-			case INQUESTED:
-				agi.addInquestList(new Judge(day, talk.getAgent(), content.getTarget(), content.getResult()));
-				break;
-
-			default:
-				break;
+				if (!isCameout || fakeRole == Role.MEDIUM) {
+					Judge inquest = getFakeJudge(Role.MEDIUM);
+					if (inquest != null) {
+						inquestQueue.offer(inquest);
+						enqueueWhisper(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
+					}
+				}
 			}
 		}
-		readTalkListNum = talkList.size();
+
+		currentGameInfo = gameInfo;
+
+		int lastDivIdx = agi.getDivinationList().size();
+		int lastInqIdx = agi.getInquestList().size();
+		agi.update(currentGameInfo);
+
+		List<Agent> possessedPersons = new ArrayList<>();
+		// 占い結果が嘘の場合，裏切り者候補
+		for (int i = lastDivIdx; i < agi.getDivinationList().size(); i++) {
+			Judge judge = agi.getDivinationList().get(i);
+			if ((humans.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF) || (werewolves.contains(judge.getTarget()) && judge.getResult() == Species.HUMAN)) {
+				if (!possessedPersons.contains(judge.getAgent())) {
+					possessedPersons.add(judge.getAgent());
+				}
+			}
+		}
+		// 霊媒結果が嘘の場合，裏切り者候補
+		for (int i = lastInqIdx; i < agi.getInquestList().size(); i++) {
+			Judge judge = agi.getInquestList().get(i);
+			if ((humans.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF) || (werewolves.contains(judge.getTarget()) && judge.getResult() == Species.HUMAN)) {
+				if (!possessedPersons.contains(judge.getAgent())) {
+					possessedPersons.add(judge.getAgent());
+				}
+			}
+		}
+		if (!possessedPersons.isEmpty()) {
+			if (!possessedPersons.contains(possessed)) {
+				Collections.shuffle(possessedPersons);
+				possessed = possessedPersons.get(0);
+				enqueueWhisper(new Content(new EstimateContentBuilder(possessed, Role.POSSESSED)));
+			}
+		}
 	}
 
 	@Override
 	public String talk() {
-		// 未CO，かつ設定したCOする日にちを過ぎていたらCO
-		if (!isCameout && day >= comingoutDay) {
-			String string = new Content(new ComingoutContentBuilder(me, fakeRole)).getText();
-			isCameout = true;
-			return string;
+
+		// まず他の人狼のカミングアウト状況を調べる
+		int fakeSeerCO = 0;
+		int fakeMediumCO = 0;
+		for (Agent wolf : werewolves) {
+			if (agi.getComingoutMap().get(wolf) == Role.SEER) {
+				fakeSeerCO++;
+			} else if (agi.getComingoutMap().get(wolf) == Role.MEDIUM) {
+				fakeMediumCO++;
+			}
 		}
-		// COしているなら偽占い，霊媒結果の報告
-		else if (isCameout && !isSaidAllFakeResult) {
-			for (Judge judge : fakeJudgeList) {
-				if (!declaredFakeJudgedAgentList.contains(judge)) {
-					if (fakeRole == Role.SEER) {
-						String string = new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())).getText();
-						declaredFakeJudgedAgentList.add(judge);
-						return string;
-					} else if (fakeRole == Role.MEDIUM) {
-						String string = new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())).getText();
-						declaredFakeJudgedAgentList.add(judge);
-						return string;
+
+		if (fakeRole == Role.SEER) {
+			// カミングアウトする日になったら，あるいは対抗カミングアウトがあればカミングアウト
+			if (!isCameout && (day >= comingoutDay || agi.getComingoutMap().containsValue(Role.SEER)) && talkTurn >= comingoutTurn) {
+				// 既に偽占い師カミングアウトあり
+				if (fakeSeerCO > 0) {
+					// 偽霊媒師もカミングアウトありの場合，潜伏人狼
+					if (fakeMediumCO > 0) {
+						fakeRole = Role.VILLAGER;
+						comingoutDay = 10000;
+						removeWhisper(Topic.DIVINED);
+						removeWhisper(Topic.INQUESTED);
+					}
+					// 偽霊媒師に転向
+					else {
+						fakeRole = Role.MEDIUM;
+						removeWhisper(Topic.DIVINED);
 					}
 				}
+				// 占い師として出る
+				else {
+					enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					removeWhisper(Topic.INQUESTED);
+					isCameout = true;
+				}
 			}
-			isSaidAllFakeResult = true;
+		} else if (fakeRole == Role.MEDIUM) {
+			// カミングアウトする日になったら，あるいは対抗カミングアウトがあればカミングアウト
+			if (!isCameout && (day >= comingoutDay || agi.getComingoutMap().containsValue(Role.MEDIUM)) && talkTurn >= comingoutTurn) {
+				// 既に偽霊媒師カミングアウトあり
+				if (fakeMediumCO > 0) {
+					// 偽占い師もカミングアウトありの場合，潜伏人狼
+					if (fakeSeerCO > 0) {
+						fakeRole = Role.VILLAGER;
+						comingoutDay = 10000;
+						removeWhisper(Topic.DIVINED);
+						removeWhisper(Topic.INQUESTED);
+					}
+					// 偽占い師に転向
+					else {
+						fakeRole = Role.SEER;
+						removeWhisper(Topic.INQUESTED);
+					}
+				}
+				// 霊媒師として出る
+				else {
+					enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					removeWhisper(Topic.DIVINED);
+					isCameout = true;
+				}
+			}
 		}
 
-		// 今日投票するプレイヤーの報告（前に報告したプレイヤーと同じ場合は報告なし）
-		if (declaredPlanningVoteAgent != planningVoteAgent) {
-			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
-			declaredPlanningVoteAgent = planningVoteAgent;
-			return string;
-		} else {
-			return Talk.OVER;
+		// カミングアウトしたら，これまでの偽判定結果をすべて公開
+		if (isCameout) {
+			if (fakeRole == Role.SEER) {
+				while (!divinationQueue.isEmpty()) {
+					Judge divination = divinationQueue.poll();
+					enqueueTalk(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
+				}
+			} else if (fakeRole == Role.MEDIUM) {
+				while (!inquestQueue.isEmpty()) {
+					Judge inquest = inquestQueue.poll();
+					enqueueTalk(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
+				}
+			}
 		}
 
+		chooseVoteCandidate();
+		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
+		if (voteCandidate != declaredVoteCandidate)
+
+		{
+			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			declaredVoteCandidate = voteCandidate;
+		}
+
+		talkTurn++;
+		return dequeueTalk().getText();
 	}
 
 	@Override
 	public String whisper() {
-		// TODO なんかしようよ
-		return Talk.OVER;
+		chooseAttackCandidate();
+		// 以前宣言した（未宣言を含む）襲撃先と違う襲撃先を選んだ場合宣言する
+		if (attackCandidate != declaredAttackCandidate) {
+			enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
+			declaredAttackCandidate = attackCandidate;
+		}
+
+		return dequeueWhisper().getText();
 	}
 
 	@Override
 	public Agent vote() {
-		if (lastVote == null) { // この日の初投票
-			lastVote = new Vote(day, me, planningVoteAgent);
-			return planningVoteAgent;
-		} else { // 再投票
-			System.err.println("Revote occured");
-			lastVote = new Vote(day, me, planningVoteAgent);
-			return planningVoteAgent;
+		// 初回投票
+		if (lastVote == null) {
+			lastVote = new Vote(day, me, voteCandidate);
+			return voteCandidate;
 		}
+		// 再投票：前回最多得票の人間
+		Counter<Agent> counter = new Counter<>();
+		for (Vote vote : currentGameInfo.getLatestVoteList()) {
+			if (humans.contains(vote.getTarget())) {
+				counter.add(vote.getTarget());
+			}
+		}
+		int max = counter.get(counter.getLargest());
+		List<Agent> candidates = new ArrayList<>();
+		for (Agent agent : counter) {
+			if (counter.get(agent) == max) {
+				candidates.add(agent);
+			}
+		}
+		// 候補がいない場合：村人陣営から
+		if (candidates.isEmpty()) {
+			candidates.addAll(agi.getAliveOthers());
+			candidates.removeAll(werewolves);
+			candidates.remove(possessed);
+		}
+		if (candidates.contains(voteCandidate)) {
+			return voteCandidate;
+		}
+		Collections.shuffle(candidates);
+		return candidates.get(0);
 	}
 
 	@Override
 	public Agent attack() {
-		// 能力者COしているプレイヤーは襲撃候補
-		// 襲撃候補がいればその中からランダムに選択(20%で全体からランダムに変更)
-		// 襲撃候補がいなければ全体からランダム （ただし，いずれの場合も人狼と狂人(暫定)は襲撃対象から除く）
-
-		List<Agent> aliveAgentList = new ArrayList<>(currentGameInfo.getAliveAgentList());
-		aliveAgentList.removeAll(wolfList);
-		aliveAgentList.remove(maybePossesedAgent);
-
-		List<Agent> attackCandidatePlayer = new ArrayList<Agent>();
-		for (Agent agent : aliveAgentList) {
-			if (agi.getComingoutMap().containsKey(agent)) {
-				attackCandidatePlayer.add(agent);
+		// 初回投票
+		if (lastAttackVote == null) {
+			lastAttackVote = new Vote(day, me, attackCandidate);
+			return attackCandidate;
+		}
+		// 再投票：前回最多得票数の人間
+		Counter<Agent> counter = new Counter<>();
+		for (Vote vote : currentGameInfo.getLatestAttackVoteList()) {
+			if (humans.contains(vote.getTarget())) {
+				counter.add(vote.getTarget());
 			}
 		}
-
-		Agent attackAgent;
-		if (!attackCandidatePlayer.isEmpty() && Math.random() < 0.8) {
-			Collections.shuffle(attackCandidatePlayer);
-			attackAgent = attackCandidatePlayer.get(0);
-		} else {
-			Collections.shuffle(aliveAgentList);
-			attackAgent = aliveAgentList.get(0);
+		int max = counter.get(counter.getLargest());
+		List<Agent> candidates = new ArrayList<>();
+		for (Agent agent : counter) {
+			if (counter.get(agent) == max) {
+				candidates.add(agent);
+			}
 		}
-
-		if (lastAttackVote == null) {
-			lastAttackVote = new Vote(day, me, attackAgent);
-		} else {
-			lastAttackVote = new Vote(day, me, attackAgent);
-			System.err.println("Attack revote occured");
+		// 候補がいない場合：村人陣営から
+		if (candidates.isEmpty()) {
+			candidates.addAll(agi.getAliveOthers());
+			candidates.removeAll(werewolves);
+			candidates.remove(possessed);
 		}
-
-		return attackAgent;
+		if (candidates.contains(attackCandidate)) {
+			return attackCandidate;
+		}
+		Collections.shuffle(candidates);
+		return candidates.get(0);
 	}
 
 	@Override
@@ -252,175 +364,472 @@ public class SampleWerewolf extends AbstractWerewolf {
 	}
 
 	/**
-	 * 今日投票予定のプレイヤーを設定する．
+	 * <div lang="ja">投票先候補を選ぶ</div>
+	 *
+	 * <div lang="en">Choose a candidate for vote.</div>
 	 */
-	void setPlanningVoteAgent() {
-		// 下記のいずれの場合も人狼は投票候補に入れない
-		// 狂人が分かれば狂人も除く
-		// 村人騙りなら，自分以外からランダム
-		// それ以外の場合，対抗CO，もしくは自分が黒だと判定したプレイヤーからランダム
-		// いなければ白判定を出したプレイヤー以外からランダム
-		// それもいなければ生存プレイヤーからランダム
-		List<Agent> aliveAgentList = new ArrayList<>(currentGameInfo.getAliveAgentList());
-		aliveAgentList.removeAll(wolfList);
-		aliveAgentList.remove(maybePossesedAgent);
+	void chooseVoteCandidate() {
+		List<Agent> villagers = new ArrayList<>(agi.getAliveOthers());
+		villagers.removeAll(werewolves);
+		villagers.remove(possessed);
+		List<Agent> candidates = villagers; // 村人騙りの場合は村人陣営から
 
-		if (fakeRole == Role.VILLAGER) {
-			if (aliveAgentList.contains(planningVoteAgent)) {
-				return;
-			} else {
-				Collections.shuffle(aliveAgentList);
-				planningVoteAgent = aliveAgentList.get(0);
+		// 占い師/霊媒師騙りの場合
+		if (fakeRole == Role.SEER || fakeRole == Role.MEDIUM) {
+			candidates = new ArrayList<>();
+			// 対抗カミングアウトのエージェントは投票先候補
+			for (Agent agent : villagers) {
+				if (agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == fakeRole) {
+					candidates.add(agent);
+				}
+			}
+			// 人狼と判定したエージェントは投票先候補
+			List<Agent> fakeHumans = new ArrayList<>();
+			Deque<Judge> judgeQueue = null;
+			if (fakeRole == Role.SEER) {
+				judgeQueue = divinationQueue;
+			} else if (fakeRole == Role.MEDIUM) {
+				judgeQueue = inquestQueue;
+			}
+			for (Judge judge : judgeQueue) {
+				if (judge.getResult() == Species.HUMAN) {
+					fakeHumans.add(judge.getTarget());
+				} else if (!candidates.contains(judge.getTarget())) {
+					candidates.add(judge.getTarget());
+				}
+			}
+			// 候補がいなければ人間と判定していない村人陣営から
+			if (candidates.isEmpty()) {
+				candidates.addAll(villagers);
+				candidates.removeAll(fakeHumans);
+				// それでも候補がいなければ村人陣営から
+				if (candidates.isEmpty()) {
+					candidates.addAll(villagers);
+				}
 			}
 		}
-
-		// 偽占いで人間だと判定したプレイヤーのリスト
-		List<Agent> fakeHumanList = new ArrayList<Agent>();
-
-		List<Agent> voteAgentCandidate = new ArrayList<Agent>();
-		for (Agent a : aliveAgentList) {
-			if (agi.getComingoutMap().containsKey(a) && agi.getComingoutMap().get(a) == fakeRole) {
-				voteAgentCandidate.add(a);
-			}
-		}
-		for (Judge judge : fakeJudgeList) {
-			if (judge.getResult() == Species.HUMAN) {
-				fakeHumanList.add(judge.getTarget());
-			} else {
-				voteAgentCandidate.add(judge.getTarget());
-			}
-		}
-
-		if (voteAgentCandidate.contains(planningVoteAgent)) {
+		if (candidates.contains(voteCandidate)) {
 			return;
-		}
-
-		if (!voteAgentCandidate.isEmpty()) {
-			Collections.shuffle(voteAgentCandidate);
-			planningVoteAgent = voteAgentCandidate.get(0);
 		} else {
-			// 自分が白判定を出していないプレイヤーのリスト
-			List<Agent> aliveAgentExceptHumanList = new ArrayList<>(currentGameInfo.getAliveAgentList());
-			aliveAgentExceptHumanList.removeAll(fakeHumanList);
-
-			if (!aliveAgentExceptHumanList.isEmpty()) {
-				Collections.shuffle(aliveAgentExceptHumanList);
-				planningVoteAgent = aliveAgentExceptHumanList.get(0);
-			} else {
-				Collections.shuffle(aliveAgentList);
-				planningVoteAgent = aliveAgentList.get(0);
-			}
-		}
-		return;
-	}
-
-	/**
-	 * 能力者騙りをする際に，偽の占い(or霊媒)結果を作成する．
-	 */
-	void setFakeResult() {
-		// 村人騙りなら不必要
-
-		// 偽占い(or霊媒)の候補．以下，偽占い候補
-		List<Agent> fakeGiftTargetCandidateList = new ArrayList<Agent>();
-
-		Agent fakeGiftTarget;
-
-		Species fakeResult;
-
-		if (fakeRole == Role.VILLAGER) {
-			return;
-		} else if (fakeRole == Role.SEER) {
-
-			List<Agent> aliveAgentList = new ArrayList<>(currentGameInfo.getAliveAgentList());
-			aliveAgentList.remove(me);
-
-			for (Agent agent : aliveAgentList) {
-				// まだ偽占いしてないプレイヤー，かつ対抗CO者じゃないプレイヤーは偽占い候補
-				if (!isJudgedAgent(agent) && fakeRole != agi.getComingoutMap().get(agent)) {
-					fakeGiftTargetCandidateList.add(agent);
-				}
-			}
-
-			if (!fakeGiftTargetCandidateList.isEmpty()) {
-				Collections.shuffle(fakeGiftTargetCandidateList);
-				fakeGiftTarget = fakeGiftTargetCandidateList.get(0);
-			} else {
-				aliveAgentList.removeAll(fakeGiftTargetCandidateList);
-				Collections.shuffle(aliveAgentList);
-				fakeGiftTarget = aliveAgentList.get(0);
-			}
-			// 人狼が偽占い対象の場合
-			if (wolfList.contains(fakeGiftTarget)) {
-				fakeResult = Species.HUMAN;
-			}
-			// 人間が偽占い対象の場合
-			else {
-				// 狂人(暫定)，または非COプレイヤー
-				if (fakeGiftTarget == maybePossesedAgent || !agi.getComingoutMap().containsKey(fakeGiftTarget)) {
-					if (Math.random() < 0.5) {
-						fakeResult = Species.WEREWOLF;
-					} else {
-						fakeResult = Species.HUMAN;
-					}
-				}
-				// 能力者CO，かつ人間，非狂人(暫定)
-				else {
-					fakeResult = Species.WEREWOLF;
-				}
-			}
-		}
-
-		else if (fakeRole == Role.MEDIUM) {
-			fakeGiftTarget = currentGameInfo.getExecutedAgent();
-			if (fakeGiftTarget == null) {
-				return;
-			}
-			// 人狼が偽占い対象の場合
-			if (wolfList.contains(fakeGiftTarget)) {
-				fakeResult = Species.HUMAN;
-			}
-			// 人間が偽占い対象の場合
-			else {
-				// 狂人(暫定)，または非COプレイヤー
-				if (fakeGiftTarget == maybePossesedAgent || !agi.getComingoutMap().containsKey(fakeGiftTarget)) {
-					if (Math.random() < 0.5) {
-						fakeResult = Species.WEREWOLF;
-					} else {
-						fakeResult = Species.HUMAN;
-					}
-				}
-				// 能力者CO，かつ人間，非狂人(暫定)
-				else {
-					fakeResult = Species.WEREWOLF;
-				}
-			}
-		} else {
-			return;
-		}
-
-		if (fakeGiftTarget != null) {
-			fakeJudgeList.add(new Judge(day, me, fakeGiftTarget, fakeResult));
+			Collections.shuffle(candidates);
+			voteCandidate = candidates.get(0);
 		}
 	}
 
 	/**
-	 * すでに占い(or霊媒)対象にしたプレイヤーならtrue,まだ占っていない(霊媒していない)ならばfalseを返す．
+	 * <div lang="ja">襲撃先候補を選ぶ</div>
+	 *
+	 * <div lang="en">Choose a candidate for attack.</div>
+	 */
+	void chooseAttackCandidate() {
+		// カミングアウトした村人陣営は襲撃先候補
+		List<Agent> villagers = new ArrayList<>(agi.getAliveOthers());
+		villagers.removeAll(werewolves);
+		villagers.remove(possessed);
+		List<Agent> candidates = new ArrayList<>();
+		for (Agent agent : villagers) {
+			if (agi.getComingoutMap().containsKey(agent)) {
+				candidates.add(agent);
+			}
+		}
+		// 候補がいなければ村人陣営から
+		if (candidates.isEmpty()) {
+			candidates.addAll(villagers);
+		}
+		if (candidates.contains(attackCandidate)) {
+			return;
+		}
+		Collections.shuffle(candidates);
+		attackCandidate = candidates.get(0);
+		enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
+	}
+
+	/**
+	 * <div lang="ja">偽判定を返す</div>
+	 *
+	 * <div lang="en">Returns the fake judge.</div>
 	 * 
-	 * @param myJudgeList
-	 * @param agent
-	 * @return
+	 * @param role
+	 *            <div lang="ja">騙る役職を表す{@code Role}</div>
+	 *
+	 *            <div lang="en">{@code Role} representing the fake role.</div>
+	 * 
+	 * @return <div lang="ja">偽判定を表す{@code Judge}</div>
+	 *
+	 *         <div lang="en">{@code Judge} representing the fake judge.</div>
 	 */
-	boolean isJudgedAgent(Agent agent) {
-		for (Judge judge : fakeJudgeList) {
-			if (judge.getAgent() == agent) {
-				return true;
+	Judge getFakeJudge(Role role) {
+		Agent target = null;
+		Species result = null;
+		List<Species> results = new ArrayList<>(Arrays.asList(Species.HUMAN, Species.WEREWOLF));
+
+		// 村人騙りなら不必要
+		if (role == Role.VILLAGER) {
+			return null;
+		}
+		// 占い師騙りの場合
+		else if (role == Role.SEER) {
+			List<Agent> candidates = new ArrayList<>();
+			for (Agent agent : agi.getAliveOthers()) {
+				if (!divinedAgents.contains(agent) && agi.getComingoutMap().get(agent) != fakeRole) {
+					candidates.add(agent);
+				}
+			}
+
+			if (!candidates.isEmpty()) {
+				Collections.shuffle(candidates);
+				target = candidates.get(0);
+			} else {
+				candidates.clear();
+				candidates.addAll(agi.getAliveOthers());
+				Collections.shuffle(candidates);
+				target = candidates.get(0);
+			}
+			// 人狼が偽占い対象の場合
+			if (werewolves.contains(target)) {
+				result = Species.HUMAN;
+			}
+			// 人間が偽占い対象の場合
+			else {
+				// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
+				if (target == possessed || !agi.getComingoutMap().containsKey(target)) {
+					Collections.shuffle(results);
+					result = results.get(0);
+				}
+				// それ以外は人狼判定
+				else {
+					result = Species.WEREWOLF;
+				}
 			}
 		}
-		return false;
+		// 霊媒師騙りの場合
+		else if (role == Role.MEDIUM) {
+			target = currentGameInfo.getExecutedAgent();
+			if (target == null) {
+				return null;
+			}
+			// 人狼が霊媒対象の場合
+			if (werewolves.contains(target)) {
+				result = Species.HUMAN;
+			}
+			// 人間が偽占い対象の場合
+			else {
+				// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
+				if (target == possessed || !agi.getComingoutMap().containsKey(target)) {
+					Collections.shuffle(results);
+					result = results.get(0);
+				}
+				// それ以外は人狼判定
+				else {
+					result = Species.WEREWOLF;
+				}
+			}
+		}
+		return new Judge(day, me, target, result);
 	}
 
-	List<Agent> newAliveAgentList() {
-		return new ArrayList<Agent>(currentGameInfo.getAliveAgentList());
+	/**
+	 * <div lang="ja">発話を待ち行列に入れる</div>
+	 *
+	 * <div lang="en">Enqueue a utterance.</div>
+	 * 
+	 * @param newContent
+	 *            <div lang="ja">発話を表す{@code Content}</div>
+	 *
+	 *            <div lang="en">{@code Content} representing the utterance.</div>
+	 */
+	void enqueueTalk(Content newContent) {
+		String newText = newContent.getText();
+		Topic newTopic = newContent.getTopic();
+		Iterator<Content> it = talkQueue.iterator();
+		boolean isEnqueue = true;
+
+		switch (newTopic) {
+		case AGREE:
+		case DISAGREE:
+			// 同一のものが待ち行列になければ入れる
+			while (it.hasNext()) {
+				if (it.next().getText().equals(newText)) {
+					isEnqueue = false;
+					break;
+				}
+			}
+			break;
+
+		case COMINGOUT:
+			// 同じエージェントについての異なる役職のカミングアウトが待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.COMINGOUT && content.getTarget() == newContent.getTarget()) {
+					if (content.getRole() == newContent.getRole()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case ESTIMATE:
+			// 同じエージェントについての推測役職が異なる推測発言が待ち行列に残っていればそちらを取り下げ新しい方を待ち行列に入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.ESTIMATE && content.getTarget() == newContent.getTarget()) {
+					if (content.getRole() == newContent.getRole()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case DIVINED:
+			// 同じエージェントについての異なる占い結果が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.DIVINED && content.getTarget() == newContent.getTarget()) {
+					if (content.getResult() == newContent.getResult()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case INQUESTED:
+			// 同じエージェントについての異なる霊媒結果が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.INQUESTED && content.getTarget() == newContent.getTarget()) {
+					if (content.getResult() == newContent.getResult()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case VOTE:
+			// 異なる投票先宣言が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.VOTE) {
+					if (content.getTarget() == newContent.getTarget()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		default:
+			break;
+		}
+
+		if (isEnqueue) {
+			if (newContent.getTopic() == Topic.ESTIMATE) {
+				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
+				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
+					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
+						Content pastContent = new Content(talk.getText());
+						if (pastContent.getRole() == newContent.getRole()) {
+							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+						} else {
+							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+						}
+					}
+				}
+			}
+			talkQueue.offer(newContent);
+		}
+	}
+
+	/**
+	 * <div lang="ja">発話を待ち行列から取り出す</div>
+	 *
+	 * <div lang="en">Dequeue a utterance.</div>
+	 * 
+	 * @return <div lang="ja">発話を表す{@code Content}</div>
+	 *
+	 *         <div lang="en">{@code Content} representing the utterance.</div>
+	 */
+	Content dequeueTalk() {
+		if (talkQueue.isEmpty()) {
+			return Content.SKIP;
+		}
+		return talkQueue.poll();
+	}
+
+	/**
+	 * <div lang="ja">囁きを待ち行列に入れる</div>
+	 *
+	 * <div lang="en">Enqueue a whispered utterance.</div>
+	 * 
+	 * @param newContent
+	 *            <div lang="ja">発話を表す{@code Content}</div>
+	 *
+	 *            <div lang="en">{@code Content} representing the utterance.</div>
+	 */
+	void enqueueWhisper(Content newContent) {
+		String newText = newContent.getText();
+		Topic newTopic = newContent.getTopic();
+		Iterator<Content> it = whisperQueue.iterator();
+		boolean isEnqueue = true;
+
+		switch (newTopic) {
+		case AGREE:
+		case DISAGREE:
+			// 同一のものが待ち行列になければ入れる
+			while (it.hasNext()) {
+				if (it.next().getText().equals(newText)) {
+					isEnqueue = false;
+					break;
+				}
+			}
+			break;
+
+		case COMINGOUT:
+			// 同じエージェントについての異なる役職のカミングアウトが待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.COMINGOUT && content.getTarget() == newContent.getTarget()) {
+					if (content.getRole() == newContent.getRole()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case ESTIMATE:
+			// 同じエージェントについての推測役職が異なる推測発言が待ち行列に残っていればそちらを取り下げ新しい方を待ち行列に入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.ESTIMATE && content.getTarget() == newContent.getTarget()) {
+					if (content.getRole() == newContent.getRole()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case DIVINED:
+			// 同じエージェントについての異なる占い結果が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.DIVINED && content.getTarget() == newContent.getTarget()) {
+					if (content.getResult() == newContent.getResult()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case INQUESTED:
+			// 同じエージェントについての異なる霊媒結果が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.INQUESTED && content.getTarget() == newContent.getTarget()) {
+					if (content.getResult() == newContent.getResult()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case VOTE:
+			// 異なる投票先宣言が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.VOTE) {
+					if (content.getTarget() == newContent.getTarget()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		case ATTACK:
+			// 異なる襲撃先宣言が待ち行列に残っていればそれを取り下げて新しい方を入れる
+			while (it.hasNext()) {
+				Content content = it.next();
+				if (content.getTopic() == Topic.ATTACK) {
+					if (content.getTarget() == newContent.getTarget()) {
+						isEnqueue = false;
+						break;
+					} else {
+						it.remove();
+					}
+				}
+			}
+			break;
+
+		default:
+			break;
+		}
+
+		if (isEnqueue) {
+			whisperQueue.offer(newContent);
+		}
+	}
+
+	/**
+	 * <div lang="ja">囁きを待ち行列から取り出す</div>
+	 *
+	 * <div lang="en">Dequeue a whispered utterance.</div>
+	 * 
+	 * @return <div lang="ja">発話を表す{@code Content}</div>
+	 *
+	 *         <div lang="en">{@code Content} representing the utterance.</div>
+	 */
+	Content dequeueWhisper() {
+		if (whisperQueue.isEmpty()) {
+			return Content.SKIP;
+		}
+		return whisperQueue.poll();
+	}
+
+	/**
+	 * <div lang="ja">指定したトピックの囁きを取り除く</div>
+	 *
+	 * <div lang="en">Remove the whispers of given topic.</div>
+	 * 
+	 * @param topic
+	 *            <div lang="ja">取り除くトピックを表す{@code Topic}</div>
+	 *
+	 *            <div lang="en">{@code Topic} representing the topic to be removed from the queue.</div>
+	 */
+	void removeWhisper(Topic topic) {
+		Iterator<Content> it = whisperQueue.iterator();
+		while (it.hasNext()) {
+			Content content = it.next();
+			if (content.getTopic() == topic) {
+				it.remove();
+			}
+		}
 	}
 
 }

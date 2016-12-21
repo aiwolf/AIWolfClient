@@ -13,10 +13,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DisagreeContentBuilder;
 import org.aiwolf.client.lib.DivineContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
@@ -85,6 +88,7 @@ public class SampleSeer extends AbstractSeer {
 
 		// 1日の最初のupdate()でdayStart()の機能を代行する
 		if (gameInfo.getDay() == day + 1) { // 1日の最初のupdate()
+			day = gameInfo.getDay();
 			declaredVoteCandidate = null;
 			voteCandidate = null;
 			lastVote = null;
@@ -103,7 +107,6 @@ public class SampleSeer extends AbstractSeer {
 		}
 
 		currentGameInfo = gameInfo;
-		day = currentGameInfo.getDay();
 		agi.update(currentGameInfo);
 	}
 
@@ -143,78 +146,71 @@ public class SampleSeer extends AbstractSeer {
 			declaredVoteCandidate = voteCandidate;
 		}
 
-		if (talkQueue.isEmpty()) {
-			return Talk.SKIP;
-		} else {
-			return dequeueTalk().getText();
-		}
+		return dequeueTalk().getText();
 	}
 
 	@Override
-	public Agent vote() {
-		// TODO 投票発言にもとづく投票（追放されそうになった場合の回避）
-		if (lastVote == null) { // この日の初投票
+	public Agent vote() { // TODO 投票発言にもとづく投票（追放されそうになった場合の回避）
+		// 初回投票
+		if (lastVote == null) {
 			lastVote = new Vote(day, me, voteCandidate);
 			return voteCandidate;
-		} else {
-			// 再投票
-			if (!werewolves.isEmpty()) {
-				// 人狼がいる場合前回最多得票数の人狼に投票
-				Counter<Agent> counter = new Counter<>();
-				for (Vote vote : currentGameInfo.getLatestVoteList()) {
-					if (werewolves.contains(vote.getTarget())) {
-						counter.add(vote.getTarget());
-					}
-				}
-				if (!counter.isEmpty()) {
-					int max = counter.get(counter.getLargest());
-					List<Agent> candidates = new ArrayList<>();
-					for (Agent agent : counter) {
-						if (counter.get(agent) == max) {
-							candidates.add(agent);
-						}
-					}
-					Collections.shuffle(candidates);
-					return candidates.get(0);
-				}
-			}
-
-			if (!semiwolves.isEmpty()) {
-				// 人狼候補がいる場合前回最多得票数の人狼候補に投票
-				Counter<Agent> counter = new Counter<>();
-				for (Vote vote : currentGameInfo.getLatestVoteList()) {
-					if (semiwolves.contains(vote.getTarget())) {
-						counter.add(vote.getTarget());
-					}
-				}
-				if (!counter.isEmpty()) {
-					int max = counter.get(counter.getLargest());
-					List<Agent> candidates = new ArrayList<>();
-					for (Agent agent : counter) {
-						if (counter.get(agent) == max) {
-							candidates.add(agent);
-						}
-					}
-					Collections.shuffle(candidates);
-					return candidates.get(0);
-				}
-			}
-
-			// 人狼（候補）がいない場合前回最多得票数のエージェントに投票
+		}
+		// 再投票
+		if (!werewolves.isEmpty()) {
+			// 人狼がいる場合前回最多得票数の人狼に投票
 			Counter<Agent> counter = new Counter<>();
 			for (Vote vote : currentGameInfo.getLatestVoteList()) {
-				counter.add(vote.getTarget());
-			}
-			int max = counter.get(counter.getLargest());
-			List<Agent> candidates = new ArrayList<>();
-			for (Agent agent : counter) {
-				if (counter.get(agent) == max) {
-					candidates.add(agent);
+				if (werewolves.contains(vote.getTarget())) {
+					counter.add(vote.getTarget());
 				}
 			}
-			Collections.shuffle(candidates);
-			return candidates.get(0);
+			if (!counter.isEmpty()) {
+				int max = counter.get(counter.getLargest());
+				List<Agent> candidates = new ArrayList<>();
+				for (Agent agent : counter) {
+					if (counter.get(agent) == max) {
+						candidates.add(agent);
+					}
+				}
+				Collections.shuffle(candidates);
+				return candidates.get(0);
+			}
 		}
+		if (!semiwolves.isEmpty()) {
+			// 人狼候補がいる場合前回最多得票数の人狼候補に投票
+			Counter<Agent> counter = new Counter<>();
+			for (Vote vote : currentGameInfo.getLatestVoteList()) {
+				if (semiwolves.contains(vote.getTarget())) {
+					counter.add(vote.getTarget());
+				}
+			}
+			if (!counter.isEmpty()) {
+				int max = counter.get(counter.getLargest());
+				List<Agent> candidates = new ArrayList<>();
+				for (Agent agent : counter) {
+					if (counter.get(agent) == max) {
+						candidates.add(agent);
+					}
+				}
+				Collections.shuffle(candidates);
+				return candidates.get(0);
+			}
+		}
+		// 人狼（候補）がいない場合前回最多得票数のエージェントに投票
+		Counter<Agent> counter = new Counter<>();
+		for (Vote vote : currentGameInfo.getLatestVoteList()) {
+			counter.add(vote.getTarget());
+		}
+		int max = counter.get(counter.getLargest());
+		List<Agent> candidates = new ArrayList<>();
+		for (Agent agent : counter) {
+			if (counter.get(agent) == max) {
+				candidates.add(agent);
+			}
+		}
+		Collections.shuffle(candidates);
+		return candidates.get(0);
 	}
 
 	@Override
@@ -246,20 +242,25 @@ public class SampleSeer extends AbstractSeer {
 
 		List<Agent> aliveWolves = new ArrayList<>(werewolves);
 		aliveWolves.removeAll(agi.getDeadOthers());
+
+		// 生存人狼がいれば当然投票
 		if (!aliveWolves.isEmpty()) {
-			// 生存人狼がいれば当然投票
-			if (voteCandidate != null) {
-				if (aliveWolves.contains(voteCandidate)) {
-					// 既定の投票先が生存人狼ならば，投票先を変えない
-					return;
-				} else {
-					// 既定の投票先が生存人狼でないならば，投票先を変える
-					Collections.shuffle(aliveWolves);
-					voteCandidate = aliveWolves.get(0);
-					return;
+			// 既定の投票先が生存人狼の場合，投票先はそのまま
+			if (voteCandidate != null && aliveWolves.contains(voteCandidate)) {
+				return;
+			}
+			// それ以外の場合，投票先を変える
+			else {
+				// 投票発言がある場合，生存人狼から被投票宣言数最大のエージェントを選ぶ
+				if (!agi.getVoteCounter().isEmpty()) {
+					for (Agent agent : agi.getVoteCounter().getReverseList()) {
+						if (aliveWolves.contains(agent)) {
+							voteCandidate = agent;
+							return;
+						}
+					}
 				}
-			} else {
-				// 既定の投票先がなければ，新たな投票先を設定
+				// 投票発言に該当なし，あるいは投票発言がない場合，生存人狼からランダムに選ぶ
 				Collections.shuffle(aliveWolves);
 				voteCandidate = aliveWolves.get(0);
 				return;
@@ -268,6 +269,7 @@ public class SampleSeer extends AbstractSeer {
 
 		// 以後は推測になる
 		semiwolves.clear();
+
 		// 占い師をカミングアウトしている他のエージェントは人狼候補
 		List<Agent> others = new ArrayList<>(currentGameInfo.getAgentList());
 		others.remove(me);
@@ -291,37 +293,55 @@ public class SampleSeer extends AbstractSeer {
 			}
 		}
 
-		// 生存している灰にしぼる
+		// 生存かつ非人間にしぼる
 		semiwolves.removeAll(humans);
 		semiwolves.removeAll(agi.getDeadOthers());
 
-		if (semiwolves.isEmpty()) {
-			if (voteCandidate != null) {
-				// 投票先既定で投票先候補なしの場合，投票先を変えない
-				return;
-			} else {
-				// 投票先未定で投票先候補なしの場合，自分以外の生存者からランダムに選ぶ
-				List<Agent> aliveOthers = new ArrayList<>(agi.getAliveOthers());
-				Collections.shuffle(aliveOthers);
-				voteCandidate = aliveOthers.get(0);
-			}
-		} else {
-			if (voteCandidate != null) {
-				// 投票先既定で投票先候補ありの場合
-				if (semiwolves.contains(voteCandidate)) {
-					// 現在の投票先が投票先候補に含まれている場合，投票先を変えない
-					return;
-				} else {
-					// 現在の投票先が投票先候補に含まれていない場合，新たに投票先候補からランダムに選び，人狼と推定する発言をする
-					Collections.shuffle(semiwolves);
-					voteCandidate = semiwolves.get(0);
-					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+		// 人狼候補がいる場合
+		if (!semiwolves.isEmpty()) {
+			// 投票先未定，あるいは既定の投票先が人狼候補でない場合，新たに投票先を選ぶ
+			if (voteCandidate == null || !semiwolves.contains(voteCandidate)) {
+				// 投票発言がある場合，人狼候補から被投票宣言数最大のエージェントを選ぶ
+				if (!agi.getVoteCounter().isEmpty()) {
+					for (Agent agent : agi.getVoteCounter().getReverseList()) {
+						if (semiwolves.contains(agent)) {
+							voteCandidate = agent;
+							// 投票先が変わったので人狼推定発言をする
+							enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+							return;
+						}
+					}
 				}
-			} else {
-				// 投票先未定で投票先候補ありの場合，投票先候補からランダムに選び，人狼と推定する発言をする
+				// 投票発言に該当なし，あるいは投票発言がない場合，人狼候補からランダムに選ぶ
 				Collections.shuffle(semiwolves);
 				voteCandidate = semiwolves.get(0);
+				// 投票先が変わったので人狼推定発言をする
 				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+				return;
+			}
+		}
+		// 人狼候補がいない場合
+		else {
+			// 投票先未定の場合，自分以外の生存者から投票先を選ぶ
+			if (voteCandidate == null) {
+				List<Agent> aliveOthers = new ArrayList<>(agi.getAliveOthers());
+				// これまでの投票発言がある場合，自分以外の生存者で被投票宣言数最大のエージェントを選ぶ
+				if (!agi.getVoteCounter().isEmpty()) {
+					for (Agent agent : agi.getVoteCounter().getReverseList()) {
+						if (aliveOthers.contains(agent)) {
+							voteCandidate = agent;
+							return;
+						}
+					}
+				}
+				// 投票発言に該当なし，あるいは投票発言がない場合，自分以外の生存者からランダムに選ぶ
+				Collections.shuffle(aliveOthers);
+				voteCandidate = aliveOthers.get(0);
+				return;
+			}
+			// 既定の投票先があれば，投票先はそのまま
+			else {
+				return;
 			}
 		}
 	}
@@ -408,6 +428,19 @@ public class SampleSeer extends AbstractSeer {
 		}
 
 		if (isEnqueue) {
+			if (newContent.getTopic() == Topic.ESTIMATE) {
+				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
+				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
+					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
+						Content pastContent = new Content(talk.getText());
+						if (pastContent.getRole() == newContent.getRole()) {
+							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+						} else {
+							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+						}
+					}
+				}
+			}
 			talkQueue.offer(newContent);
 		}
 	}
@@ -422,6 +455,9 @@ public class SampleSeer extends AbstractSeer {
 	 *         <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	Content dequeueTalk() {
+		if (talkQueue.isEmpty()) {
+			return Content.SKIP;
+		}
 		return talkQueue.poll();
 	}
 

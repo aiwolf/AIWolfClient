@@ -12,8 +12,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DisagreeContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
@@ -72,6 +75,7 @@ public class SampleVillager extends AbstractVillager {
 
 		// 1日の最初のupdate()でdayStart()の機能を代行する
 		if (gameInfo.getDay() == day + 1) { // 1日の最初のupdate()
+			day = gameInfo.getDay();
 			declaredVoteCandidate = null;
 			voteCandidate = null;
 			lastVote = null;
@@ -79,7 +83,6 @@ public class SampleVillager extends AbstractVillager {
 		}
 
 		currentGameInfo = gameInfo;
-		day = currentGameInfo.getDay();
 		agi.update(currentGameInfo);
 	}
 
@@ -92,56 +95,51 @@ public class SampleVillager extends AbstractVillager {
 			declaredVoteCandidate = voteCandidate;
 		}
 
-		if (talkQueue.isEmpty()) {
-			return Talk.SKIP;
-		} else {
-			return dequeueTalk().getText();
-		}
+		return dequeueTalk().getText();
 	}
 
 	@Override
 	public Agent vote() {
-		if (lastVote == null) { // この日の初投票
+		// 初回投票
+		if (lastVote == null) {
 			lastVote = new Vote(day, me, voteCandidate);
 			return voteCandidate;
-		} else {
-			// 再投票
-			if (!werewolves.isEmpty()) {
-				// 人狼候補がいる場合前回最多得票数の人狼候補に投票
-				Counter<Agent> counter = new Counter<>();
-				for (Vote vote : currentGameInfo.getLatestVoteList()) {
-					if (werewolves.contains(vote.getTarget())) {
-						counter.add(vote.getTarget());
-					}
-				}
-				if (!counter.isEmpty()) {
-					int max = counter.get(counter.getLargest());
-					List<Agent> candidates = new ArrayList<>();
-					for (Agent agent : counter) {
-						if (counter.get(agent) == max) {
-							candidates.add(agent);
-						}
-					}
-					Collections.shuffle(candidates);
-					return candidates.get(0);
-				}
-			}
-
-			// 人狼候補がいない場合前回最多得票数のエージェントに投票
+		}
+		// 再投票
+		if (!werewolves.isEmpty()) {
+			// 人狼候補がいる場合前回最多得票数の人狼候補に投票
 			Counter<Agent> counter = new Counter<>();
 			for (Vote vote : currentGameInfo.getLatestVoteList()) {
-				counter.add(vote.getTarget());
-			}
-			int max = counter.get(counter.getLargest());
-			List<Agent> candidates = new ArrayList<>();
-			for (Agent agent : counter) {
-				if (counter.get(agent) == max) {
-					candidates.add(agent);
+				if (werewolves.contains(vote.getTarget())) {
+					counter.add(vote.getTarget());
 				}
 			}
-			Collections.shuffle(candidates);
-			return candidates.get(0);
+			if (!counter.isEmpty()) {
+				int max = counter.get(counter.getLargest());
+				List<Agent> candidates = new ArrayList<>();
+				for (Agent agent : counter) {
+					if (counter.get(agent) == max) {
+						candidates.add(agent);
+					}
+				}
+				Collections.shuffle(candidates);
+				return candidates.get(0);
+			}
 		}
+		// 人狼候補がいない場合前回最多得票数のエージェントに投票
+		Counter<Agent> counter = new Counter<>();
+		for (Vote vote : currentGameInfo.getLatestVoteList()) {
+			counter.add(vote.getTarget());
+		}
+		int max = counter.get(counter.getLargest());
+		List<Agent> candidates = new ArrayList<>();
+		for (Agent agent : counter) {
+			if (counter.get(agent) == max) {
+				candidates.add(agent);
+			}
+		}
+		Collections.shuffle(candidates);
+		return candidates.get(0);
 	}
 
 	@Override
@@ -324,6 +322,19 @@ public class SampleVillager extends AbstractVillager {
 		}
 
 		if (isEnqueue) {
+			if (newContent.getTopic() == Topic.ESTIMATE) {
+				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
+				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
+					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
+						Content pastContent = new Content(talk.getText());
+						if (pastContent.getRole() == newContent.getRole()) {
+							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+						} else {
+							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+						}
+					}
+				}
+			}
 			talkQueue.offer(newContent);
 		}
 	}
@@ -338,6 +349,9 @@ public class SampleVillager extends AbstractVillager {
 	 *         <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	Content dequeueTalk() {
+		if (talkQueue.isEmpty()) {
+			return Content.SKIP;
+		}
 		return talkQueue.poll();
 	}
 

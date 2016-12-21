@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.Topic;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
@@ -25,20 +26,21 @@ import org.aiwolf.common.util.Counter;
  */
 public class AdditionalGameInfo {
 
-	List<Agent> executedAgentList = new ArrayList<>();
-	List<Judge> divinationList = new ArrayList<>();
-	List<Judge> inquestList = new ArrayList<>();
-	List<Agent> killedAgentList = new ArrayList<>();
-	List<Agent> aliveOthers;
-	List<Agent> deadOthers = new ArrayList<>();
-	Map<Agent, Role> comingoutMap = new HashMap<>();
-	Map<Agent, List<Judge>> judgeMap = new HashMap<>();
-	Map<Agent, Agent> voteMap = new HashMap<>();
-	Counter<Agent> voteCounter = new Counter<>();
-	Agent me;
-	Role myRole;
-	int talkListHead; // talkList読み込みのヘッド
-	int day;
+	private List<Agent> executedAgentList = new ArrayList<>();
+	private List<Judge> divinationList = new ArrayList<>();
+	private List<Judge> inquestList = new ArrayList<>();
+	private List<Agent> killedAgentList = new ArrayList<>();
+	private List<Agent> aliveOthers;
+	private List<Agent> deadOthers = new ArrayList<>();
+	private Map<Agent, Role> comingoutMap = new HashMap<>();
+	private Map<Agent, List<Judge>> judgeMap = new HashMap<>();
+	private Map<Agent, List<Talk>> estimateMap = new HashMap<>();
+	private Map<Agent, Agent> voteMap = new HashMap<>();
+	private Counter<Agent> voteCounter = new Counter<>();
+	private Agent me;
+	private Role myRole;
+	private int talkListHead; // talkList読み込みのヘッド
+	private int day;
 
 	/**
 	 * <div lang="ja">自分自身を返す</div>
@@ -216,7 +218,7 @@ public class AdditionalGameInfo {
 	}
 
 	/**
-	 * <div lang="ja">判定状況を返す</div>
+	 * <div lang="ja">判定状況マップを返す</div>
 	 *
 	 * <div lang="en">Returns the situation of judgment.</div>
 	 * 
@@ -229,7 +231,7 @@ public class AdditionalGameInfo {
 	}
 
 	/**
-	 * <div lang="ja">新たな判定を判定状況に登録する</div>
+	 * <div lang="ja">新たな判定を判定状況マップに登録する</div>
 	 *
 	 * <div lang="en">Registers a new judgment on the judgment map.</div>
 	 * 
@@ -244,6 +246,43 @@ public class AdditionalGameInfo {
 			judgeMap.put(agent, new ArrayList<Judge>());
 		}
 		judgeMap.get(agent).add(judge);
+	}
+
+	/**
+	 * <div lang="ja">推測状況マップを返す</div>
+	 *
+	 * <div lang="en">Returns the situation of estimate.</div>
+	 * 
+	 * @return <div lang="ja">推測状況を表す{@code Map<Agent, List<Talk>>}</div>
+	 *
+	 *         <div lang="en">{@code Map<Agent, List<Talk>>} representing the situation of estimate.</div>
+	 */
+	public Map<Agent, List<Talk>> getEstimateMap() {
+		return estimateMap;
+	}
+
+	/**
+	 * <div lang="ja">新たな推測発言を推測状況マップに登録する</div>
+	 *
+	 * <div lang="en">Registers a new estimating talk on the estimate map.</div>
+	 * 
+	 * @param content
+	 *            <div lang="ja">推測発言を表す{@code Talk}</div>
+	 * 
+	 *            <div lang="en">{@code Talk} representing the estimating talk.</div>
+	 */
+	public void putEstimateMap(Talk talk) {
+		Content content = new Content(talk.getText());
+		if (content.getTopic() != Topic.ESTIMATE) {
+			return;
+		}
+		Agent agent = content.getTarget();
+		if (agent != null) {
+			if (estimateMap.get(agent) == null) {
+				estimateMap.put(agent, new ArrayList<Talk>());
+			}
+			estimateMap.get(agent).add(talk);
+		}
 	}
 
 	/**
@@ -383,6 +422,10 @@ public class AdditionalGameInfo {
 
 			case VOTE:
 				voteMap.put(talker, content.getTarget());
+				break;
+
+			case ESTIMATE:
+				putEstimateMap(talk);
 				break;
 
 			default:
