@@ -333,6 +333,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 			return attackCandidate;
 		}
 		// 再投票：前回最多得票数の人間
+		List<Agent> candidates = new ArrayList<>();
 		Counter<Agent> counter = new Counter<>();
 		for (Vote vote : currentGameInfo.getLatestAttackVoteList()) {
 			if (humans.contains(vote.getTarget())) {
@@ -340,7 +341,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 			}
 		}
 		int max = counter.get(counter.getLargest());
-		List<Agent> candidates = new ArrayList<>();
 		for (Agent agent : counter) {
 			if (counter.get(agent) == max) {
 				candidates.add(agent);
@@ -351,6 +351,10 @@ public class SampleWerewolf extends AbstractWerewolf {
 			candidates.addAll(agi.getAliveOthers());
 			candidates.removeAll(werewolves);
 			candidates.remove(possessed);
+		}
+		// 候補がいない場合：人間から
+		if (candidates.isEmpty()) {
+			candidates.addAll(humans);
 		}
 		if (candidates.contains(attackCandidate)) {
 			return attackCandidate;
