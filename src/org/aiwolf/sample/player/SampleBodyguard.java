@@ -106,37 +106,41 @@ public class SampleBodyguard extends AbstractBodyguard {
 			return voteCandidate;
 		}
 		// 再投票
+		List<Agent> candidates = new ArrayList<>();
+		Counter<Agent> counter = new Counter<>();
 		if (!werewolves.isEmpty()) {
-			// 人狼候補がいる場合前回最多得票数の人狼候補に投票
-			Counter<Agent> counter = new Counter<>();
+			// 人狼候補がいる場合：前回最多得票数の人狼候補
 			for (Vote vote : currentGameInfo.getLatestVoteList()) {
 				if (werewolves.contains(vote.getTarget())) {
 					counter.add(vote.getTarget());
 				}
 			}
-			if (!counter.isEmpty()) {
-				int max = counter.get(counter.getLargest());
-				List<Agent> candidates = new ArrayList<>();
-				for (Agent agent : counter) {
-					if (counter.get(agent) == max) {
-						candidates.add(agent);
-					}
+			int max = counter.get(counter.getLargest());
+			for (Agent agent : counter) {
+				if (counter.get(agent) == max) {
+					candidates.add(agent);
 				}
-				Collections.shuffle(candidates);
-				return candidates.get(0);
 			}
 		}
-		// 人狼候補がいない場合前回最多得票数のエージェントに投票
-		Counter<Agent> counter = new Counter<>();
-		for (Vote vote : currentGameInfo.getLatestVoteList()) {
-			counter.add(vote.getTarget());
-		}
-		int max = counter.get(counter.getLargest());
-		List<Agent> candidates = new ArrayList<>();
-		for (Agent agent : counter) {
-			if (counter.get(agent) == max) {
-				candidates.add(agent);
+		// 候補がいない場合：前回最多得票のエージェント
+		if (candidates.isEmpty()) {
+			counter.clear();
+			for (Vote vote : currentGameInfo.getLatestVoteList()) {
+				counter.add(vote.getTarget());
 			}
+			int max = counter.get(counter.getLargest());
+			for (Agent agent : counter) {
+				if (counter.get(agent) == max) {
+					candidates.add(agent);
+				}
+			}
+		}
+		// 候補がいない場合：自分以外
+		if (candidates.isEmpty()) {
+			candidates.addAll(agi.getAliveOthers());
+		}
+		if (candidates.contains(voteCandidate)) {
+			return voteCandidate;
 		}
 		Collections.shuffle(candidates);
 		return candidates.get(0);
