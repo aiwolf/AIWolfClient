@@ -226,6 +226,9 @@ public class SampleSeer extends AbstractSeer {
 		List<Agent> candidates = new ArrayList<>(agi.getAliveOthers());
 		candidates.removeAll(werewolves);
 		candidates.removeAll(humans);
+		if (candidates.isEmpty()) {
+			return null;
+		}
 		Collections.shuffle(candidates);
 		return candidates.get(0);
 	}
