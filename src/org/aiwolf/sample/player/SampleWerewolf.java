@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.AttackContentBuilder;
@@ -43,6 +45,7 @@ import org.aiwolf.sample.lib.AbstractWerewolf;
 public class SampleWerewolf extends AbstractWerewolf {
 
 	GameInfo currentGameInfo;
+	GameSetting gameSetting;
 	int day;
 	Agent me;
 	Role myRole;
@@ -63,12 +66,13 @@ public class SampleWerewolf extends AbstractWerewolf {
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
 	int comingoutTurn; // カミングアウトするターン
-	List<Integer> comingoutTurns = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5));
+	List<Integer> comingoutTurns = new ArrayList<>(Arrays.asList(0, 1, 2));
 	boolean isCameout; // カミングアウト済みか否か
 	Deque<Judge> divinationQueue = new LinkedList<>(); // 偽占い結果のFIFO
 	Deque<Judge> inquestQueue = new LinkedList<>(); // 偽霊媒結果のFIFO
 	List<Agent> divinedAgents = new ArrayList<>(); // 偽占い済みエージェントのリスト
 	Role fakeRole; // 騙る役職
+	List<Role> fakeRoles = new ArrayList<>(Arrays.asList(Role.VILLAGER)); // 騙れる役職のリスト
 
 	@Override
 	public String getName() {
@@ -77,6 +81,8 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
+		this.gameSetting = gameSetting;
+		day = -1;
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
@@ -84,24 +90,20 @@ public class SampleWerewolf extends AbstractWerewolf {
 		humans = new ArrayList<>(agi.getAliveOthers());
 		humans.removeAll(werewolves);
 
-		List<Role> fakeRoles = new ArrayList<>(Arrays.asList(Role.VILLAGER));
 		for (Role role : gameInfo.getExistingRoles()) {
 			if (role == Role.SEER || role == Role.MEDIUM) {
 				fakeRoles.add(role);
 			}
 		}
+		// 暫定的に騙る役職を決める
 		Collections.shuffle(fakeRoles);
 		fakeRole = fakeRoles.get(0);
-		enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
-		// 占い師か霊媒師なら1～3日目からランダム，村人ならカミングアウトなし
-		if (fakeRole == Role.VILLAGER) {
-			comingoutDay = 10000;
-		} else {
-			Collections.shuffle(comingoutDays);
-			comingoutDay = comingoutDays.get(0);
-			Collections.shuffle(comingoutTurns);
-			comingoutTurn = comingoutTurns.get(0);
-		}
+
+		// 1～3日目のランダムな日にカミングアウトする．他の人狼との同時カミングアウトを避けるため発話ターンは散らす
+		Collections.shuffle(comingoutDays);
+		comingoutDay = comingoutDays.get(0);
+		Collections.shuffle(comingoutTurns);
+		comingoutTurn = comingoutTurns.get(0);
 
 		isCameout = false;
 		inquestQueue.clear();
@@ -117,9 +119,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 	@Override
 	public void update(GameInfo gameInfo) {
 
+		currentGameInfo = gameInfo;
+
 		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (gameInfo.getDay() == day + 1) { // 1日の最初のupdate()
-			day = gameInfo.getDay();
+		if (currentGameInfo.getDay() == day + 1) {
+			day = currentGameInfo.getDay();
 			declaredVoteCandidate = null;
 			voteCandidate = null;
 			declaredAttackCandidate = null;
@@ -130,9 +134,14 @@ public class SampleWerewolf extends AbstractWerewolf {
 			whisperQueue.clear();
 			talkTurn = 0;
 
+			// 初日は騙る役職を宣言
+			if (day == 0) {
+				enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+			}
+
 			// 偽の判定
+			// カミングアウト前は占い結果と霊媒結果の両方用意
 			if (day > 0) {
-				// カミングアウト前は占い結果と霊媒結果の両方用意
 				if (!isCameout || fakeRole == Role.SEER) {
 					Judge divination = getFakeJudge(Role.SEER);
 					if (divination != null) {
@@ -151,8 +160,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 			}
 		}
 
-		currentGameInfo = gameInfo;
-
 		int lastDivIdx = agi.getDivinationList().size();
 		int lastInqIdx = agi.getInquestList().size();
 		agi.update(currentGameInfo);
@@ -162,7 +169,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		for (int i = lastDivIdx; i < agi.getDivinationList().size(); i++) {
 			Judge judge = agi.getDivinationList().get(i);
 			if ((humans.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF) || (werewolves.contains(judge.getTarget()) && judge.getResult() == Species.HUMAN)) {
-				if (!possessedPersons.contains(judge.getAgent())) {
+				if (!werewolves.contains(judge.getAgent()) && !possessedPersons.contains(judge.getAgent())) {
 					possessedPersons.add(judge.getAgent());
 				}
 			}
@@ -171,7 +178,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		for (int i = lastInqIdx; i < agi.getInquestList().size(); i++) {
 			Judge judge = agi.getInquestList().get(i);
 			if ((humans.contains(judge.getTarget()) && judge.getResult() == Species.WEREWOLF) || (werewolves.contains(judge.getTarget()) && judge.getResult() == Species.HUMAN)) {
-				if (!possessedPersons.contains(judge.getAgent())) {
+				if (!werewolves.contains(judge.getAgent()) && !possessedPersons.contains(judge.getAgent())) {
 					possessedPersons.add(judge.getAgent());
 				}
 			}
@@ -199,54 +206,41 @@ public class SampleWerewolf extends AbstractWerewolf {
 			}
 		}
 
-		if (fakeRole == Role.SEER) {
+		// 直前の調整の結果，潜伏人狼と決定した場合，すぐに空のカミングアウトをしたと考える
+		if (!isCameout && fakeRole == Role.VILLAGER) {
+			isCameout = true;
+			removeWhisper(Topic.DIVINED);
+			removeWhisper(Topic.INQUESTED);
+		} else if (fakeRole == Role.SEER) {
 			// カミングアウトする日になったら，あるいは対抗カミングアウトがあればカミングアウト
 			if (!isCameout && (day >= comingoutDay || agi.getComingoutMap().containsValue(Role.SEER)) && talkTurn >= comingoutTurn) {
-				// 既に偽占い師カミングアウトあり
+				isCameout = true;
+				// 既に偽占い師カミングアウトありの場合潜伏
 				if (fakeSeerCO > 0) {
-					// 偽霊媒師もカミングアウトありの場合，潜伏人狼
-					if (fakeMediumCO > 0) {
-						fakeRole = Role.VILLAGER;
-						comingoutDay = 10000;
-						removeWhisper(Topic.DIVINED);
-						removeWhisper(Topic.INQUESTED);
-					}
-					// 偽霊媒師に転向
-					else {
-						fakeRole = Role.MEDIUM;
-						removeWhisper(Topic.DIVINED);
-					}
+					fakeRole = Role.VILLAGER;
+					removeWhisper(Topic.DIVINED);
+					removeWhisper(Topic.INQUESTED);
 				}
-				// 占い師として出る
+				// 占い師を騙る
 				else {
 					enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
 					removeWhisper(Topic.INQUESTED);
-					isCameout = true;
 				}
 			}
 		} else if (fakeRole == Role.MEDIUM) {
 			// カミングアウトする日になったら，あるいは対抗カミングアウトがあればカミングアウト
 			if (!isCameout && (day >= comingoutDay || agi.getComingoutMap().containsValue(Role.MEDIUM)) && talkTurn >= comingoutTurn) {
-				// 既に偽霊媒師カミングアウトあり
+				isCameout = true;
+				// 既に偽霊媒師カミングアウトありの場合潜伏
 				if (fakeMediumCO > 0) {
-					// 偽占い師もカミングアウトありの場合，潜伏人狼
-					if (fakeSeerCO > 0) {
-						fakeRole = Role.VILLAGER;
-						comingoutDay = 10000;
-						removeWhisper(Topic.DIVINED);
-						removeWhisper(Topic.INQUESTED);
-					}
-					// 偽占い師に転向
-					else {
-						fakeRole = Role.SEER;
-						removeWhisper(Topic.INQUESTED);
-					}
+					fakeRole = Role.VILLAGER;
+					removeWhisper(Topic.DIVINED);
+					removeWhisper(Topic.INQUESTED);
 				}
-				// 霊媒師として出る
+				// 霊媒師を騙る
 				else {
 					enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
 					removeWhisper(Topic.DIVINED);
-					isCameout = true;
 				}
 			}
 		}
@@ -281,11 +275,21 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 	@Override
 	public String whisper() {
-		chooseAttackCandidate();
-		// 以前宣言した（未宣言を含む）襲撃先と違う襲撃先を選んだ場合宣言する
-		if (attackCandidate != declaredAttackCandidate) {
-			enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
-			declaredAttackCandidate = attackCandidate;
+
+		// 初日(Day0)は，騙る役職の調整をする
+		if (day == 0) {
+			Role newFakeRole = coordinateFakeRole();
+			if (newFakeRole != fakeRole) {
+				fakeRole = newFakeRole;
+				enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+			}
+		} else {
+			chooseAttackCandidate();
+			// 以前宣言した（未宣言を含む）襲撃先と違う襲撃先を選んだ場合宣言する
+			if (attackCandidate != declaredAttackCandidate) {
+				enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
+				declaredAttackCandidate = attackCandidate;
+			}
 		}
 
 		return dequeueWhisper().getText();
@@ -368,9 +372,56 @@ public class SampleWerewolf extends AbstractWerewolf {
 	}
 
 	/**
+	 * <div lang="ja">騙る役職について，他の人狼との間で調整をする</div>
+	 *
+	 * <div lang="en">Coordinates with other werewolves on the fake role.</div>
+	 */
+	Role coordinateFakeRole() {
+		// 騙る役職の希望調査
+		Map<Role, Integer> roleDesireMap = new HashMap<>();
+		for (Role role : fakeRoles) {
+			roleDesireMap.put(role, 0);
+		}
+		for (Role role : agi.getWhisperedComingoutMap().values()) {
+			if (fakeRoles.contains(role)) {
+				roleDesireMap.put(role, roleDesireMap.get(role) + 1);
+			}
+		}
+
+		switch (fakeRole) {
+		case VILLAGER:
+			// 村人騙り希望でも，空き役職がある場合，確率0.5でそちらに転向
+			for (Role role : fakeRoles) {
+				if (role != Role.VILLAGER && roleDesireMap.get(role) == 0 && Math.random() < 0.5) {
+					return role;
+				}
+			}
+			break;
+
+		case SEER:
+			// 自分の他に占い師希望者がいた場合，確率0.5で村人に転向
+			if (roleDesireMap.get(Role.SEER) > 1 && Math.random() < 0.5) {
+				return Role.VILLAGER;
+			}
+			break;
+
+		case MEDIUM:
+			// 自分の他に霊媒師希望者がいた場合，確率0.5で村人に転向
+			if (roleDesireMap.get(Role.MEDIUM) > 1 && Math.random() < 0.5) {
+				return Role.VILLAGER;
+			}
+			break;
+
+		default:
+			break;
+		}
+		return fakeRole;
+	}
+
+	/**
 	 * <div lang="ja">投票先候補を選ぶ</div>
 	 *
-	 * <div lang="en">Choose a candidate for vote.</div>
+	 * <div lang="en">Chooses a candidate for vote.</div>
 	 */
 	void chooseVoteCandidate() {
 		List<Agent> villagers = new ArrayList<>(agi.getAliveOthers());
@@ -423,7 +474,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	/**
 	 * <div lang="ja">襲撃先候補を選ぶ</div>
 	 *
-	 * <div lang="en">Choose a candidate for attack.</div>
+	 * <div lang="en">Chooses a candidate for attack.</div>
 	 */
 	void chooseAttackCandidate() {
 		// カミングアウトした村人陣営は襲撃先候補
@@ -445,7 +496,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 		}
 		Collections.shuffle(candidates);
 		attackCandidate = candidates.get(0);
-		enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
 	}
 
 	/**
@@ -465,7 +515,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 	Judge getFakeJudge(Role role) {
 		Agent target = null;
 		Species result = null;
-		List<Species> results = new ArrayList<>(Arrays.asList(Species.HUMAN, Species.WEREWOLF));
 
 		// 村人騙りなら不必要
 		if (role == Role.VILLAGER) {
@@ -489,20 +538,20 @@ public class SampleWerewolf extends AbstractWerewolf {
 				Collections.shuffle(candidates);
 				target = candidates.get(0);
 			}
-			// 人狼が偽占い対象の場合
-			if (werewolves.contains(target)) {
-				result = Species.HUMAN;
-			}
+
+			result = Species.HUMAN;
 			// 人間が偽占い対象の場合
-			else {
-				// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
-				if (target == possessed || !agi.getComingoutMap().containsKey(target)) {
-					Collections.shuffle(results);
-					result = results.get(0);
-				}
-				// それ以外は人狼判定
-				else {
-					result = Species.WEREWOLF;
+			if (humans.contains(target)) {
+				// 偽人狼に余裕があれば
+				if (countWolfJudge(divinationQueue) < gameSetting.getRoleNum(Role.WEREWOLF)) {
+					// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
+					if ((target == possessed || !agi.getComingoutMap().containsKey(target)) && Math.random() < 0.5) {
+						result = Species.WEREWOLF;
+					}
+					// それ以外は人狼判定
+					else {
+						result = Species.WEREWOLF;
+					}
 				}
 			}
 		}
@@ -512,20 +561,20 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (target == null) {
 				return null;
 			}
-			// 人狼が霊媒対象の場合
-			if (werewolves.contains(target)) {
-				result = Species.HUMAN;
-			}
-			// 人間が偽占い対象の場合
-			else {
-				// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
-				if (target == possessed || !agi.getComingoutMap().containsKey(target)) {
-					Collections.shuffle(results);
-					result = results.get(0);
-				}
-				// それ以外は人狼判定
-				else {
-					result = Species.WEREWOLF;
+
+			result = Species.HUMAN;
+			// 人間が霊媒対象の場合
+			if (humans.contains(target)) {
+				// 偽人狼に余裕があれば
+				if (countWolfJudge(inquestQueue) < gameSetting.getRoleNum(Role.WEREWOLF)) {
+					// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
+					if ((target == possessed || !agi.getComingoutMap().containsKey(target)) && Math.random() < 0.5) {
+						result = Species.WEREWOLF;
+					}
+					// それ以外は人狼判定
+					else {
+						result = Species.WEREWOLF;
+					}
 				}
 			}
 		}
@@ -533,9 +582,28 @@ public class SampleWerewolf extends AbstractWerewolf {
 	}
 
 	/**
+	 * <div lang="ja">{@code Deque<Judge>}の中で，{@code result}が{@code WEREWOLF}であるものの数を返す</div>
+	 *
+	 * <div lang="en">Returns the number of {@code Judge}s whose {@code result} is {@code WEREWOLF} in the
+	 * {@code Deque<Judge>}.</div>
+	 * 
+	 * @param judges
+	 *            {@code Deque<Judge>}
+	 */
+	static int countWolfJudge(Deque<Judge> judges) {
+		int count = 0;
+		for (Judge judge : judges) {
+			if (judge.getResult() == Species.WEREWOLF) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	/**
 	 * <div lang="ja">発話を待ち行列に入れる</div>
 	 *
-	 * <div lang="en">Enqueue a utterance.</div>
+	 * <div lang="en">Enqueues a utterance.</div>
 	 * 
 	 * @param newContent
 	 *            <div lang="ja">発話を表す{@code Content}</div>
@@ -660,7 +728,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	/**
 	 * <div lang="ja">発話を待ち行列から取り出す</div>
 	 *
-	 * <div lang="en">Dequeue a utterance.</div>
+	 * <div lang="en">Dequeues a utterance.</div>
 	 * 
 	 * @return <div lang="ja">発話を表す{@code Content}</div>
 	 *
@@ -676,7 +744,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	/**
 	 * <div lang="ja">囁きを待ち行列に入れる</div>
 	 *
-	 * <div lang="en">Enqueue a whispered utterance.</div>
+	 * <div lang="en">Enqueues a whispered utterance.</div>
 	 * 
 	 * @param newContent
 	 *            <div lang="ja">発話を表す{@code Content}</div>
@@ -803,7 +871,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	/**
 	 * <div lang="ja">囁きを待ち行列から取り出す</div>
 	 *
-	 * <div lang="en">Dequeue a whispered utterance.</div>
+	 * <div lang="en">Dequeues a whispered utterance.</div>
 	 * 
 	 * @return <div lang="ja">発話を表す{@code Content}</div>
 	 *
@@ -819,7 +887,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	/**
 	 * <div lang="ja">指定したトピックの囁きを取り除く</div>
 	 *
-	 * <div lang="en">Remove the whispers of given topic.</div>
+	 * <div lang="en">Removes the whispers of given topic.</div>
 	 * 
 	 * @param topic
 	 *            <div lang="ja">取り除くトピックを表す{@code Topic}</div>

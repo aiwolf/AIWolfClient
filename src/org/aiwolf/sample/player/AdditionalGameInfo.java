@@ -29,17 +29,27 @@ public class AdditionalGameInfo {
 	private List<Agent> executedAgentList = new ArrayList<>();
 	private List<Judge> divinationList = new ArrayList<>();
 	private List<Judge> inquestList = new ArrayList<>();
+	private List<Judge> whisperedDivinationList = new ArrayList<>();
+	private List<Judge> whisperedInquestList = new ArrayList<>();
 	private List<Agent> killedAgentList = new ArrayList<>();
 	private List<Agent> aliveOthers;
 	private List<Agent> deadOthers = new ArrayList<>();
 	private Map<Agent, Role> comingoutMap = new HashMap<>();
+	private Map<Agent, Role> whisperedComingoutMap = new HashMap<>();
 	private Map<Agent, List<Judge>> judgeMap = new HashMap<>();
+	private Map<Agent, List<Judge>> whisperedJudgeMap = new HashMap<>();
 	private Map<Agent, List<Talk>> estimateMap = new HashMap<>();
+	private Map<Agent, List<Talk>> whisperedEstimateMap = new HashMap<>();
 	private Map<Agent, Agent> voteMap = new HashMap<>();
+	private Map<Agent, Agent> whisperedVoteMap = new HashMap<>();
+	private Map<Agent, Agent> attackVoteMap = new HashMap<>();
 	private Counter<Agent> voteCounter = new Counter<>();
+	private Counter<Agent> whisperedVoteCounter = new Counter<>();
+	private Counter<Agent> attackVoteCounter = new Counter<>();
 	private Agent me;
 	private Role myRole;
 	private int talkListHead; // talkList読み込みのヘッド
+	private int whisperListHead; // whisperList読み込みのヘッド
 	private int day;
 
 	/**
@@ -218,6 +228,38 @@ public class AdditionalGameInfo {
 	}
 
 	/**
+	 * <div lang="ja">カミングアウト（囁き）状況を返す</div>
+	 *
+	 * <div lang="en">Returns the situation of whispered comingouts.</div>
+	 * 
+	 * @return <div lang="ja">カミングアウト（囁き）状況を表す{@code Map<Agent, Role>}</div>
+	 *
+	 *         <div lang="en">{@code Map<Agent, Role>} representing the situation of whispered comingouts.</div>
+	 */
+	public Map<Agent, Role> getWhisperedComingoutMap() {
+		return whisperedComingoutMap;
+	}
+
+	/**
+	 * <div lang="ja">新たなカミングアウト（囁き）をカミングアウト（囁き）状況に登録する</div>
+	 *
+	 * <div lang="en">Registers a new whispered comingout on the whiepered comingout map.</div>
+	 * 
+	 * @param agent
+	 *            <div lang="ja">カミングアウトしたプレイヤーを表す{@code Agent}</div>
+	 *
+	 *            <div lang="en">{@code Agent} representing the player who did this comingout.</div>
+	 * 
+	 * @param role
+	 *            <div lang="ja">カミングアウトした役職を表す{@code Role}</div>
+	 *
+	 *            <div lang="en">{@code Role} representing the role this comingout claims.</div>
+	 */
+	public void putWhisperedComingoutMap(Agent agent, Role role) {
+		whisperedComingoutMap.put(agent, role);
+	}
+
+	/**
 	 * <div lang="ja">判定状況マップを返す</div>
 	 *
 	 * <div lang="en">Returns the situation of judgment.</div>
@@ -246,6 +288,37 @@ public class AdditionalGameInfo {
 			judgeMap.put(agent, new ArrayList<Judge>());
 		}
 		judgeMap.get(agent).add(judge);
+	}
+
+	/**
+	 * <div lang="ja">判定（囁き）状況マップを返す</div>
+	 *
+	 * <div lang="en">Returns the situation of whispered judgment.</div>
+	 * 
+	 * @return <div lang="ja">判定（囁き）状況を表す{@code Map<Agent, List<Judge>>}</div>
+	 *
+	 *         <div lang="en">{@code Map<Agent, List<Judge>>} representing the situation of whispered judgment.</div>
+	 */
+	public Map<Agent, List<Judge>> getWhisperedJudgeMap() {
+		return whisperedJudgeMap;
+	}
+
+	/**
+	 * <div lang="ja">新たな判定（囁き）を判定（囁き）状況マップに登録する</div>
+	 *
+	 * <div lang="en">Registers a new whispered judgment on the whispered judgment map.</div>
+	 * 
+	 * @param judge
+	 *            <div lang="ja">判定（囁き）を表す{@code Judge}</div>
+	 * 
+	 *            <div lang="en">{@code Judge} representing the whispered judgment.</div>
+	 */
+	public void putWhisperedJudgeMap(Judge judge) {
+		Agent agent = judge.getAgent();
+		if (whisperedJudgeMap.get(agent) == null) {
+			whisperedJudgeMap.put(agent, new ArrayList<Judge>());
+		}
+		whisperedJudgeMap.get(agent).add(judge);
 	}
 
 	/**
@@ -286,6 +359,43 @@ public class AdditionalGameInfo {
 	}
 
 	/**
+	 * <div lang="ja">推測（囁き）状況マップを返す</div>
+	 *
+	 * <div lang="en">Returns the situation of whispered estimate.</div>
+	 * 
+	 * @return <div lang="ja">推測（囁き）状況を表す{@code Map<Agent, List<Talk>>}</div>
+	 *
+	 *         <div lang="en">{@code Map<Agent, List<Talk>>} representing the situation of whispered estimate.</div>
+	 */
+	public Map<Agent, List<Talk>> getWhisperedEstimateMap() {
+		return whisperedEstimateMap;
+	}
+
+	/**
+	 * <div lang="ja">新たな推測（囁き）発言を推測（囁き）状況マップに登録する</div>
+	 *
+	 * <div lang="en">Registers a new estimating whisper on the whispered estimate map.</div>
+	 * 
+	 * @param content
+	 *            <div lang="ja">推測（囁き）発言を表す{@code Talk}</div>
+	 * 
+	 *            <div lang="en">{@code Talk} representing the estimating whisper.</div>
+	 */
+	public void putWhisperedEstimateMap(Talk talk) {
+		Content content = new Content(talk.getText());
+		if (content.getTopic() != Topic.ESTIMATE) {
+			return;
+		}
+		Agent agent = content.getTarget();
+		if (agent != null) {
+			if (whisperedEstimateMap.get(agent) == null) {
+				whisperedEstimateMap.put(agent, new ArrayList<Talk>());
+			}
+			whisperedEstimateMap.get(agent).add(talk);
+		}
+	}
+
+	/**
 	 * <div lang="ja">占い結果リストを返す</div>
 	 *
 	 * <div lang="en">Returns the list of divinations.</div>
@@ -309,7 +419,34 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Judge} representing the divination to be added.</div>
 	 */
 	public void addDivination(Judge judge) {
-		this.divinationList.add(judge);
+		divinationList.add(judge);
+	}
+
+	/**
+	 * <div lang="ja">占い結果（囁き）リストを返す</div>
+	 *
+	 * <div lang="en">Returns the list of whispered divinations.</div>
+	 * 
+	 * @return <div lang="ja">占い結果（囁き）リストを表す{@code List<Judge>}</div>
+	 *
+	 *         <div lang="en">{@code List<Judge>} representing the list of whispered divinations.</div>
+	 */
+	public List<Judge> getWhisperedDivinationList() {
+		return whisperedDivinationList;
+	}
+
+	/**
+	 * <div lang="ja">占い結果（囁き）リストに新しい占い結果（囁き）を追加する</div>
+	 *
+	 * <div lang="en">Add a new whispered divination to the list of whispered divinations.</div>
+	 * 
+	 * @param judge
+	 *            <div lang="ja">追加する占い結果（囁き）を表す{@code Judge}</div>
+	 *
+	 *            <div lang="en">{@code Judge} representing the whispered divination to be added.</div>
+	 */
+	public void addWhisperedDivination(Judge judge) {
+		whisperedDivinationList.add(judge);
 	}
 
 	/**
@@ -340,6 +477,33 @@ public class AdditionalGameInfo {
 	}
 
 	/**
+	 * <div lang="ja">霊媒結果（囁き）リストを返す</div>
+	 *
+	 * <div lang="en">Returns the list of whispered inquests.</div>
+	 * 
+	 * @return <div lang="ja">霊媒結果（囁き）リストを表す{@code List<Judge>}</div>
+	 *
+	 *         <div lang="en">{@code List<Judge>} representing the list of whispered inquests.</div>
+	 */
+	public List<Judge> getWhisperedInquestList() {
+		return whisperedInquestList;
+	}
+
+	/**
+	 * <div lang="ja">霊媒結果（囁き）リストに新しい霊媒結果（囁き）を追加する</div>
+	 *
+	 * <div lang="en">Add a new whispered inquest to the list of whispered inquests.</div>
+	 * 
+	 * @param judge
+	 *            <div lang="ja">追加する霊媒結果（囁き）を表す{@code Judge}</div>
+	 *
+	 *            <div lang="en">{@code Judge} representing the whispered inquest to be added.</div>
+	 */
+	public void addWhisperedInquestList(Judge judge) {
+		whisperedInquestList.add(judge);
+	}
+
+	/**
 	 * <div lang="ja">投票宣言マップを返す</div>
 	 *
 	 * <div lang="en">Returns the map of the declaration of vote.</div>
@@ -366,6 +530,61 @@ public class AdditionalGameInfo {
 	}
 
 	/**
+	 * <div lang="ja">投票宣言（囁き）マップを返す</div>
+	 *
+	 * <div lang="en">Returns the map of the whispered declaration of vote.</div>
+	 * 
+	 * @return <div lang="ja">投票宣言（囁き）マップを表す{@code Map<Agent, Agent>}</div>
+	 *
+	 *         <div lang="en">{@code Map<Agent, Agent>} representing the map of the whispered declaration of vote.</div>
+	 */
+	public Map<Agent, Agent> getWhisperedVoteMap() {
+		return whisperedVoteMap;
+	}
+
+	/**
+	 * <div lang="ja">投票宣言（囁き）カウンタを返す</div>
+	 *
+	 * <div lang="en">Returns the counter of the whispered declaration of vote.</div>
+	 * 
+	 * @return <div lang="ja">投票宣言（囁き）カウンタを表す{@code Counter<Agent>}</div>
+	 *
+	 *         <div lang="en">{@code Counter<Agent>} representing the counter of the whispered declaration of
+	 *         vote.</div>
+	 */
+	public Counter<Agent> getWhisperedVoteCounter() {
+		return whisperedVoteCounter;
+	}
+
+	/**
+	 * <div lang="ja">襲撃投票宣言マップを返す</div>
+	 *
+	 * <div lang="en">Returns the map of the declaration of vote for attack.</div>
+	 * 
+	 * @return <div lang="ja">襲撃投票宣言マップを表す{@code Map<Agent, Agent>}</div>
+	 *
+	 *         <div lang="en">{@code Map<Agent, Agent>} representing the map of the declaration of vote for
+	 *         attack.</div>
+	 */
+	public Map<Agent, Agent> getAttackVoteMap() {
+		return attackVoteMap;
+	}
+
+	/**
+	 * <div lang="ja">襲撃投票宣言カウンタを返す</div>
+	 *
+	 * <div lang="en">Returns the counter of the declaration of vote for attack.</div>
+	 * 
+	 * @return <div lang="ja">襲撃投票宣言カウンタを表す{@code Counter<Agent>}</div>
+	 *
+	 *         <div lang="en">{@code Counter<Agent>} representing the counter of the declaration of vote for
+	 *         attack.</div>
+	 */
+	public Counter<Agent> getAttackVoteCounter() {
+		return attackVoteCounter;
+	}
+
+	/**
 	 * <div lang="ja">追加ゲーム情報を更新する</div>
 	 *
 	 * <div lang="en">Updates the additional game information.</div>
@@ -381,9 +600,11 @@ public class AdditionalGameInfo {
 		if (gameInfo.getDay() == day + 1) {
 			day = gameInfo.getDay();
 			talkListHead = 0;
+			whisperListHead = 0;
 
 			// その日の投票宣言マップをクリア
 			voteMap.clear();
+			attackVoteMap.clear();
 
 			// 前日に追放されたエージェントを登録
 			addExecutedAgent(gameInfo.getExecutedAgent());
@@ -421,7 +642,7 @@ public class AdditionalGameInfo {
 				break;
 
 			case VOTE:
-				voteMap.put(talker, content.getTarget());
+				getVoteMap().put(talker, content.getTarget());
 				break;
 
 			case ESTIMATE:
@@ -438,6 +659,59 @@ public class AdditionalGameInfo {
 		voteCounter.clear();
 		for (Agent agent : voteMap.keySet()) {
 			voteCounter.add(voteMap.get(agent));
+		}
+
+		// whisperListからカミングアウト予告，占い結果予告，霊媒結果予告，投票宣言，襲撃投票宣言を抽出
+		List<Talk> whisperList = gameInfo.getWhisperList();
+		for (int i = whisperListHead; i < whisperList.size(); i++) {
+			Talk whisper = whisperList.get(i);
+			Agent whisperer = whisper.getAgent();
+			Content content = new Content(whisper.getText());
+			switch (content.getTopic()) {
+			case COMINGOUT:
+				putWhisperedComingoutMap(whisperer, content.getRole());
+				break;
+
+			case DIVINED:
+				Judge whisperedDivination = new Judge(day, whisperer, content.getTarget(), content.getResult());
+				addWhisperedDivination(whisperedDivination);
+				putWhisperedJudgeMap(whisperedDivination);
+				break;
+
+			case INQUESTED:
+				Judge whisperedInquest = new Judge(day, whisperer, content.getTarget(), content.getResult());
+				addWhisperedInquestList(whisperedInquest);
+				putWhisperedJudgeMap(whisperedInquest);
+				break;
+
+			case VOTE:
+				getWhisperedVoteMap().put(whisperer, content.getTarget());
+				break;
+
+			case ESTIMATE:
+				putWhisperedEstimateMap(whisper);
+				break;
+
+			case ATTACK:
+				getAttackVoteMap().put(whisperer, content.getTarget());
+				break;
+
+			default:
+				break;
+			}
+		}
+		whisperListHead = whisperList.size();
+
+		// 投票宣言の集計
+		whisperedVoteCounter.clear();
+		for (Agent agent : whisperedVoteMap.keySet()) {
+			whisperedVoteCounter.add(whisperedVoteMap.get(agent));
+		}
+
+		// 襲撃投票宣言の集計
+		attackVoteCounter.clear();
+		for (Agent agent : attackVoteMap.keySet()) {
+			attackVoteCounter.add(attackVoteMap.get(agent));
 		}
 	}
 
