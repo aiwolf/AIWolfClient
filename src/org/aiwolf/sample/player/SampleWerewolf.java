@@ -491,7 +491,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 		}
 		Collections.shuffle(candidates);
 		attackCandidate = candidates.get(0);
-		enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
 	}
 
 	/**
@@ -511,7 +510,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 	Judge getFakeJudge(Role role) {
 		Agent target = null;
 		Species result = null;
-		List<Species> results = new ArrayList<>(Arrays.asList(Species.HUMAN, Species.WEREWOLF));
 
 		// 村人騙りなら不必要
 		if (role == Role.VILLAGER) {
@@ -535,20 +533,20 @@ public class SampleWerewolf extends AbstractWerewolf {
 				Collections.shuffle(candidates);
 				target = candidates.get(0);
 			}
-			// 人狼が偽占い対象の場合
-			if (werewolves.contains(target)) {
-				result = Species.HUMAN;
-			}
+
+			result = Species.HUMAN;
 			// 人間が偽占い対象の場合
-			else {
-				// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
-				if (target == possessed || !agi.getComingoutMap().containsKey(target)) {
-					Collections.shuffle(results);
-					result = results.get(0);
-				}
-				// それ以外は人狼判定
-				else {
-					result = Species.WEREWOLF;
+			if (humans.contains(target)) {
+				// 偽人狼に余裕があれば
+				if (countWolfJudge(divinationQueue) < gameSetting.getRoleNum(Role.WEREWOLF)) {
+					// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
+					if ((target == possessed || !agi.getComingoutMap().containsKey(target)) && Math.random() < 0.5) {
+						result = Species.WEREWOLF;
+					}
+					// それ以外は人狼判定
+					else {
+						result = Species.WEREWOLF;
+					}
 				}
 			}
 		}
@@ -558,24 +556,43 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (target == null) {
 				return null;
 			}
-			// 人狼が霊媒対象の場合
-			if (werewolves.contains(target)) {
-				result = Species.HUMAN;
-			}
-			// 人間が偽占い対象の場合
-			else {
-				// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
-				if (target == possessed || !agi.getComingoutMap().containsKey(target)) {
-					Collections.shuffle(results);
-					result = results.get(0);
-				}
-				// それ以外は人狼判定
-				else {
-					result = Species.WEREWOLF;
+
+			result = Species.HUMAN;
+			// 人間が霊媒対象の場合
+			if (humans.contains(target)) {
+				// 偽人狼に余裕があれば
+				if (countWolfJudge(inquestQueue) < gameSetting.getRoleNum(Role.WEREWOLF)) {
+					// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
+					if ((target == possessed || !agi.getComingoutMap().containsKey(target)) && Math.random() < 0.5) {
+						result = Species.WEREWOLF;
+					}
+					// それ以外は人狼判定
+					else {
+						result = Species.WEREWOLF;
+					}
 				}
 			}
 		}
 		return new Judge(day, me, target, result);
+	}
+
+	/**
+	 * <div lang="ja">{@code Deque<Judge>}の中で，{@code result}が{@code WEREWOLF}であるものの数を返す</div>
+	 *
+	 * <div lang="en">Returns the number of {@code Judge}s whose {@code result} is {@code WEREWOLF} in the
+	 * {@code Deque<Judge>}.</div>
+	 * 
+	 * @param judges
+	 *            {@code Deque<Judge>}
+	 */
+	static int countWolfJudge(Deque<Judge> judges) {
+		int count = 0;
+		for (Judge judge : judges) {
+			if (judge.getResult() == Species.WEREWOLF) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	/**

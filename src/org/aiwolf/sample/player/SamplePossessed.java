@@ -41,6 +41,7 @@ import org.aiwolf.sample.lib.AbstractPossessed;
 public class SamplePossessed extends AbstractPossessed {
 
 	GameInfo currentGameInfo;
+	GameSetting gameSetting;
 	int day;
 	Agent me;
 	Role myRole;
@@ -67,6 +68,7 @@ public class SamplePossessed extends AbstractPossessed {
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
+		this.gameSetting = gameSetting;
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
@@ -286,7 +288,6 @@ public class SamplePossessed extends AbstractPossessed {
 		}
 	}
 
-
 	/**
 	 * <div lang="ja">偽判定を返す</div>
 	 *
@@ -334,13 +335,10 @@ public class SamplePossessed extends AbstractPossessed {
 				return null;
 			}
 		}
-
-		// 人狼と人間の割合を勘案して，30%の確率で人狼と判定
-		Species result = null;
-		if (Math.random() < 0.3) {
+		// 偽人狼に余裕があれば，人狼と人間の割合を勘案して，30%の確率で人狼と判定
+		Species result = Species.HUMAN;
+		if (SampleWerewolf.countWolfJudge(judgeQueue) < gameSetting.getRoleNum(Role.WEREWOLF) && Math.random() < 0.3) {
 			result = Species.WEREWOLF;
-		} else {
-			result = Species.HUMAN;
 		}
 		return new Judge(day, me, target, result);
 	}
