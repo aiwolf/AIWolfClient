@@ -82,6 +82,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		this.gameSetting = gameSetting;
+		day = -1;
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
@@ -94,10 +95,9 @@ public class SampleWerewolf extends AbstractWerewolf {
 				fakeRoles.add(role);
 			}
 		}
-		// 暫定的に騙る役職を決め，宣言する
+		// 暫定的に騙る役職を決める
 		Collections.shuffle(fakeRoles);
 		fakeRole = fakeRoles.get(0);
-		enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
 
 		// 1～3日目のランダムな日にカミングアウトする．他の人狼との同時カミングアウトを避けるため発話ターンは散らす
 		Collections.shuffle(comingoutDays);
@@ -119,9 +119,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 	@Override
 	public void update(GameInfo gameInfo) {
 
+		currentGameInfo = gameInfo;
+
 		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (gameInfo.getDay() == day + 1) {
-			day = gameInfo.getDay();
+		if (currentGameInfo.getDay() == day + 1) {
+			day = currentGameInfo.getDay();
 			declaredVoteCandidate = null;
 			voteCandidate = null;
 			declaredAttackCandidate = null;
@@ -131,6 +133,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 			talkQueue.clear();
 			whisperQueue.clear();
 			talkTurn = 0;
+
+			// 初日は騙る役職を宣言
+			if (day == 0) {
+				enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+			}
 
 			// 偽の判定
 			// カミングアウト前は占い結果と霊媒結果の両方用意
@@ -152,8 +159,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 				}
 			}
 		}
-
-		currentGameInfo = gameInfo;
 
 		int lastDivIdx = agi.getDivinationList().size();
 		int lastInqIdx = agi.getInquestList().size();
@@ -387,7 +392,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		case VILLAGER:
 			// 村人騙り希望でも，空き役職がある場合，確率0.5でそちらに転向
 			for (Role role : fakeRoles) {
-				if (role != Role.VILLAGER && roleDesireMap.get(role) == 0 && Math.random() > 0.5) {
+				if (role != Role.VILLAGER && roleDesireMap.get(role) == 0 && Math.random() < 0.5) {
 					return role;
 				}
 			}
@@ -395,14 +400,14 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 		case SEER:
 			// 自分の他に占い師希望者がいた場合，確率0.5で村人に転向
-			if (roleDesireMap.get(Role.SEER) > 1 && Math.random() > 0.5) {
+			if (roleDesireMap.get(Role.SEER) > 1 && Math.random() < 0.5) {
 				return Role.VILLAGER;
 			}
 			break;
 
 		case MEDIUM:
 			// 自分の他に霊媒師希望者がいた場合，確率0.5で村人に転向
-			if (roleDesireMap.get(Role.MEDIUM) > 1 && Math.random() > 0.5) {
+			if (roleDesireMap.get(Role.MEDIUM) > 1 && Math.random() < 0.5) {
 				return Role.VILLAGER;
 			}
 			break;

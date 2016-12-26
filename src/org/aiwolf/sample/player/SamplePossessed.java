@@ -69,6 +69,7 @@ public class SamplePossessed extends AbstractPossessed {
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		this.gameSetting = gameSetting;
+		day = -1;
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
@@ -107,9 +108,11 @@ public class SamplePossessed extends AbstractPossessed {
 	@Override
 	public void update(GameInfo gameInfo) {
 
+		currentGameInfo = gameInfo;
+
 		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (gameInfo.getDay() == day + 1) { // 1日の最初のupdate()
-			day = gameInfo.getDay();
+		if (currentGameInfo.getDay() == day + 1) { // 1日の最初のupdate()
+			day = currentGameInfo.getDay();
 			declaredVoteCandidate = null;
 			voteCandidate = null;
 			lastVote = null;
@@ -125,7 +128,6 @@ public class SamplePossessed extends AbstractPossessed {
 			}
 		}
 
-		currentGameInfo = gameInfo;
 		agi.update(currentGameInfo);
 	}
 
