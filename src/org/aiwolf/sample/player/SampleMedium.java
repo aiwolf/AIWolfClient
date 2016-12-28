@@ -81,28 +81,22 @@ public class SampleMedium extends AbstractMedium {
 
 	@Override
 	public void dayStart() {
-		// このメソッドの前に呼ばれるupdate()に任せて，何もしない
+		declaredVoteCandidate = null;
+		voteCandidate = null;
+		lastVote = null;
+		talkQueue.clear();
+
+		// 霊媒結果をFIFOに入れる
+		if (currentGameInfo.getMediumResult() != null) {
+			inquestQueue.offer(currentGameInfo.getMediumResult());
+		}
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
 
 		currentGameInfo = gameInfo;
-
-		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (currentGameInfo.getDay() == day + 1) { // 1日の最初のupdate()
-			day = currentGameInfo.getDay();
-			declaredVoteCandidate = null;
-			voteCandidate = null;
-			lastVote = null;
-			talkQueue.clear();
-
-			// 霊媒結果をFIFOに入れる
-			if (currentGameInfo.getMediumResult() != null) {
-				inquestQueue.offer(currentGameInfo.getMediumResult());
-			}
-		}
-
+		day = currentGameInfo.getDay();
 		agi.update(currentGameInfo);
 	}
 
