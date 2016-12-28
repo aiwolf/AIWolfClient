@@ -12,6 +12,8 @@ import org.aiwolf.common.data.Role;
  * <div lang="ja">村人用抽象クラス</div>
  *
  * <div lang="en">Abstract class for villager</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractVillager extends AbstractRole {
 

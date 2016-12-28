@@ -17,6 +17,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">各役職用抽象クラス共通のスーパークラス</div>
  *
  * <div lang="en">The common super class for each role's abstract class</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractRole {
 

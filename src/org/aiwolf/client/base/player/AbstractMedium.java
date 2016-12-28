@@ -17,6 +17,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">霊媒師用抽象クラス</div>
  *
  * <div lang="en">Abstract class for medium</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractMedium extends AbstractRole {
 

@@ -12,6 +12,8 @@ import org.aiwolf.common.data.Role;
  * <div lang="ja">裏切り者用抽象クラス</div>
  *
  * <div lang="en">Abstract class for possessed</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractPossessed extends AbstractRole{
 

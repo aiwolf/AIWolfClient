@@ -17,6 +17,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">占い師用抽象クラス</div>
  *
  * <div lang="en">Abstract class for seer</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractSeer extends AbstractRole{
 
