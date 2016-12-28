@@ -9,7 +9,9 @@ import org.aiwolf.common.AIWolfRuntimeException;
 
 /**
  * 各種エージェントにおいて呼ばれるべきではないメソッドが呼ばれたときに投げられるException
+ * 
  * @author tori
+ * @deprecated
  *
  */
 public class UnsuspectedMethodCallException extends AIWolfRuntimeException {

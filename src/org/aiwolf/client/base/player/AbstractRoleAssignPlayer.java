@@ -21,6 +21,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">役職ごとに実際に使用するプレイヤーを切り替えるプレイヤーの抽象クラス</div>
  *
  * <div lang="en">Abstract player class which switches player actually used according to its role.</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractRoleAssignPlayer implements Player {
 

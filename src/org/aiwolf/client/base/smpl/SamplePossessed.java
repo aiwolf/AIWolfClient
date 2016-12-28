@@ -28,6 +28,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">裏切り者プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample possessed agent</div>
+ * 
+ * @deprecated
  */
 public class SamplePossessed extends AbstractPossessed {
 

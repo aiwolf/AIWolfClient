@@ -17,6 +17,8 @@ import org.aiwolf.common.data.Role;
  * <div lang="ja">人狼用抽象クラス</div>
  *
  * <div lang="en">Abstract class for werewolf</div>
+ * 
+ * @deprecated
  */
 public abstract class AbstractWerewolf extends AbstractRole {
 

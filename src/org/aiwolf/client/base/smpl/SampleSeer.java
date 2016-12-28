@@ -25,6 +25,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">占い師プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample seer agent</div>
+ * 
+ * @deprecated
  */
 public class SampleSeer extends AbstractSeer{
 

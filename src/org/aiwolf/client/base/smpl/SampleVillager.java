@@ -22,6 +22,8 @@ import org.aiwolf.common.net.GameInfo;
  * <div lang="ja">村人プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample villager agent</div>
+ * 
+ * @deprecated
  */
 public class SampleVillager extends AbstractVillager{
 	/*
