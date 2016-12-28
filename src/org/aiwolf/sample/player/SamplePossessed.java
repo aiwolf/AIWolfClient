@@ -102,32 +102,25 @@ public class SamplePossessed extends AbstractPossessed {
 
 	@Override
 	public void dayStart() {
-		// このメソッドの前に呼ばれるupdate()に任せて，何もしない
+		declaredVoteCandidate = null;
+		voteCandidate = null;
+		lastVote = null;
+		talkQueue.clear();
+
+		// 偽の判定
+		if (day > 0) {
+			Judge judge = getFakeJudge(fakeRole);
+			if (judge != null) {
+				judgeQueue.offer(judge);
+				judgedAgents.add(judge.getTarget());
+			}
+		}
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
-
 		currentGameInfo = gameInfo;
-
-		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (currentGameInfo.getDay() == day + 1) { // 1日の最初のupdate()
-			day = currentGameInfo.getDay();
-			declaredVoteCandidate = null;
-			voteCandidate = null;
-			lastVote = null;
-			talkQueue.clear();
-
-			// 偽の判定
-			if (day > 0) {
-				Judge judge = getFakeJudge(fakeRole);
-				if (judge != null) {
-					judgeQueue.offer(judge);
-					judgedAgents.add(judge.getTarget());
-				}
-			}
-		}
-
+		day = currentGameInfo.getDay();
 		agi.update(currentGameInfo);
 	}
 

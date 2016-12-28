@@ -81,34 +81,27 @@ public class SampleSeer extends AbstractSeer {
 
 	@Override
 	public void dayStart() {
-		// このメソッドの前に呼ばれるupdate()に任せて，何もしない
+		declaredVoteCandidate = null;
+		voteCandidate = null;
+		lastVote = null;
+		talkQueue.clear();
+
+		// 占い結果をFIFOに入れる
+		Judge divination = currentGameInfo.getDivineResult();
+		if (divination != null) {
+			divinationQueue.offer(divination);
+			if (divination.getResult() == Species.HUMAN) {
+				humans.add(divination.getTarget());
+			} else {
+				werewolves.add(divination.getTarget());
+			}
+		}
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
-
 		currentGameInfo = gameInfo;
-
-		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (currentGameInfo.getDay() == day + 1) { // 1日の最初のupdate()
-			day = currentGameInfo.getDay();
-			declaredVoteCandidate = null;
-			voteCandidate = null;
-			lastVote = null;
-			talkQueue.clear();
-
-			// 占い結果をFIFOに入れる
-			Judge divination = currentGameInfo.getDivineResult();
-			if (divination != null) {
-				divinationQueue.offer(divination);
-				if (divination.getResult() == Species.HUMAN) {
-					humans.add(divination.getTarget());
-				} else {
-					werewolves.add(divination.getTarget());
-				}
-			}
-		}
-
+		day = currentGameInfo.getDay();
 		agi.update(currentGameInfo);
 	}
 

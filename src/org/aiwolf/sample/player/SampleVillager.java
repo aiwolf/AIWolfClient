@@ -68,23 +68,16 @@ public class SampleVillager extends AbstractVillager {
 
 	@Override
 	public void dayStart() {
-		// このメソッドの前に呼ばれるupdate()に任せて，何もしない
+		declaredVoteCandidate = null;
+		voteCandidate = null;
+		lastVote = null;
+		talkQueue.clear();
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
-
 		currentGameInfo = gameInfo;
-
-		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (currentGameInfo.getDay() == day + 1) { // 1日の最初のupdate()
-			day = currentGameInfo.getDay();
-			declaredVoteCandidate = null;
-			voteCandidate = null;
-			lastVote = null;
-			talkQueue.clear();
-		}
-
+		day = currentGameInfo.getDay();
 		agi.update(currentGameInfo);
 	}
 
