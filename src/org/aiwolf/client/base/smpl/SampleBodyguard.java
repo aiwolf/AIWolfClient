@@ -24,6 +24,8 @@ import org.aiwolf.common.net.GameInfo;
  * <div lang="ja">狩人プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample bodyguard agent</div>
+ * 
+ * @deprecated
  */
 public class SampleBodyguard extends AbstractBodyguard {
 

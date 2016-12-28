@@ -26,6 +26,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">霊媒師プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample medium agent</div>
+ * 
+ * @deprecated
  */
 public class SampleMedium extends AbstractMedium {
 

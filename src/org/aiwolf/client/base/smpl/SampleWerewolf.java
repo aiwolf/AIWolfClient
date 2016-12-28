@@ -28,6 +28,8 @@ import org.aiwolf.common.net.GameSetting;
  * <div lang="ja">人狼プレイヤーのサンプル</div>
  *
  * <div lang="en">Sample werewolf agent</div>
+ * 
+ * @deprecated
  */
 public class SampleWerewolf extends AbstractWerewolf {
 

@@ -18,6 +18,8 @@ import org.aiwolf.common.data.Role;
  * <div lang="ja">アドバンストゲーム情報</div>
  *
  * <div lang="en">Advanced game information</div>
+ * 
+ * @deprecated
  */
 public class AdvanceGameInfo {
 
