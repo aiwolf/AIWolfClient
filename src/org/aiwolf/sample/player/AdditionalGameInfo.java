@@ -86,6 +86,7 @@ public class AdditionalGameInfo {
 	public AdditionalGameInfo(GameInfo gameInfo) {
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
+		day = -1;
 		aliveOthers = new ArrayList<>(gameInfo.getAgentList());
 		aliveOthers.remove(me);
 	}
