@@ -63,6 +63,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	List<Agent> humans; // 人間リスト
 
 	int talkTurn; // talk()のターン
+	int whisperTurn; // whisper()のターン
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
 	int comingoutTurn; // カミングアウトするターン
@@ -72,7 +73,9 @@ public class SampleWerewolf extends AbstractWerewolf {
 	Deque<Judge> inquestQueue = new LinkedList<>(); // 偽霊媒結果のFIFO
 	List<Agent> divinedAgents = new ArrayList<>(); // 偽占い済みエージェントのリスト
 	Role fakeRole; // 騙る役職
+	boolean isFixFakeRole = false; // 騙る役職が決まったかどうか
 	List<Role> fakeRoles = new ArrayList<>(Arrays.asList(Role.VILLAGER)); // 騙れる役職のリスト
+	Judge lastFakeJudge;
 
 	@Override
 	public String getName() {
@@ -82,7 +85,6 @@ public class SampleWerewolf extends AbstractWerewolf {
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		this.gameSetting = gameSetting;
-		day = -1;
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
@@ -113,53 +115,23 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 	@Override
 	public void dayStart() {
-		// このメソッドの前に呼ばれるupdate()に任せて，何もしない
+		declaredVoteCandidate = null;
+		voteCandidate = null;
+		declaredAttackCandidate = null;
+		attackCandidate = null;
+		lastVote = null;
+		lastAttackVote = null;
+		lastFakeJudge = null;
+		talkQueue.clear();
+		whisperQueue.clear();
+		talkTurn = -1;
+		whisperTurn = -1;
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
-
 		currentGameInfo = gameInfo;
-
-		// 1日の最初のupdate()でdayStart()の機能を代行する
-		if (currentGameInfo.getDay() == day + 1) {
-			day = currentGameInfo.getDay();
-			declaredVoteCandidate = null;
-			voteCandidate = null;
-			declaredAttackCandidate = null;
-			attackCandidate = null;
-			lastVote = null;
-			lastAttackVote = null;
-			talkQueue.clear();
-			whisperQueue.clear();
-			talkTurn = 0;
-
-			// 初日は騙る役職を宣言
-			if (day == 0) {
-				enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
-			}
-
-			// 偽の判定
-			// カミングアウト前は占い結果と霊媒結果の両方用意
-			if (day > 0) {
-				if (!isCameout || fakeRole == Role.SEER) {
-					Judge divination = getFakeJudge(Role.SEER);
-					if (divination != null) {
-						divinationQueue.offer(divination);
-						divinedAgents.add(divination.getTarget());
-						enqueueWhisper(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
-					}
-				}
-				if (!isCameout || fakeRole == Role.MEDIUM) {
-					Judge inquest = getFakeJudge(Role.MEDIUM);
-					if (inquest != null) {
-						inquestQueue.offer(inquest);
-						enqueueWhisper(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
-					}
-				}
-			}
-		}
-
+		day = currentGameInfo.getDay();
 		int lastDivIdx = agi.getDivinationList().size();
 		int lastInqIdx = agi.getInquestList().size();
 		agi.update(currentGameInfo);
@@ -194,6 +166,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 	@Override
 	public String talk() {
+		talkTurn++;
 
 		// まず他の人狼のカミングアウト状況を調べる
 		int fakeSeerCO = 0;
@@ -269,19 +242,28 @@ public class SampleWerewolf extends AbstractWerewolf {
 			declaredVoteCandidate = voteCandidate;
 		}
 
-		talkTurn++;
 		return dequeueTalk().getText();
 	}
 
 	@Override
 	public String whisper() {
+		whisperTurn++;
 
 		// 初日(Day0)は，騙る役職の調整をする
 		if (day == 0) {
-			Role newFakeRole = coordinateFakeRole();
-			if (newFakeRole != fakeRole) {
-				fakeRole = newFakeRole;
-				enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+			if (!isFixFakeRole) {
+				// 最初に騙る役職を宣言
+				if (whisperTurn == 0) {
+					enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+				} else {
+					Role newFakeRole = coordinateFakeRole();
+					if (newFakeRole == null) {
+						isFixFakeRole = true;
+					} else if (newFakeRole != fakeRole) {
+						fakeRole = newFakeRole;
+						enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					}
+				}
 			}
 		} else {
 			chooseAttackCandidate();
@@ -289,6 +271,27 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (attackCandidate != declaredAttackCandidate) {
 				enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
 				declaredAttackCandidate = attackCandidate;
+			}
+		}
+
+		if (isFixFakeRole && lastFakeJudge == null) {
+			// 追放結果判明後なので翌日の偽判定を作成
+			if (fakeRole == Role.SEER) {
+				Judge divination = getFakeJudge(Role.SEER);
+				if (divination != null) {
+					lastFakeJudge = divination;
+					divinationQueue.offer(divination);
+					divinedAgents.add(divination.getTarget());
+					enqueueWhisper(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
+				}
+			}
+			if (fakeRole == Role.MEDIUM) {
+				Judge inquest = getFakeJudge(Role.MEDIUM);
+				if (inquest != null) {
+					lastFakeJudge = inquest;
+					inquestQueue.offer(inquest);
+					enqueueWhisper(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
+				}
 			}
 		}
 
@@ -386,6 +389,30 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (fakeRoles.contains(role)) {
 				roleDesireMap.put(role, roleDesireMap.get(role) + 1);
 			}
+		}
+
+		// 騙る役職が確定したか判定
+		boolean isFixed = true;
+		// 人手が足りている場合（普通のケース），村人以外への希望がすべて1なら確定
+		if (fakeRoles.size() <= werewolves.size()) {
+			for (Role role : fakeRoles) {
+				if (role != Role.VILLAGER && roleDesireMap.get(role) != 1) {
+					isFixed = false;
+					break;
+				}
+			}
+		}
+		// 人手不足の場合，村人希望が0で村人以外への希望がすべて1以下なら確定
+		else {
+			for (Role role : fakeRoles) {
+				if ((role == Role.VILLAGER && roleDesireMap.get(role) > 0) || roleDesireMap.get(role) > 1) {
+					isFixed = false;
+					break;
+				}
+			}
+		}
+		if (isFixed) {
+			return null;
 		}
 
 		switch (fakeRole) {
@@ -557,7 +584,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 		}
 		// 霊媒師騙りの場合
 		else if (role == Role.MEDIUM) {
-			target = currentGameInfo.getExecutedAgent();
+			if (currentGameInfo.getLatestExecutedAgent() != null) {
+				target = currentGameInfo.getLatestExecutedAgent();
+			} else {
+				target = currentGameInfo.getExecutedAgent();
+			}
 			if (target == null) {
 				return null;
 			}
