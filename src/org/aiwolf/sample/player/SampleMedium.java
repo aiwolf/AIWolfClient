@@ -110,7 +110,7 @@ public class SampleMedium extends AbstractMedium {
 		}
 
 		// 霊媒結果が人狼だったらカミングアウト
-		if (!inquestQueue.isEmpty() && inquestQueue.peekLast().getResult() == Species.WEREWOLF) {
+		if (!isCameout && !inquestQueue.isEmpty() && inquestQueue.peekLast().getResult() == Species.WEREWOLF) {
 			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
 			isCameout = true;
 		}
