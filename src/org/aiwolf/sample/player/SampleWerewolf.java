@@ -537,6 +537,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 					candidates.add(judge.getTarget());
 				}
 			}
+			candidates.removeAll(agi.getDeadOthers());
 			// 候補がいなければ人間と判定していない村人陣営から
 			if (candidates.isEmpty()) {
 				candidates.addAll(villagers);
