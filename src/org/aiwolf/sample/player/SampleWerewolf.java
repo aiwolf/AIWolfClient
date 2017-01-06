@@ -60,6 +60,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	Deque<Content> whisperQueue = new LinkedList<>();
 	Agent possessed; // 裏切り者と思われるプレイヤー
 	List<Agent> werewolves; // 人狼リスト
+	List<Agent> aliveWerewolves = new ArrayList<>(); // 生存人狼リスト
 	List<Agent> humans; // 人間リスト
 
 	int talkTurn; // talk()のターン
@@ -135,6 +136,31 @@ public class SampleWerewolf extends AbstractWerewolf {
 		int lastDivIdx = agi.getDivinationList().size();
 		int lastInqIdx = agi.getInquestList().size();
 		agi.update(currentGameInfo);
+		aliveWerewolves.clear();
+		aliveWerewolves.addAll(werewolves);
+		aliveWerewolves.removeAll(agi.getDeadOthers());
+
+		// 人狼1の場合whisper()が呼ばれないので0日目はupdate()で担当
+		if (aliveWerewolves.size() == 1 && day == 0) {
+			// 翌日の偽判定を作成
+			if (lastFakeJudge == null) {
+				if (fakeRole == Role.SEER) {
+					Judge divination = getFakeJudge(Role.SEER);
+					if (divination != null) {
+						lastFakeJudge = divination;
+						divinationQueue.offer(divination);
+						divinedAgents.add(divination.getTarget());
+					}
+				}
+				if (fakeRole == Role.MEDIUM) {
+					Judge inquest = getFakeJudge(Role.MEDIUM);
+					if (inquest != null) {
+						lastFakeJudge = inquest;
+						inquestQueue.offer(inquest);
+					}
+				}
+			}
+		}
 
 		List<Agent> possessedPersons = new ArrayList<>();
 		// 占い結果が嘘の場合，裏切り者候補
@@ -334,6 +360,31 @@ public class SampleWerewolf extends AbstractWerewolf {
 
 	@Override
 	public Agent attack() {
+
+		// 人狼1の場合whisper()が呼ばれないので1日目以降はattack()で担当
+		if (aliveWerewolves.size() == 1) {
+			chooseAttackCandidate();
+
+			// 追放結果判明後なので翌日の偽判定を作成
+			if (lastFakeJudge == null) {
+				if (fakeRole == Role.SEER) {
+					Judge divination = getFakeJudge(Role.SEER);
+					if (divination != null) {
+						lastFakeJudge = divination;
+						divinationQueue.offer(divination);
+						divinedAgents.add(divination.getTarget());
+					}
+				}
+				if (fakeRole == Role.MEDIUM) {
+					Judge inquest = getFakeJudge(Role.MEDIUM);
+					if (inquest != null) {
+						lastFakeJudge = inquest;
+						inquestQueue.offer(inquest);
+					}
+				}
+			}
+		}
+
 		// 初回投票
 		if (lastAttackVote == null) {
 			lastAttackVote = new Vote(day, me, attackCandidate);
