@@ -70,8 +70,10 @@ public class SampleWerewolf extends AbstractWerewolf {
 	int comingoutTurn; // カミングアウトするターン
 	List<Integer> comingoutTurns = new ArrayList<>(Arrays.asList(0, 1, 2));
 	boolean isCameout; // カミングアウト済みか否か
-	Deque<Judge> divinationQueue = new LinkedList<>(); // 偽占い結果のFIFO
-	Deque<Judge> inquestQueue = new LinkedList<>(); // 偽霊媒結果のFIFO
+	List<Judge> divinationList = new ArrayList<>(); // 偽占い結果のリスト
+	int divinationHead; // 偽占い結果のヘッド
+	List<Judge> inquestList = new ArrayList<>(); // 偽霊媒結果のリスト
+	int inquestHead; // 偽霊媒結果のヘッド
 	List<Agent> divinedAgents = new ArrayList<>(); // 偽占い済みエージェントのリスト
 	Role fakeRole; // 騙る役職
 	boolean isFixFakeRole = false; // 騙る役職が決まったかどうか
@@ -109,8 +111,10 @@ public class SampleWerewolf extends AbstractWerewolf {
 		comingoutTurn = comingoutTurns.get(0);
 
 		isCameout = false;
-		inquestQueue.clear();
-		divinationQueue.clear();
+		inquestList.clear();
+		inquestHead = 0;
+		divinationList.clear();
+		divinationHead = 0;
 		divinedAgents.clear();
 	}
 
@@ -148,7 +152,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 					Judge divination = getFakeJudge(Role.SEER);
 					if (divination != null) {
 						lastFakeJudge = divination;
-						divinationQueue.offer(divination);
+						divinationList.add(divination);
 						divinedAgents.add(divination.getTarget());
 					}
 				}
@@ -156,7 +160,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 					Judge inquest = getFakeJudge(Role.MEDIUM);
 					if (inquest != null) {
 						lastFakeJudge = inquest;
-						inquestQueue.offer(inquest);
+						inquestList.add(inquest);
 					}
 				}
 			}
@@ -247,15 +251,17 @@ public class SampleWerewolf extends AbstractWerewolf {
 		// カミングアウトしたら，これまでの偽判定結果をすべて公開
 		if (isCameout) {
 			if (fakeRole == Role.SEER) {
-				while (!divinationQueue.isEmpty()) {
-					Judge divination = divinationQueue.poll();
+				for (int head = divinationHead; head < divinationList.size(); head++) {
+					Judge divination = divinationList.get(head);
 					enqueueTalk(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
 				}
+				divinationHead = divinationList.size();
 			} else if (fakeRole == Role.MEDIUM) {
-				while (!inquestQueue.isEmpty()) {
-					Judge inquest = inquestQueue.poll();
+				for (int head = inquestHead; head < inquestList.size(); head++) {
+					Judge inquest = inquestList.get(head);
 					enqueueTalk(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
 				}
+				inquestHead = inquestList.size();
 			}
 		}
 
@@ -306,7 +312,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 				Judge divination = getFakeJudge(Role.SEER);
 				if (divination != null) {
 					lastFakeJudge = divination;
-					divinationQueue.offer(divination);
+					divinationList.add(divination);
 					divinedAgents.add(divination.getTarget());
 					enqueueWhisper(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
 				}
@@ -315,7 +321,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 				Judge inquest = getFakeJudge(Role.MEDIUM);
 				if (inquest != null) {
 					lastFakeJudge = inquest;
-					inquestQueue.offer(inquest);
+					inquestList.add(inquest);
 					enqueueWhisper(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
 				}
 			}
@@ -371,7 +377,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 					Judge divination = getFakeJudge(Role.SEER);
 					if (divination != null) {
 						lastFakeJudge = divination;
-						divinationQueue.offer(divination);
+						divinationList.add(divination);
 						divinedAgents.add(divination.getTarget());
 					}
 				}
@@ -379,7 +385,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 					Judge inquest = getFakeJudge(Role.MEDIUM);
 					if (inquest != null) {
 						lastFakeJudge = inquest;
-						inquestQueue.offer(inquest);
+						inquestList.add(inquest);
 					}
 				}
 			}
@@ -518,13 +524,13 @@ public class SampleWerewolf extends AbstractWerewolf {
 			}
 			// 人狼と判定したエージェントは投票先候補
 			List<Agent> fakeHumans = new ArrayList<>();
-			Deque<Judge> judgeQueue = null;
+			List<Judge> judgeList = null;
 			if (fakeRole == Role.SEER) {
-				judgeQueue = divinationQueue;
+				judgeList = divinationList;
 			} else if (fakeRole == Role.MEDIUM) {
-				judgeQueue = inquestQueue;
+				judgeList = inquestList;
 			}
-			for (Judge judge : judgeQueue) {
+			for (Judge judge : judgeList) {
 				if (judge.getResult() == Species.HUMAN) {
 					fakeHumans.add(judge.getTarget());
 				} else if (!candidates.contains(judge.getTarget())) {
@@ -621,10 +627,12 @@ public class SampleWerewolf extends AbstractWerewolf {
 			// 人間が偽占い対象の場合
 			if (humans.contains(target)) {
 				// 偽人狼に余裕があれば
-				if (countWolfJudge(divinationQueue) < gameSetting.getRoleNum(Role.WEREWOLF)) {
+				if (countWolfJudge(divinationList) < gameSetting.getRoleNum(Role.WEREWOLF)) {
 					// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
-					if ((target == possessed || !agi.getComingoutMap().containsKey(target)) && Math.random() < 0.5) {
-						result = Species.WEREWOLF;
+					if ((target == possessed || !agi.getComingoutMap().containsKey(target))) {
+						if (Math.random() < 0.5) {
+							result = Species.WEREWOLF;
+						}
 					}
 					// それ以外は人狼判定
 					else {
@@ -648,10 +656,12 @@ public class SampleWerewolf extends AbstractWerewolf {
 			// 人間が霊媒対象の場合
 			if (humans.contains(target)) {
 				// 偽人狼に余裕があれば
-				if (countWolfJudge(inquestQueue) < gameSetting.getRoleNum(Role.WEREWOLF)) {
+				if (countWolfJudge(inquestList) < gameSetting.getRoleNum(Role.WEREWOLF)) {
 					// 裏切り者，あるいはまだカミングアウトしていないエージェントの場合，判定は五分五分
-					if ((target == possessed || !agi.getComingoutMap().containsKey(target)) && Math.random() < 0.5) {
-						result = Species.WEREWOLF;
+					if ((target == possessed || !agi.getComingoutMap().containsKey(target))) {
+						if (Math.random() < 0.5) {
+							result = Species.WEREWOLF;
+						}
 					}
 					// それ以外は人狼判定
 					else {
@@ -664,15 +674,14 @@ public class SampleWerewolf extends AbstractWerewolf {
 	}
 
 	/**
-	 * <div lang="ja">{@code Deque<Judge>}の中で，{@code result}が{@code WEREWOLF}であるものの数を返す</div>
+	 * <div lang="ja">{@code List<Judge>}の中で，{@code result}が{@code WEREWOLF}であるものの数を返す</div>
 	 *
-	 * <div lang="en">Returns the number of {@code Judge}s whose {@code result} is {@code WEREWOLF} in the
-	 * {@code Deque<Judge>}.</div>
+	 * <div lang="en">Returns the number of {@code Judge}s whose {@code result} is {@code WEREWOLF} in the {@code List<Judge>}.</div>
 	 * 
 	 * @param judges
-	 *            {@code Deque<Judge>}
+	 *            {@code LIst<Judge>}
 	 */
-	static int countWolfJudge(Deque<Judge> judges) {
+	static int countWolfJudge(List<Judge> judges) {
 		int count = 0;
 		for (Judge judge : judges) {
 			if (judge.getResult() == Species.WEREWOLF) {
