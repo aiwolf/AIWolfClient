@@ -57,7 +57,8 @@ public class SamplePossessed extends AbstractPossessed {
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
 	boolean isCameout; // カミングアウト済みか否か
-	Deque<Judge> judgeQueue = new LinkedList<>(); // 偽判定結果のFIFO
+	List<Judge> judgeList = new ArrayList<>(); // 偽判定結果のリスト
+	int judgeHead; // 偽判定結果のヘッド
 	List<Agent> judgedAgents = new ArrayList<>(); // 偽判定済みエージェントのリスト
 	Role fakeRole; // 騙る役職
 
@@ -96,7 +97,8 @@ public class SamplePossessed extends AbstractPossessed {
 		comingoutDay = 0;
 
 		isCameout = false;
-		judgeQueue.clear();
+		judgeList.clear();
+		judgeHead = 0;
 		judgedAgents.clear();
 	}
 
@@ -111,7 +113,7 @@ public class SamplePossessed extends AbstractPossessed {
 		if (day > 0) {
 			Judge judge = getFakeJudge(fakeRole);
 			if (judge != null) {
-				judgeQueue.offer(judge);
+				judgeList.add(judge);
 				judgedAgents.add(judge.getTarget());
 			}
 		}
@@ -134,14 +136,15 @@ public class SamplePossessed extends AbstractPossessed {
 
 		// カミングアウトしたらこれまでの偽判定結果をすべて公開
 		if (isCameout) {
-			while (!judgeQueue.isEmpty()) {
-				Judge judge = judgeQueue.poll();
+			for (int head = judgeHead; head < judgeList.size(); head++) {
+				Judge judge = judgeList.get(head);
 				if (fakeRole == Role.SEER) {
 					enqueueTalk(new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())));
 				} else if (fakeRole == Role.MEDIUM) {
 					enqueueTalk(new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())));
 				}
 			}
+			judgeHead = judgeList.size();
 		}
 
 		chooseVoteCandidate();
@@ -258,7 +261,7 @@ public class SamplePossessed extends AbstractPossessed {
 			}
 			// 人狼と判定したエージェントは投票先候補
 			List<Agent> fakeHumans = new ArrayList<>();
-			for (Judge judge : judgeQueue) {
+			for (Judge judge : judgeList) {
 				if (judge.getResult() == Species.HUMAN) {
 					fakeHumans.add(judge.getTarget());
 				} else if (!candidates.contains(judge.getTarget())) {
@@ -332,7 +335,7 @@ public class SamplePossessed extends AbstractPossessed {
 		}
 		// 偽人狼に余裕があれば，人狼と人間の割合を勘案して，30%の確率で人狼と判定
 		Species result = Species.HUMAN;
-		if (SampleWerewolf.countWolfJudge(judgeQueue) < gameSetting.getRoleNum(Role.WEREWOLF) && Math.random() < 0.3) {
+		if (SampleWerewolf.countWolfJudge(judgeList) < gameSetting.getRoleNum(Role.WEREWOLF) && Math.random() < 0.3) {
 			result = Species.WEREWOLF;
 		}
 		return new Judge(day, me, target, result);
