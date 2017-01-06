@@ -575,6 +575,10 @@ public class SampleWerewolf extends AbstractWerewolf {
 		if (candidates.isEmpty()) {
 			candidates.addAll(villagers);
 		}
+		// 村人陣営がいない場合は裏切り者を襲う
+		if (candidates.isEmpty()) {
+			candidates.add(possessed);
+		}
 		if (candidates.contains(attackCandidate)) {
 			return;
 		}
