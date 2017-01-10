@@ -19,6 +19,7 @@ import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -52,6 +53,7 @@ public class SampleMedium extends AbstractMedium {
 	List<Agent> seers = new ArrayList<>(); // 占い師候補リスト
 	Agent trueSeer; // 真占い師と思われるエージェント
 	List<Agent> werewolves = new ArrayList<>(); // 人狼候補リスト
+	Content skipMe;
 
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
@@ -67,6 +69,7 @@ public class SampleMedium extends AbstractMedium {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		day = -1;
 		me = gameInfo.getAgent();
+		skipMe = new Content(new SkipContentBuilder(me));
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
 		seers.clear();
@@ -105,19 +108,19 @@ public class SampleMedium extends AbstractMedium {
 		// TODO 投票発言結果にもとづくカミングアウト（追放されそうになった場合の回避）
 		// カミングアウトする日になったらカミングアウト
 		if (!isCameout && day >= comingoutDay) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
 
 		// 霊媒結果が人狼だったらカミングアウト
 		if (!isCameout && !inquestQueue.isEmpty() && inquestQueue.peekLast().getResult() == Species.WEREWOLF) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
 
 		// 霊媒師カミングアウトが出たらカミングアウト
 		if (!isCameout && agi.getComingoutMap().containsValue(Role.MEDIUM)) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
 
@@ -125,14 +128,14 @@ public class SampleMedium extends AbstractMedium {
 		if (isCameout) {
 			while (!inquestQueue.isEmpty()) {
 				Judge inquest = inquestQueue.poll();
-				enqueueTalk(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
+				enqueueTalk(new Content(new InquestContentBuilder(me, inquest.getTarget(), inquest.getResult())));
 			}
 		}
 
 		chooseVoteCandidate();
 		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
 		if (voteCandidate != declaredVoteCandidate) {
-			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			enqueueTalk(new Content(new VoteContentBuilder(me, voteCandidate)));
 			declaredVoteCandidate = voteCandidate;
 		}
 
@@ -264,7 +267,7 @@ public class SampleMedium extends AbstractMedium {
 				// これまで真占い師なしか，これまでの真占い師が間違いだった場合，新たな占い師推定発言をする
 				Collections.shuffle(seers);
 				trueSeer = seers.get(0);
-				enqueueTalk(new Content(new EstimateContentBuilder(trueSeer, Role.SEER)));
+				enqueueTalk(new Content(new EstimateContentBuilder(me, trueSeer, Role.SEER)));
 			}
 		}
 
@@ -282,7 +285,7 @@ public class SampleMedium extends AbstractMedium {
 						if (candidates.contains(agent)) {
 							voteCandidate = agent;
 							// 投票先が変わったので人狼推定発言をする
-							enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+							enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
 							return;
 						}
 					}
@@ -291,7 +294,7 @@ public class SampleMedium extends AbstractMedium {
 				Collections.shuffle(candidates);
 				voteCandidate = candidates.get(0);
 				// 投票先が変わったので人狼推定発言をする
-				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+				enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
 				return;
 			}
 			// 既定の投票先が投票先候補に含まれる場合，投票先はそのまま
@@ -411,11 +414,11 @@ public class SampleMedium extends AbstractMedium {
 				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
 				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
 					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
-						Content pastContent = new Content(talk.getText());
+						Content pastContent = new Content(talk.getAgent(), talk.getText());
 						if (pastContent.getRole() == newContent.getRole()) {
-							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new AgreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						} else {
-							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new DisagreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						}
 					}
 				}
@@ -435,7 +438,7 @@ public class SampleMedium extends AbstractMedium {
 	 */
 	Content dequeueTalk() {
 		if (talkQueue.isEmpty()) {
-			return Content.SKIP;
+			return skipMe;
 		}
 		return talkQueue.poll();
 	}

@@ -17,8 +17,9 @@ import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
-import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.DivinedContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -52,6 +53,7 @@ public class SampleSeer extends AbstractSeer {
 	List<Agent> humans = new ArrayList<>(); // 人間リスト
 	List<Agent> werewolves = new ArrayList<>(); // 人狼リスト
 	List<Agent> semiwolves = new ArrayList<>(); // 人狼かもリスト
+	Content skipMe;
 
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
@@ -67,6 +69,7 @@ public class SampleSeer extends AbstractSeer {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		day = -1;
 		me = gameInfo.getAgent();
+		skipMe = new Content(new SkipContentBuilder(me));
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
 		humans.clear();
@@ -110,19 +113,19 @@ public class SampleSeer extends AbstractSeer {
 		// TODO 投票発言結果にもとづくカミングアウト（追放されそうになった場合の回避）
 		// カミングアウトする日になったらカミングアウト
 		if (!isCameout && day >= comingoutDay) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
 
 		// 人狼を占ったらカミングアウト
 		if (!isCameout && !divinationQueue.isEmpty() && divinationQueue.peekLast().getResult() == Species.WEREWOLF) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
 
 		// 占い師カミングアウトが出たらカミングアウト
 		if (!isCameout && agi.getComingoutMap().containsValue(Role.SEER)) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, myRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
 
@@ -130,14 +133,14 @@ public class SampleSeer extends AbstractSeer {
 		if (isCameout) {
 			while (!divinationQueue.isEmpty()) {
 				Judge divination = divinationQueue.poll();
-				enqueueTalk(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
+				enqueueTalk(new Content(new DivinedContentBuilder(me, divination.getTarget(), divination.getResult())));
 			}
 		}
 
 		chooseVoteCandidate();
 		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
 		if (voteCandidate != declaredVoteCandidate) {
-			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			enqueueTalk(new Content(new VoteContentBuilder(me, voteCandidate)));
 			declaredVoteCandidate = voteCandidate;
 		}
 
@@ -304,7 +307,7 @@ public class SampleSeer extends AbstractSeer {
 						if (semiwolves.contains(agent)) {
 							voteCandidate = agent;
 							// 投票先が変わったので人狼推定発言をする
-							enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+							enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
 							return;
 						}
 					}
@@ -313,7 +316,7 @@ public class SampleSeer extends AbstractSeer {
 				Collections.shuffle(semiwolves);
 				voteCandidate = semiwolves.get(0);
 				// 投票先が変わったので人狼推定発言をする
-				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+				enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
 				return;
 			}
 		}
@@ -429,11 +432,11 @@ public class SampleSeer extends AbstractSeer {
 				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
 				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
 					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
-						Content pastContent = new Content(talk.getText());
+						Content pastContent = new Content(talk.getAgent(), talk.getText());
 						if (pastContent.getRole() == newContent.getRole()) {
-							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new AgreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						} else {
-							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new DisagreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						}
 					}
 				}
@@ -453,7 +456,7 @@ public class SampleSeer extends AbstractSeer {
 	 */
 	Content dequeueTalk() {
 		if (talkQueue.isEmpty()) {
-			return Content.SKIP;
+			return skipMe;
 		}
 		return talkQueue.poll();
 	}

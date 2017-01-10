@@ -20,9 +20,10 @@ import org.aiwolf.client.lib.AttackContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
-import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.DivinedContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -62,6 +63,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	List<Agent> werewolves; // 人狼リスト
 	List<Agent> aliveWerewolves = new ArrayList<>(); // 生存人狼リスト
 	List<Agent> humans; // 人間リスト
+	Content skipMe;
 
 	int talkTurn; // talk()のターン
 	int whisperTurn; // whisper()のターン
@@ -89,6 +91,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		this.gameSetting = gameSetting;
 		me = gameInfo.getAgent();
+		skipMe = new Content(new SkipContentBuilder(me));
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
 		werewolves = new ArrayList<>(gameInfo.getRoleMap().keySet());
@@ -189,7 +192,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (!possessedPersons.contains(possessed)) {
 				Collections.shuffle(possessedPersons);
 				possessed = possessedPersons.get(0);
-				enqueueWhisper(new Content(new EstimateContentBuilder(possessed, Role.POSSESSED)));
+				enqueueWhisper(new Content(new EstimateContentBuilder(me, possessed, Role.POSSESSED)));
 			}
 		}
 	}
@@ -226,7 +229,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 				}
 				// 占い師を騙る
 				else {
-					enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					enqueueTalk(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 					removeWhisper(Topic.INQUESTED);
 				}
 			}
@@ -242,7 +245,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 				}
 				// 霊媒師を騙る
 				else {
-					enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					enqueueTalk(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 					removeWhisper(Topic.DIVINED);
 				}
 			}
@@ -253,13 +256,13 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (fakeRole == Role.SEER) {
 				for (int head = divinationHead; head < divinationList.size(); head++) {
 					Judge divination = divinationList.get(head);
-					enqueueTalk(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
+					enqueueTalk(new Content(new DivinedContentBuilder(me, divination.getTarget(), divination.getResult())));
 				}
 				divinationHead = divinationList.size();
 			} else if (fakeRole == Role.MEDIUM) {
 				for (int head = inquestHead; head < inquestList.size(); head++) {
 					Judge inquest = inquestList.get(head);
-					enqueueTalk(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
+					enqueueTalk(new Content(new InquestContentBuilder(me, inquest.getTarget(), inquest.getResult())));
 				}
 				inquestHead = inquestList.size();
 			}
@@ -270,7 +273,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		if (voteCandidate != declaredVoteCandidate)
 
 		{
-			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			enqueueTalk(new Content(new VoteContentBuilder(me, voteCandidate)));
 			declaredVoteCandidate = voteCandidate;
 		}
 
@@ -286,14 +289,14 @@ public class SampleWerewolf extends AbstractWerewolf {
 			if (!isFixFakeRole) {
 				// 最初に騙る役職を宣言
 				if (whisperTurn == 0) {
-					enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					enqueueWhisper(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 				} else {
 					Role newFakeRole = coordinateFakeRole();
 					if (newFakeRole == null) {
 						isFixFakeRole = true;
 					} else if (newFakeRole != fakeRole) {
 						fakeRole = newFakeRole;
-						enqueueWhisper(new Content(new ComingoutContentBuilder(me, fakeRole)));
+						enqueueWhisper(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 					}
 				}
 			}
@@ -301,7 +304,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 			chooseAttackCandidate();
 			// 以前宣言した（未宣言を含む）襲撃先と違う襲撃先を選んだ場合宣言する
 			if (attackCandidate != declaredAttackCandidate) {
-				enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
+				enqueueWhisper(new Content(new AttackContentBuilder(me, attackCandidate)));
 				declaredAttackCandidate = attackCandidate;
 			}
 		}
@@ -314,7 +317,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 					lastFakeJudge = divination;
 					divinationList.add(divination);
 					divinedAgents.add(divination.getTarget());
-					enqueueWhisper(new Content(new DivineContentBuilder(divination.getTarget(), divination.getResult())));
+					enqueueWhisper(new Content(new DivinedContentBuilder(me, divination.getTarget(), divination.getResult())));
 				}
 			}
 			if (fakeRole == Role.MEDIUM) {
@@ -322,7 +325,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 				if (inquest != null) {
 					lastFakeJudge = inquest;
 					inquestList.add(inquest);
-					enqueueWhisper(new Content(new InquestContentBuilder(inquest.getTarget(), inquest.getResult())));
+					enqueueWhisper(new Content(new InquestContentBuilder(me, inquest.getTarget(), inquest.getResult())));
 				}
 			}
 		}
@@ -681,7 +684,8 @@ public class SampleWerewolf extends AbstractWerewolf {
 	/**
 	 * <div lang="ja">{@code List<Judge>}の中で，{@code result}が{@code WEREWOLF}であるものの数を返す</div>
 	 *
-	 * <div lang="en">Returns the number of {@code Judge}s whose {@code result} is {@code WEREWOLF} in the {@code List<Judge>}.</div>
+	 * <div lang="en">Returns the number of {@code Judge}s whose {@code result} is {@code WEREWOLF} in the
+	 * {@code List<Judge>}.</div>
 	 * 
 	 * @param judges
 	 *            {@code LIst<Judge>}
@@ -808,11 +812,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
 				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
 					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
-						Content pastContent = new Content(talk.getText());
+						Content pastContent = new Content(talk.getAgent(), talk.getText());
 						if (pastContent.getRole() == newContent.getRole()) {
-							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new AgreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						} else {
-							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new DisagreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						}
 					}
 				}
@@ -832,7 +836,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	 */
 	Content dequeueTalk() {
 		if (talkQueue.isEmpty()) {
-			return Content.SKIP;
+			return skipMe;
 		}
 		return talkQueue.poll();
 	}
@@ -975,7 +979,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 	 */
 	Content dequeueWhisper() {
 		if (whisperQueue.isEmpty()) {
-			return Content.SKIP;
+			return skipMe;
 		}
 		return whisperQueue.poll();
 	}

@@ -17,8 +17,9 @@ import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
-import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.DivinedContentBuilder;
 import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -53,6 +54,7 @@ public class SamplePossessed extends AbstractPossessed {
 	List<Agent> seers = new ArrayList<>(); // 占い師候補リスト
 	Agent trueSeer; // 真占い師と思われるエージェント
 	List<Agent> werewolves = new ArrayList<>(); // 人狼候補リスト
+	Content skipMe;
 
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
@@ -72,6 +74,7 @@ public class SamplePossessed extends AbstractPossessed {
 		this.gameSetting = gameSetting;
 		day = -1;
 		me = gameInfo.getAgent();
+		skipMe = new Content(new SkipContentBuilder(me));
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
 		seers.clear();
@@ -130,7 +133,7 @@ public class SamplePossessed extends AbstractPossessed {
 	public String talk() {
 		// カミングアウトする日になったらカミングアウト
 		if (!isCameout && day >= comingoutDay) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 			isCameout = true;
 		}
 
@@ -139,9 +142,9 @@ public class SamplePossessed extends AbstractPossessed {
 			for (int head = judgeHead; head < judgeList.size(); head++) {
 				Judge judge = judgeList.get(head);
 				if (fakeRole == Role.SEER) {
-					enqueueTalk(new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())));
+					enqueueTalk(new Content(new DivinedContentBuilder(me, judge.getTarget(), judge.getResult())));
 				} else if (fakeRole == Role.MEDIUM) {
-					enqueueTalk(new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())));
+					enqueueTalk(new Content(new InquestContentBuilder(me, judge.getTarget(), judge.getResult())));
 				}
 			}
 			judgeHead = judgeList.size();
@@ -150,7 +153,7 @@ public class SamplePossessed extends AbstractPossessed {
 		chooseVoteCandidate();
 		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
 		if (voteCandidate != declaredVoteCandidate) {
-			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			enqueueTalk(new Content(new VoteContentBuilder(me, voteCandidate)));
 			declaredVoteCandidate = voteCandidate;
 		}
 
@@ -453,11 +456,11 @@ public class SamplePossessed extends AbstractPossessed {
 				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
 				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
 					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
-						Content pastContent = new Content(talk.getText());
+						Content pastContent = new Content(talk.getAgent(), talk.getText());
 						if (pastContent.getRole() == newContent.getRole()) {
-							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new AgreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						} else {
-							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new DisagreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
 						}
 					}
 				}
@@ -477,7 +480,7 @@ public class SamplePossessed extends AbstractPossessed {
 	 */
 	Content dequeueTalk() {
 		if (talkQueue.isEmpty()) {
-			return Content.SKIP;
+			return skipMe;
 		}
 		return talkQueue.poll();
 	}

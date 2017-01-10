@@ -346,7 +346,7 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Talk} representing the estimating talk.</div>
 	 */
 	public void putEstimateMap(Talk talk) {
-		Content content = new Content(talk.getText());
+		Content content = new Content(talk.getAgent(), talk.getText());
 		if (content.getTopic() != Topic.ESTIMATE) {
 			return;
 		}
@@ -383,7 +383,7 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Talk} representing the estimating whisper.</div>
 	 */
 	public void putWhisperedEstimateMap(Talk talk) {
-		Content content = new Content(talk.getText());
+		Content content = new Content(talk.getAgent(), talk.getText());
 		if (content.getTopic() != Topic.ESTIMATE) {
 			return;
 		}
@@ -624,7 +624,7 @@ public class AdditionalGameInfo {
 		for (int i = talkListHead; i < talkList.size(); i++) {
 			Talk talk = talkList.get(i);
 			Agent talker = talk.getAgent();
-			Content content = new Content(talk.getText());
+			Content content = new Content(talk.getAgent(), talk.getText());
 			switch (content.getTopic()) {
 			case COMINGOUT:
 				putComingoutMap(talker, content.getRole());
@@ -667,7 +667,7 @@ public class AdditionalGameInfo {
 		for (int i = whisperListHead; i < whisperList.size(); i++) {
 			Talk whisper = whisperList.get(i);
 			Agent whisperer = whisper.getAgent();
-			Content content = new Content(whisper.getText());
+			Content content = new Content(whisper.getAgent(), whisper.getText());
 			switch (content.getTopic()) {
 			case COMINGOUT:
 				putWhisperedComingoutMap(whisperer, content.getRole());
