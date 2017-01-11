@@ -8,17 +8,18 @@ package org.aiwolf.sample.player;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
+import org.aiwolf.client.lib.DivineContentBuilder;
 import org.aiwolf.client.lib.DivinedContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.Operator;
+import org.aiwolf.client.lib.RequestContentBuilder;
 import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
@@ -49,7 +50,8 @@ public class SampleSeer extends AbstractSeer {
 	Agent voteCandidate; // 投票先候補
 	Agent declaredVoteCandidate; // 宣言した投票先候補
 	Vote lastVote; // 再投票における前回の投票
-	Deque<Content> talkQueue = new LinkedList<>();
+	List<Content> talkList = new ArrayList<>(); // 発話リスト．次のtalkHeadと併せて待ち行列を構成
+	int talkHead;
 	List<Agent> humans = new ArrayList<>(); // 人間リスト
 	List<Agent> werewolves = new ArrayList<>(); // 人狼リスト
 	List<Agent> semiwolves = new ArrayList<>(); // 人狼かもリスト
@@ -58,7 +60,8 @@ public class SampleSeer extends AbstractSeer {
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
 	boolean isCameout; // カミングアウト済みか否か
-	Deque<Judge> divinationQueue = new LinkedList<>(); // 占い結果のFIFO
+	List<Judge> divinationList = new ArrayList<>(); // 占い結果リスト．次のdivinationHeadと併せて待ち行列を構成
+	int divinationHead;
 
 	@Override
 	public String getName() {
@@ -79,7 +82,8 @@ public class SampleSeer extends AbstractSeer {
 		Collections.shuffle(comingoutDays);
 		comingoutDay = comingoutDays.get(0); // 1～3日目をランダムで
 		isCameout = false;
-		divinationQueue.clear();
+		divinationList.clear();
+		divinationHead = 0;
 	}
 
 	@Override
@@ -87,12 +91,13 @@ public class SampleSeer extends AbstractSeer {
 		declaredVoteCandidate = null;
 		voteCandidate = null;
 		lastVote = null;
-		talkQueue.clear();
+		talkList.clear();
+		talkHead = 0;
 
-		// 占い結果をFIFOに入れる
+		// 占い結果を待ち行列に入れる
 		Judge divination = currentGameInfo.getDivineResult();
 		if (divination != null) {
-			divinationQueue.offer(divination);
+			divinationList.add(divination);
 			if (divination.getResult() == Species.HUMAN) {
 				humans.add(divination.getTarget());
 			} else {
@@ -118,7 +123,7 @@ public class SampleSeer extends AbstractSeer {
 		}
 
 		// 人狼を占ったらカミングアウト
-		if (!isCameout && !divinationQueue.isEmpty() && divinationQueue.peekLast().getResult() == Species.WEREWOLF) {
+		if (!isCameout && !divinationList.isEmpty() && divinationList.get(divinationList.size() - 1).getResult() == Species.WEREWOLF) {
 			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, myRole)));
 			isCameout = true;
 		}
@@ -131,8 +136,8 @@ public class SampleSeer extends AbstractSeer {
 
 		// カミングアウトしたらこれまでの占い結果をすべて公開
 		if (isCameout) {
-			while (!divinationQueue.isEmpty()) {
-				Judge divination = divinationQueue.poll();
+			while (divinationHead < divinationList.size()) {
+				Judge divination = divinationList.get(divinationHead++);
 				enqueueTalk(new Content(new DivinedContentBuilder(me, divination.getTarget(), divination.getResult())));
 			}
 		}
@@ -263,6 +268,12 @@ public class SampleSeer extends AbstractSeer {
 				// 投票発言に該当なし，あるいは投票発言がない場合，生存人狼からランダムに選ぶ
 				Collections.shuffle(aliveWolves);
 				voteCandidate = aliveWolves.get(0);
+				// 投票を要請する
+				List<Agent> others = agi.getAliveOthers();
+				others.removeAll(aliveWolves);
+				for (Agent agent : others) {
+					enqueueTalk(new Content(new RequestContentBuilder(me, new Content(new VoteContentBuilder(agent, voteCandidate)))));
+				}
 				return;
 			}
 		}
@@ -283,7 +294,7 @@ public class SampleSeer extends AbstractSeer {
 
 		// 自分の占い結果と異なる判定の霊媒師は人狼候補
 		for (Judge judge : agi.getInquestList()) {
-			for (Judge myJudge : divinationQueue) {
+			for (Judge myJudge : divinationList) {
 				if (judge.getTarget() == myJudge.getTarget() && judge.getResult() != myJudge.getResult()) {
 					Agent agent = judge.getAgent();
 					if (!semiwolves.contains(agent)) {
@@ -357,17 +368,30 @@ public class SampleSeer extends AbstractSeer {
 	 *            <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	void enqueueTalk(Content newContent) {
-		String newText = newContent.getText();
-		Topic newTopic = newContent.getTopic();
-		Iterator<Content> it = talkQueue.iterator();
 		boolean isEnqueue = true;
+
+		if (newContent.getOperator() == Operator.REQUEST) {
+			for (Content content : talkList) {
+				if (content.equals(newContent)) {
+					isEnqueue = false;
+					break;
+				}
+			}
+			if (isEnqueue) {
+				talkList.add(newContent);
+			}
+			return;
+		}
+
+		Iterator<Content> it = talkList.iterator();
+		Topic newTopic = newContent.getTopic();
 
 		switch (newTopic) {
 		case AGREE:
 		case DISAGREE:
 			// 同一のものが待ち行列になければ入れる
 			while (it.hasNext()) {
-				if (it.next().getText().equals(newText)) {
+				if (it.next().equals(newContent)) {
 					isEnqueue = false;
 					break;
 				}
@@ -441,7 +465,7 @@ public class SampleSeer extends AbstractSeer {
 					}
 				}
 			}
-			talkQueue.offer(newContent);
+			talkList.add(newContent);
 		}
 	}
 
@@ -455,10 +479,10 @@ public class SampleSeer extends AbstractSeer {
 	 *         <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	Content dequeueTalk() {
-		if (talkQueue.isEmpty()) {
+		if (talkHead == talkList.size()) {
 			return skipMe;
 		}
-		return talkQueue.poll();
+		return talkList.get(talkHead++);
 	}
 
 }
