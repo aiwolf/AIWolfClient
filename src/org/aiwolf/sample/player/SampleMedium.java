@@ -17,8 +17,11 @@ import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
+import org.aiwolf.client.lib.DivineContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.Operator;
+import org.aiwolf.client.lib.RequestContentBuilder;
 import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
@@ -208,6 +211,9 @@ public class SampleMedium extends AbstractMedium {
 		for (Agent agent : others) {
 			if (agi.getComingoutMap().containsKey(agent) && agi.getComingoutMap().get(agent) == Role.MEDIUM) {
 				if (!werewolves.contains(agent)) {
+					if (trueSeer != null) {
+						enqueueTalk(new Content(new RequestContentBuilder(me, new Content(new DivineContentBuilder(trueSeer, agent)))));
+					}
 					werewolves.add(agent);
 				}
 			}
@@ -340,9 +346,23 @@ public class SampleMedium extends AbstractMedium {
 	 */
 	void enqueueTalk(Content newContent) {
 		String newText = newContent.getText();
-		Topic newTopic = newContent.getTopic();
 		Iterator<Content> it = talkQueue.iterator();
 		boolean isEnqueue = true;
+
+		if (newContent.getOperator() == Operator.REQUEST) {
+			while (it.hasNext()) {
+				if (it.next().equals(newContent)) {
+					isEnqueue = false;
+					break;
+				}
+			}
+			if (isEnqueue) {
+				talkQueue.offer(newContent);
+			}
+			return;
+		}
+
+		Topic newTopic = newContent.getTopic();
 
 		switch (newTopic) {
 		case AGREE:
