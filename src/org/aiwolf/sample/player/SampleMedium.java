@@ -372,13 +372,11 @@ public class SampleMedium extends AbstractMedium {
 	 *            <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	void enqueueTalk(Content newContent) {
-		Iterator<Content> it = talkList.iterator();
 		boolean isEnqueue = true;
 
 		if (newContent.getOperator() == Operator.REQUEST) {
-			while (it.hasNext()) {
-				Content c = it.next();
-				if (c.equals(newContent)) {
+			for (Content content : talkList) {
+				if (content.equals(newContent)) {
 					isEnqueue = false;
 					break;
 				}
@@ -389,6 +387,7 @@ public class SampleMedium extends AbstractMedium {
 			return;
 		}
 
+		Iterator<Content> it = talkList.iterator();
 		Topic newTopic = newContent.getTopic();
 
 		switch (newTopic) {
