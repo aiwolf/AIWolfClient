@@ -133,8 +133,8 @@ public class AdditionalGameInfo {
 	/**
 	 * <div lang="ja">エージェントが，追放されたエージェントのリストに無かった場合は追加する。同時に死亡者リストにも追加し，生存者リストから除く</div>
 	 *
-	 * <div lang="en">Adds the agent to the list of the executed ones if it doesn't contain the agent. At the same time,
-	 * the agent is added to the list of the dead ones and removed from the list of the alive ones. </div>
+	 * <div lang="en">Adds the agent to the list of the executed ones if it doesn't contain the agent. At the same time, the agent is added to the list of the dead ones and removed from the list of
+	 * the alive ones. </div>
 	 *
 	 * @param executedAgent
 	 *            <div lang="ja">追加するエージェントを表す{@code Agent}</div>
@@ -172,9 +172,8 @@ public class AdditionalGameInfo {
 	/**
 	 * <div lang="ja">エージェントが，殺された（襲撃，呪殺，ただし追放は含まない）エージェントのリストに無かった場合追加する。同時に死亡者リストにも追加し，生存者リストから除く</div>
 	 *
-	 * <div lang="en">Adds the agent to the list of the killed ones if it doesn't contain the agent. Notice that this
-	 * list doesn't contain the executed ones. At the same time, the agent is added to the list of the dead ones and
-	 * removed from the list of the alive ones. </div>
+	 * <div lang="en">Adds the agent to the list of the killed ones if it doesn't contain the agent. Notice that this list doesn't contain the executed ones. At the same time, the agent is added to
+	 * the list of the dead ones and removed from the list of the alive ones. </div>
 	 *
 	 * @param killedAgentList
 	 *            <div lang="ja">追加するエージェントを表す{@code Agent}</div>
@@ -346,7 +345,7 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Talk} representing the estimating talk.</div>
 	 */
 	public void putEstimateMap(Talk talk) {
-		Content content = new Content(talk.getText());
+		Content content = new Content(talk.getAgent(), talk.getText());
 		if (content.getTopic() != Topic.ESTIMATE) {
 			return;
 		}
@@ -383,7 +382,7 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Talk} representing the estimating whisper.</div>
 	 */
 	public void putWhisperedEstimateMap(Talk talk) {
-		Content content = new Content(talk.getText());
+		Content content = new Content(talk.getAgent(), talk.getText());
 		if (content.getTopic() != Topic.ESTIMATE) {
 			return;
 		}
@@ -550,8 +549,7 @@ public class AdditionalGameInfo {
 	 * 
 	 * @return <div lang="ja">投票宣言（囁き）カウンタを表す{@code Counter<Agent>}</div>
 	 *
-	 *         <div lang="en">{@code Counter<Agent>} representing the counter of the whispered declaration of
-	 *         vote.</div>
+	 *         <div lang="en">{@code Counter<Agent>} representing the counter of the whispered declaration of vote.</div>
 	 */
 	public Counter<Agent> getWhisperedVoteCounter() {
 		return whisperedVoteCounter;
@@ -564,8 +562,7 @@ public class AdditionalGameInfo {
 	 * 
 	 * @return <div lang="ja">襲撃投票宣言マップを表す{@code Map<Agent, Agent>}</div>
 	 *
-	 *         <div lang="en">{@code Map<Agent, Agent>} representing the map of the declaration of vote for
-	 *         attack.</div>
+	 *         <div lang="en">{@code Map<Agent, Agent>} representing the map of the declaration of vote for attack.</div>
 	 */
 	public Map<Agent, Agent> getAttackVoteMap() {
 		return attackVoteMap;
@@ -578,8 +575,7 @@ public class AdditionalGameInfo {
 	 * 
 	 * @return <div lang="ja">襲撃投票宣言カウンタを表す{@code Counter<Agent>}</div>
 	 *
-	 *         <div lang="en">{@code Counter<Agent>} representing the counter of the declaration of vote for
-	 *         attack.</div>
+	 *         <div lang="en">{@code Counter<Agent>} representing the counter of the declaration of vote for attack.</div>
 	 */
 	public Counter<Agent> getAttackVoteCounter() {
 		return attackVoteCounter;
@@ -624,34 +620,36 @@ public class AdditionalGameInfo {
 		for (int i = talkListHead; i < talkList.size(); i++) {
 			Talk talk = talkList.get(i);
 			Agent talker = talk.getAgent();
-			Content content = new Content(talk.getText());
-			switch (content.getTopic()) {
-			case COMINGOUT:
-				putComingoutMap(talker, content.getRole());
-				break;
+			Content content = new Content(talk.getAgent(), talk.getText());
+			if (content.getOperator() == null) {
+				switch (content.getTopic()) {
+				case COMINGOUT:
+					putComingoutMap(talker, content.getRole());
+					break;
 
-			case DIVINED:
-				Judge divination = new Judge(day, talker, content.getTarget(), content.getResult());
-				addDivination(divination);
-				putJudgeMap(divination);
-				break;
+				case DIVINED:
+					Judge divination = new Judge(day, talker, content.getTarget(), content.getResult());
+					addDivination(divination);
+					putJudgeMap(divination);
+					break;
 
-			case INQUESTED:
-				Judge inquest = new Judge(day, talker, content.getTarget(), content.getResult());
-				addInquestList(inquest);
-				putJudgeMap(inquest);
-				break;
+				case INQUESTED:
+					Judge inquest = new Judge(day, talker, content.getTarget(), content.getResult());
+					addInquestList(inquest);
+					putJudgeMap(inquest);
+					break;
 
-			case VOTE:
-				getVoteMap().put(talker, content.getTarget());
-				break;
+				case VOTE:
+					getVoteMap().put(talker, content.getTarget());
+					break;
 
-			case ESTIMATE:
-				putEstimateMap(talk);
-				break;
+				case ESTIMATE:
+					putEstimateMap(talk);
+					break;
 
-			default:
-				break;
+				default:
+					break;
+				}
 			}
 		}
 		talkListHead = talkList.size();
@@ -667,38 +665,40 @@ public class AdditionalGameInfo {
 		for (int i = whisperListHead; i < whisperList.size(); i++) {
 			Talk whisper = whisperList.get(i);
 			Agent whisperer = whisper.getAgent();
-			Content content = new Content(whisper.getText());
-			switch (content.getTopic()) {
-			case COMINGOUT:
-				putWhisperedComingoutMap(whisperer, content.getRole());
-				break;
+			Content content = new Content(whisper.getAgent(), whisper.getText());
+			if (content.getOperator() == null) {
+				switch (content.getTopic()) {
+				case COMINGOUT:
+					putWhisperedComingoutMap(whisperer, content.getRole());
+					break;
 
-			case DIVINED:
-				Judge whisperedDivination = new Judge(day, whisperer, content.getTarget(), content.getResult());
-				addWhisperedDivination(whisperedDivination);
-				putWhisperedJudgeMap(whisperedDivination);
-				break;
+				case DIVINED:
+					Judge whisperedDivination = new Judge(day, whisperer, content.getTarget(), content.getResult());
+					addWhisperedDivination(whisperedDivination);
+					putWhisperedJudgeMap(whisperedDivination);
+					break;
 
-			case INQUESTED:
-				Judge whisperedInquest = new Judge(day, whisperer, content.getTarget(), content.getResult());
-				addWhisperedInquestList(whisperedInquest);
-				putWhisperedJudgeMap(whisperedInquest);
-				break;
+				case INQUESTED:
+					Judge whisperedInquest = new Judge(day, whisperer, content.getTarget(), content.getResult());
+					addWhisperedInquestList(whisperedInquest);
+					putWhisperedJudgeMap(whisperedInquest);
+					break;
 
-			case VOTE:
-				getWhisperedVoteMap().put(whisperer, content.getTarget());
-				break;
+				case VOTE:
+					getWhisperedVoteMap().put(whisperer, content.getTarget());
+					break;
 
-			case ESTIMATE:
-				putWhisperedEstimateMap(whisper);
-				break;
+				case ESTIMATE:
+					putWhisperedEstimateMap(whisper);
+					break;
 
-			case ATTACK:
-				getAttackVoteMap().put(whisperer, content.getTarget());
-				break;
+				case ATTACK:
+					getAttackVoteMap().put(whisperer, content.getTarget());
+					break;
 
-			default:
-				break;
+				default:
+					break;
+				}
 			}
 		}
 		whisperListHead = whisperList.size();
