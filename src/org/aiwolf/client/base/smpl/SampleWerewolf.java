@@ -13,7 +13,7 @@ import java.util.Random;
 import org.aiwolf.client.base.player.AbstractWerewolf;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.DivinedContentBuilder;
+import org.aiwolf.client.lib.DivineContentBuilder;
 import org.aiwolf.client.lib.InquestContentBuilder;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
@@ -116,7 +116,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		 */
 
 		if(!isCameout && getDay() >= comingoutDay){
-			String string = new Content(new ComingoutContentBuilder(getMe(), getMe(), fakeRole)).getText();
+			String string = new Content(new ComingoutContentBuilder(getMe(), fakeRole)).getText();
 			isCameout = true;
 			return string;
 		}
@@ -127,11 +127,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 			for(Judge judge: getMyFakeJudgeList()){
 				if(!declaredFakeJudgedAgentList.contains(judge)){
 					if(fakeRole == Role.SEER){
-						String string = new Content(new DivinedContentBuilder(getMe(), judge.getTarget(), judge.getResult())).getText();
+						String string = new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())).getText();
 						declaredFakeJudgedAgentList.add(judge);
 						return string;
 					}else if(fakeRole == Role.MEDIUM){
-						String string = new Content(new InquestContentBuilder(getMe(), judge.getTarget(), judge.getResult())).getText();
+						String string = new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())).getText();
 						declaredFakeJudgedAgentList.add(judge);
 						return string;
 					}
@@ -145,7 +145,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			String string = new Content(new VoteContentBuilder(getMe(), planningVoteAgent)).getText();
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}
@@ -284,7 +284,7 @@ public class SampleWerewolf extends AbstractWerewolf {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content content = new Content(talk.getAgent(), talk.getText());
+			Content content = new Content(talk.getText());
 			switch (content.getTopic()) {
 
 			/*

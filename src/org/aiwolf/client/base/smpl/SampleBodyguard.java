@@ -56,7 +56,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 
 		if(declaredPlanningVoteAgent != planningVoteAgent){
 
-			String string = new Content(new VoteContentBuilder(getMe(), planningVoteAgent)).getText();
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}else{
@@ -115,7 +115,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content content = new Content(talk.getAgent(), talk.getText());
+			Content content = new Content(talk.getText());
 			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合
