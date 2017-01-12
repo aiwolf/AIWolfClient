@@ -13,8 +13,8 @@ import java.util.Random;
 import org.aiwolf.client.base.player.AbstractPossessed;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.DivineContentBuilder;
-import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
@@ -119,11 +119,11 @@ public class SamplePossessed extends AbstractPossessed {
 			for(Judge judge: getMyFakeJudgeList()){
 				if(!declaredFakeJudgedAgentList.contains(judge)){
 					if(fakeRole == Role.SEER){
-						String string = new Content(new DivineContentBuilder(judge.getTarget(), judge.getResult())).getText();
+						String string = new Content(new DivinedResultContentBuilder(judge.getTarget(), judge.getResult())).getText();
 						declaredFakeJudgedAgentList.add(judge);
 						return string;
 					}else if(fakeRole == Role.MEDIUM){
-						String string = new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())).getText();
+						String string = new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())).getText();
 						declaredFakeJudgedAgentList.add(judge);
 						return string;
 					}

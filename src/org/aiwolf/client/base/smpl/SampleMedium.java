@@ -12,7 +12,7 @@ import java.util.Random;
 import org.aiwolf.client.base.player.AbstractMedium;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
@@ -98,7 +98,7 @@ public class SampleMedium extends AbstractMedium {
 		else if(isCameout && !isSaidAllInquestResult){
 			for(Judge judge: getMyJudgeList()){
 				if(!declaredJudgedAgentList.contains(judge)){
-					String string = new Content(new InquestContentBuilder(judge.getTarget(), judge.getResult())).getText();
+					String string = new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())).getText();
 					declaredJudgedAgentList.add(judge);
 					return string;
 				}
