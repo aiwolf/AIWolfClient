@@ -13,11 +13,10 @@ import java.util.List;
 import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
-import org.aiwolf.client.lib.DivineContentBuilder;
+import org.aiwolf.client.lib.DivinationContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.Operator;
 import org.aiwolf.client.lib.RequestContentBuilder;
-import org.aiwolf.client.lib.SkipContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -52,7 +51,6 @@ public class SampleBodyguard extends AbstractBodyguard {
 	List<Agent> seers = new ArrayList<>(); // 占い師候補リスト
 	Agent trueSeer; // 真占い師と思われるエージェント
 	List<Agent> werewolves = new ArrayList<>(); // 人狼候補リスト
-	Content skipMe;
 
 	@Override
 	public String getName() {
@@ -63,7 +61,6 @@ public class SampleBodyguard extends AbstractBodyguard {
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		day = -1;
 		me = gameInfo.getAgent();
-		skipMe = new Content(new SkipContentBuilder(me));
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
 		seers.clear();
@@ -92,7 +89,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 		chooseVoteCandidate();
 		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
 		if (voteCandidate != declaredVoteCandidate) {
-			enqueueTalk(new Content(new VoteContentBuilder(me, voteCandidate)));
+			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
 			declaredVoteCandidate = voteCandidate;
 		}
 
@@ -243,7 +240,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 				// これまで真占い師なしか，これまでの真占い師が間違いだった場合，新たな占い師推定発言をする
 				Collections.shuffle(seers);
 				trueSeer = seers.get(0);
-				enqueueTalk(new Content(new EstimateContentBuilder(me, trueSeer, Role.SEER)));
+				enqueueTalk(new Content(new EstimateContentBuilder(trueSeer, Role.SEER)));
 			}
 		}
 
@@ -261,7 +258,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 						if (candidates.contains(agent)) {
 							voteCandidate = agent;
 							// 投票先が変わったので人狼推定発言をする
-							enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
+							enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 							// 占いを要請
 							if (trueSeer != null) {
 								int i = 0;
@@ -272,7 +269,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 									}
 								}
 								if (i == agi.getDivinationList().size()) {
-									enqueueTalk(new Content(new RequestContentBuilder(me, new Content(new DivineContentBuilder(trueSeer, voteCandidate)))));
+									enqueueTalk(new Content(new RequestContentBuilder(trueSeer, new Content(new DivinationContentBuilder(voteCandidate)))));
 								}
 							}
 							return;
@@ -283,7 +280,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 				Collections.shuffle(candidates);
 				voteCandidate = candidates.get(0);
 				// 投票先が変わったので人狼推定発言をする
-				enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
+				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 				// 占いを要請
 				if (trueSeer != null) {
 					int i = 0;
@@ -294,7 +291,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 						}
 					}
 					if (i == agi.getDivinationList().size()) {
-						enqueueTalk(new Content(new RequestContentBuilder(me, new Content(new DivineContentBuilder(trueSeer, voteCandidate)))));
+						enqueueTalk(new Content(new RequestContentBuilder(trueSeer, new Content(new DivinationContentBuilder(voteCandidate)))));
 					}
 				}
 				return;
@@ -377,8 +374,8 @@ public class SampleBodyguard extends AbstractBodyguard {
 				Content content = it.next();
 				if (content.getTopic() == Topic.COMINGOUT && content.getTarget() == newContent.getTarget()) {
 					if (content.getRole() == newContent.getRole()) {
-					isEnqueue = false;
-					break;
+						isEnqueue = false;
+						break;
 					} else {
 						it.remove();
 					}
@@ -425,11 +422,11 @@ public class SampleBodyguard extends AbstractBodyguard {
 				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
 				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
 					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
-						Content pastContent = new Content(talk.getAgent(), talk.getText());
+						Content pastContent = new Content(talk.getText());
 						if (pastContent.getRole() == newContent.getRole()) {
-							enqueueTalk(new Content(new AgreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
 						} else {
-							enqueueTalk(new Content(new DisagreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
 						}
 					}
 				}
@@ -449,7 +446,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 	 */
 	Content dequeueTalk() {
 		if (talkHead == talkList.size()) {
-			return skipMe;
+			return Content.SKIP;
 		}
 		return talkList.get(talkHead++);
 	}
