@@ -12,7 +12,7 @@ import java.util.Random;
 import org.aiwolf.client.base.player.AbstractMedium;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.InquestContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
@@ -88,7 +88,7 @@ public class SampleMedium extends AbstractMedium {
 		 */
 
 		if(!isCameout && getDay() >= comingoutDay){
-			String string = new Content(new ComingoutContentBuilder(getMe(), getMe(), getMyRole())).getText();
+			String string = new Content(new ComingoutContentBuilder(getMe(), getMyRole())).getText();
 			isCameout = true;
 			return string;
 		}
@@ -98,7 +98,7 @@ public class SampleMedium extends AbstractMedium {
 		else if(isCameout && !isSaidAllInquestResult){
 			for(Judge judge: getMyJudgeList()){
 				if(!declaredJudgedAgentList.contains(judge)){
-					String string = new Content(new InquestContentBuilder(getMe(), judge.getTarget(), judge.getResult())).getText();
+					String string = new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())).getText();
 					declaredJudgedAgentList.add(judge);
 					return string;
 				}
@@ -111,7 +111,7 @@ public class SampleMedium extends AbstractMedium {
 		 * 前に報告したプレイヤーと同じ場合は報告なし
 		 */
 		if(declaredPlanningVoteAgent != planningVoteAgent){
-			String string = new Content(new VoteContentBuilder(getMe(), planningVoteAgent)).getText();
+			String string = new Content(new VoteContentBuilder(planningVoteAgent)).getText();
 			declaredPlanningVoteAgent = planningVoteAgent;
 			return string;
 		}
@@ -145,7 +145,7 @@ public class SampleMedium extends AbstractMedium {
 		 */
 		for(int i = readTalkListNum; i < talkList.size(); i++){
 			Talk talk = talkList.get(i);
-			Content content = new Content(talk.getAgent(), talk.getText());
+			Content content = new Content(talk.getText());
 			switch (content.getTopic()) {
 
 			//カミングアウトの発話の場合

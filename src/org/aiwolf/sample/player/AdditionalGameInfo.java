@@ -345,7 +345,7 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Talk} representing the estimating talk.</div>
 	 */
 	public void putEstimateMap(Talk talk) {
-		Content content = new Content(talk.getAgent(), talk.getText());
+		Content content = new Content(talk.getText());
 		if (content.getTopic() != Topic.ESTIMATE) {
 			return;
 		}
@@ -382,7 +382,7 @@ public class AdditionalGameInfo {
 	 *            <div lang="en">{@code Talk} representing the estimating whisper.</div>
 	 */
 	public void putWhisperedEstimateMap(Talk talk) {
-		Content content = new Content(talk.getAgent(), talk.getText());
+		Content content = new Content(talk.getText());
 		if (content.getTopic() != Topic.ESTIMATE) {
 			return;
 		}
@@ -620,7 +620,7 @@ public class AdditionalGameInfo {
 		for (int i = talkListHead; i < talkList.size(); i++) {
 			Talk talk = talkList.get(i);
 			Agent talker = talk.getAgent();
-			Content content = new Content(talk.getAgent(), talk.getText());
+			Content content = new Content(talk.getText());
 			if (content.getOperator() == null) {
 				switch (content.getTopic()) {
 				case COMINGOUT:
@@ -633,7 +633,7 @@ public class AdditionalGameInfo {
 					putJudgeMap(divination);
 					break;
 
-				case INQUESTED:
+				case IDENTIFIED:
 					Judge inquest = new Judge(day, talker, content.getTarget(), content.getResult());
 					addInquestList(inquest);
 					putJudgeMap(inquest);
@@ -665,7 +665,7 @@ public class AdditionalGameInfo {
 		for (int i = whisperListHead; i < whisperList.size(); i++) {
 			Talk whisper = whisperList.get(i);
 			Agent whisperer = whisper.getAgent();
-			Content content = new Content(whisper.getAgent(), whisper.getText());
+			Content content = new Content(whisper.getText());
 			if (content.getOperator() == null) {
 				switch (content.getTopic()) {
 				case COMINGOUT:
@@ -678,7 +678,7 @@ public class AdditionalGameInfo {
 					putWhisperedJudgeMap(whisperedDivination);
 					break;
 
-				case INQUESTED:
+				case IDENTIFIED:
 					Judge whisperedInquest = new Judge(day, whisperer, content.getTarget(), content.getResult());
 					addWhisperedInquestList(whisperedInquest);
 					putWhisperedJudgeMap(whisperedInquest);

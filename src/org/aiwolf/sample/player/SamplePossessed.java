@@ -8,18 +8,16 @@ package org.aiwolf.sample.player;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.aiwolf.client.lib.AgreeContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DisagreeContentBuilder;
-import org.aiwolf.client.lib.DivinedContentBuilder;
-import org.aiwolf.client.lib.InquestContentBuilder;
-import org.aiwolf.client.lib.SkipContentBuilder;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
+import org.aiwolf.client.lib.Operator;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -50,11 +48,11 @@ public class SamplePossessed extends AbstractPossessed {
 	Agent voteCandidate; // 投票先候補
 	Agent declaredVoteCandidate; // 宣言した投票先候補
 	Vote lastVote; // 再投票における前回の投票
-	Deque<Content> talkQueue = new LinkedList<>();
+	List<Content> talkList = new ArrayList<>(); // 発話リスト．次のtalkHeadと併せて待ち行列を構成
+	int talkHead;
 	List<Agent> seers = new ArrayList<>(); // 占い師候補リスト
 	Agent trueSeer; // 真占い師と思われるエージェント
 	List<Agent> werewolves = new ArrayList<>(); // 人狼候補リスト
-	Content skipMe;
 
 	int comingoutDay; // カミングアウトする日
 	List<Integer> comingoutDays = new ArrayList<>(Arrays.asList(1, 2, 3));
@@ -74,7 +72,6 @@ public class SamplePossessed extends AbstractPossessed {
 		this.gameSetting = gameSetting;
 		day = -1;
 		me = gameInfo.getAgent();
-		skipMe = new Content(new SkipContentBuilder(me));
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
 		seers.clear();
@@ -110,7 +107,8 @@ public class SamplePossessed extends AbstractPossessed {
 		declaredVoteCandidate = null;
 		voteCandidate = null;
 		lastVote = null;
-		talkQueue.clear();
+		talkList.clear();
+		talkHead = 0;
 
 		// 偽の判定
 		if (day > 0) {
@@ -133,7 +131,7 @@ public class SamplePossessed extends AbstractPossessed {
 	public String talk() {
 		// カミングアウトする日になったらカミングアウト
 		if (!isCameout && day >= comingoutDay) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
 			isCameout = true;
 		}
 
@@ -142,9 +140,9 @@ public class SamplePossessed extends AbstractPossessed {
 			for (int head = judgeHead; head < judgeList.size(); head++) {
 				Judge judge = judgeList.get(head);
 				if (fakeRole == Role.SEER) {
-					enqueueTalk(new Content(new DivinedContentBuilder(me, judge.getTarget(), judge.getResult())));
+					enqueueTalk(new Content(new DivinedResultContentBuilder(judge.getTarget(), judge.getResult())));
 				} else if (fakeRole == Role.MEDIUM) {
-					enqueueTalk(new Content(new InquestContentBuilder(me, judge.getTarget(), judge.getResult())));
+					enqueueTalk(new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())));
 				}
 			}
 			judgeHead = judgeList.size();
@@ -153,7 +151,7 @@ public class SamplePossessed extends AbstractPossessed {
 		chooseVoteCandidate();
 		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
 		if (voteCandidate != declaredVoteCandidate) {
-			enqueueTalk(new Content(new VoteContentBuilder(me, voteCandidate)));
+			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
 			declaredVoteCandidate = voteCandidate;
 		}
 
@@ -355,17 +353,30 @@ public class SamplePossessed extends AbstractPossessed {
 	 *            <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	void enqueueTalk(Content newContent) {
-		String newText = newContent.getText();
-		Topic newTopic = newContent.getTopic();
-		Iterator<Content> it = talkQueue.iterator();
 		boolean isEnqueue = true;
+
+		if (newContent.getOperator() == Operator.REQUEST) {
+			for (Content content : talkList) {
+				if (content.equals(newContent)) {
+					isEnqueue = false;
+					break;
+				}
+			}
+			if (isEnqueue) {
+				talkList.add(newContent);
+			}
+			return;
+		}
+
+		Iterator<Content> it = talkList.iterator();
+		Topic newTopic = newContent.getTopic();
 
 		switch (newTopic) {
 		case AGREE:
 		case DISAGREE:
 			// 同一のものが待ち行列になければ入れる
 			while (it.hasNext()) {
-				if (it.next().getText().equals(newText)) {
+				if (it.next().equals(newContent)) {
 					isEnqueue = false;
 					break;
 				}
@@ -417,11 +428,11 @@ public class SamplePossessed extends AbstractPossessed {
 			}
 			break;
 
-		case INQUESTED:
+		case IDENTIFIED:
 			// 同じエージェントについての異なる霊媒結果が待ち行列に残っていればそれを取り下げて新しい方を入れる
 			while (it.hasNext()) {
 				Content content = it.next();
-				if (content.getTopic() == Topic.INQUESTED && content.getTarget() == newContent.getTarget()) {
+				if (content.getTopic() == Topic.IDENTIFIED && content.getTarget() == newContent.getTarget()) {
 					if (content.getResult() == newContent.getResult()) {
 						isEnqueue = false;
 						break;
@@ -456,16 +467,16 @@ public class SamplePossessed extends AbstractPossessed {
 				// 過去の推測発言で同一のものには同意発言，相反するものには不同意発言
 				if (agi.getEstimateMap().containsKey(newContent.getTarget())) {
 					for (Talk talk : agi.getEstimateMap().get(newContent.getTarget())) {
-						Content pastContent = new Content(talk.getAgent(), talk.getText());
+						Content pastContent = new Content(talk.getText());
 						if (pastContent.getRole() == newContent.getRole()) {
-							enqueueTalk(new Content(new AgreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new AgreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
 						} else {
-							enqueueTalk(new Content(new DisagreeContentBuilder(me, TalkType.TALK, talk.getDay(), talk.getIdx())));
+							enqueueTalk(new Content(new DisagreeContentBuilder(TalkType.TALK, talk.getDay(), talk.getIdx())));
 						}
 					}
 				}
 			}
-			talkQueue.offer(newContent);
+			talkList.add(newContent);
 		}
 	}
 
@@ -479,10 +490,10 @@ public class SamplePossessed extends AbstractPossessed {
 	 *         <div lang="en">{@code Content} representing the utterance.</div>
 	 */
 	Content dequeueTalk() {
-		if (talkQueue.isEmpty()) {
-			return skipMe;
+		if (talkHead == talkList.size()) {
+			return Content.SKIP;
 		}
-		return talkQueue.poll();
+		return talkList.get(talkHead++);
 	}
 
 }
