@@ -265,11 +265,7 @@ public class SampleSeer extends AbstractSeer {
 				Collections.shuffle(aliveWolves);
 				voteCandidate = aliveWolves.get(0);
 				// 投票を要請する
-				List<Agent> others = agi.getAliveOthers();
-				others.removeAll(aliveWolves);
-				for (Agent agent : others) {
-					enqueueTalk(new Content(new RequestContentBuilder(agent, new Content(new VoteContentBuilder(voteCandidate)))));
-				}
+				enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new VoteContentBuilder(voteCandidate)))));
 				return;
 			}
 		}
