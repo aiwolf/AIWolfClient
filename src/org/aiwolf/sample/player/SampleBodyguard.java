@@ -260,18 +260,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 							// 投票先が変わったので人狼推定発言をする
 							enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 							// 占いを要請
-							if (trueSeer != null) {
-								int i = 0;
-								for (; i < agi.getDivinationList().size(); i++) {
-									Judge judge = agi.getDivinationList().get(i);
-									if (judge.getAgent() == trueSeer && judge.getTarget() == voteCandidate) {
-										break;
-									}
-								}
-								if (i == agi.getDivinationList().size()) {
-									enqueueTalk(new Content(new RequestContentBuilder(trueSeer, new Content(new DivinationContentBuilder(voteCandidate)))));
-								}
-							}
+							enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
 							return;
 						}
 					}
@@ -282,18 +271,7 @@ public class SampleBodyguard extends AbstractBodyguard {
 				// 投票先が変わったので人狼推定発言をする
 				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 				// 占いを要請
-				if (trueSeer != null) {
-					int i = 0;
-					for (; i < agi.getDivinationList().size(); i++) {
-						Judge judge = agi.getDivinationList().get(i);
-						if (judge.getAgent() == trueSeer && judge.getTarget() == voteCandidate) {
-							break;
-						}
-					}
-					if (i == agi.getDivinationList().size()) {
-						enqueueTalk(new Content(new RequestContentBuilder(trueSeer, new Content(new DivinationContentBuilder(voteCandidate)))));
-					}
-				}
+				enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
 				return;
 			}
 			// 既定の投票先が投票先候補に含まれる場合，投票先はそのまま
