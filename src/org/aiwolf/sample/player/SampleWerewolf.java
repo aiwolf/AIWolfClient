@@ -22,6 +22,7 @@ import org.aiwolf.client.lib.DivinedResultContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.IdentContentBuilder;
 import org.aiwolf.client.lib.Operator;
+import org.aiwolf.client.lib.RequestContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -273,8 +274,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 		if (voteCandidate != declaredVoteCandidate)
 
 		{
-			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			Content content = new Content(new VoteContentBuilder(voteCandidate));
+			enqueueTalk(content);
 			declaredVoteCandidate = voteCandidate;
+			// 投票を要請
+			enqueueTalk(new Content(new RequestContentBuilder(null, content)));
 		}
 
 		return dequeueTalk().getText();
@@ -304,8 +308,11 @@ public class SampleWerewolf extends AbstractWerewolf {
 			chooseAttackCandidate();
 			// 以前宣言した（未宣言を含む）襲撃先と違う襲撃先を選んだ場合宣言する
 			if (attackCandidate != declaredAttackCandidate) {
-				enqueueWhisper(new Content(new AttackContentBuilder(attackCandidate)));
+				Content content = new Content(new AttackContentBuilder(attackCandidate));
+				enqueueWhisper(content);
 				declaredAttackCandidate = attackCandidate;
+				// 襲撃を要請する
+				enqueueWhisper(new Content(new RequestContentBuilder(null, content)));
 			}
 		}
 

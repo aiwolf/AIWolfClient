@@ -18,6 +18,7 @@ import org.aiwolf.client.lib.DisagreeContentBuilder;
 import org.aiwolf.client.lib.DivinedResultContentBuilder;
 import org.aiwolf.client.lib.IdentContentBuilder;
 import org.aiwolf.client.lib.Operator;
+import org.aiwolf.client.lib.RequestContentBuilder;
 import org.aiwolf.client.lib.TalkType;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
@@ -151,8 +152,11 @@ public class SamplePossessed extends AbstractPossessed {
 		chooseVoteCandidate();
 		// 以前宣言した（未宣言を含む）投票先と違う投票先を選んだ場合宣言する
 		if (voteCandidate != declaredVoteCandidate) {
-			enqueueTalk(new Content(new VoteContentBuilder(voteCandidate)));
+			Content content = new Content(new VoteContentBuilder(voteCandidate));
+			enqueueTalk(content);
 			declaredVoteCandidate = voteCandidate;
+			// 投票を要請する
+			enqueueTalk(new Content(new RequestContentBuilder(null, content)));
 		}
 
 		return dequeueTalk().getText();
