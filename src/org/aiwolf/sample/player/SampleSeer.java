@@ -375,9 +375,15 @@ public class SampleSeer extends AbstractSeer {
 			return;
 		}
 
-		Iterator<Content> it = talkList.iterator();
 		Topic newTopic = newContent.getTopic();
 
+		// iteratorをヘッドまで進める
+		Iterator<Content> it = talkList.iterator();
+		for (int i = 0; i < talkHead; i++) {
+			if (it.hasNext()) {
+				it.next();
+			}
+		}
 		switch (newTopic) {
 		case AGREE:
 		case DISAGREE:
