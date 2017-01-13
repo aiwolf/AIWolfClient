@@ -732,9 +732,15 @@ public class SampleWerewolf extends AbstractWerewolf {
 			return;
 		}
 
-		Iterator<Content> it = talkList.iterator();
 		Topic newTopic = newContent.getTopic();
 
+		// iteratorをヘッドまで進める
+		Iterator<Content> it = talkList.iterator();
+		for (int i = 0; i < talkHead; i++) {
+			if (it.hasNext()) {
+				it.next();
+			}
+		}
 		switch (newTopic) {
 		case AGREE:
 		case DISAGREE:
@@ -886,9 +892,15 @@ public class SampleWerewolf extends AbstractWerewolf {
 			return;
 		}
 
-		Iterator<Content> it = whisperList.iterator();
 		Topic newTopic = newContent.getTopic();
 
+		// iteratorをヘッドまで進める
+		Iterator<Content> it = whisperList.iterator();
+		for (int i = 0; i < whisperHead; i++) {
+			if (it.hasNext()) {
+				it.next();
+			}
+		}
 		switch (newTopic) {
 		case AGREE:
 		case DISAGREE:
