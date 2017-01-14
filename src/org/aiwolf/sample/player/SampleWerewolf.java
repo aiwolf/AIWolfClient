@@ -78,8 +78,8 @@ public class SampleWerewolf extends AbstractWerewolf {
 	int inquestHead; // 偽霊媒結果のヘッド
 	List<Agent> divinedAgents = new ArrayList<>(); // 偽占い済みエージェントのリスト
 	Role fakeRole; // 騙る役職
-	boolean isFixFakeRole = false; // 騙る役職が決まったかどうか
-	List<Role> fakeRoles = new ArrayList<>(Arrays.asList(Role.VILLAGER)); // 騙れる役職のリスト
+	boolean isFixFakeRole; // 騙る役職が決まったかどうか
+	List<Role> fakeRoles = new ArrayList<>(); // 騙れる役職のリスト
 	Judge lastFakeJudge;
 
 	@Override
@@ -93,18 +93,21 @@ public class SampleWerewolf extends AbstractWerewolf {
 		me = gameInfo.getAgent();
 		myRole = gameInfo.getRole();
 		agi = new AdditionalGameInfo(gameInfo);
+		possessed = null;
 		werewolves = new ArrayList<>(gameInfo.getRoleMap().keySet());
 		humans = new ArrayList<>(agi.getAliveOthers());
 		humans.removeAll(werewolves);
 
+		fakeRoles.clear();
 		for (Role role : gameInfo.getExistingRoles()) {
-			if (role == Role.SEER || role == Role.MEDIUM) {
+			if (role == Role.VILLAGER || role == Role.SEER || role == Role.MEDIUM) {
 				fakeRoles.add(role);
 			}
 		}
 		// 暫定的に騙る役職を決める
 		Collections.shuffle(fakeRoles);
 		fakeRole = fakeRoles.get(0);
+		isFixFakeRole = false;
 
 		// 1～3日目のランダムな日にカミングアウトする．他の人狼との同時カミングアウトを避けるため発話ターンは散らす
 		Collections.shuffle(comingoutDays);
