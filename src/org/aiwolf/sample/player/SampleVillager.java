@@ -220,7 +220,7 @@ public class SampleVillager extends AbstractVillager {
 							// 投票先が変わったので人狼推定発言をする
 							enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 							// 占いを要請
-							enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+							enqueueTalk(new Content(new RequestContentBuilder(trueSeer, new Content(new DivinationContentBuilder(voteCandidate)))));
 							return;
 						}
 					}
@@ -231,7 +231,7 @@ public class SampleVillager extends AbstractVillager {
 				// 投票先が変わったので人狼推定発言をする
 				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 				// 占いを要請
-				enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+				enqueueTalk(new Content(new RequestContentBuilder(trueSeer, new Content(new DivinationContentBuilder(voteCandidate)))));
 				return;
 			}
 			// 既定の投票先が投票先候補に含まれる場合，投票先はそのまま
