@@ -24,19 +24,19 @@ import org.aiwolf.sample.player.SampleWerewolf;
  */
 public abstract class AbstractRoleAssignPlayer implements Player {
 
-	// 各役職で実際に使用するAbstructRoleクラスのプレイヤーインスタンスを生成して下さい．
+	// 各役職で実際に使用するPlayerクラスのプレイヤーインスタンスを生成して下さい．
 	// 例えば村人プレイヤーだけ自作のプレイヤーにしたい場合は
-	// AbstractVillager villagerPlayer = new SampleVillagerPlayer();
+	// Player villagerPlayer = new SampleVillager();
 	// を
-	// AbstractVillager villagerPlayer = new [自作プレイヤークラスのコンストラクタ];
+	// Player villagerPlayer = new [自作プレイヤークラスのコンストラクタ];
 	// と変更すれば，村人の役職が割り振られた時は自作のプレイヤーで
 	// それ以外の役職になった時はサンプルプレイヤーでプレイします．
-	private AbstractVillager villagerPlayer = new SampleVillager();
-	private AbstractSeer seerPlayer = new SampleSeer();
-	private AbstractMedium mediumPlayer = new SampleMedium();
-	private AbstractBodyguard bodyguardPlayer = new SampleBodyguard();
-	private AbstractPossessed possessedPlayer = new SamplePossessed();
-	private AbstractWerewolf werewolfPlayer = new SampleWerewolf();
+	private Player villagerPlayer = new SampleVillager();
+	private Player seerPlayer = new SampleSeer();
+	private Player mediumPlayer = new SampleMedium();
+	private Player bodyguardPlayer = new SampleBodyguard();
+	private Player possessedPlayer = new SamplePossessed();
+	private Player werewolfPlayer = new SampleWerewolf();
 
 	private Player rolePlayer;
 
@@ -49,7 +49,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *         <div lang="en">the player actually used in case of villager</div>
 	 */
-	public final AbstractVillager getVillagerPlayer() {
+	public final Player getVillagerPlayer() {
 		return villagerPlayer;
 	}
 
@@ -63,7 +63,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *            <div lang="en">the actual villager player</div>
 	 */
-	public final void setVillagerPlayer(AbstractVillager villagerPlayer) {
+	public final void setVillagerPlayer(Player villagerPlayer) {
 		this.villagerPlayer = villagerPlayer;
 	}
 
@@ -76,7 +76,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *         <div lang="en">the player actually used in case of seer</div>
 	 */
-	public final AbstractSeer getSeerPlayer() {
+	public final Player getSeerPlayer() {
 		return seerPlayer;
 	}
 
@@ -90,7 +90,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *            <div lang="en">the actual seer player</div>
 	 */
-	public final void setSeerPlayer(AbstractSeer seerPlayer) {
+	public final void setSeerPlayer(Player seerPlayer) {
 		this.seerPlayer = seerPlayer;
 	}
 
@@ -103,7 +103,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *         <div lang="en">the player actually used in case of medium</div>
 	 */
-	public final AbstractMedium getMediumPlayer() {
+	public final Player getMediumPlayer() {
 		return mediumPlayer;
 	}
 
@@ -117,7 +117,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *            <div lang="en">the actual medium player</div>
 	 */
-	public final void setMediumPlayer(AbstractMedium mediumPlayer) {
+	public final void setMediumPlayer(Player mediumPlayer) {
 		this.mediumPlayer = mediumPlayer;
 	}
 
@@ -130,7 +130,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *         <div lang="en">the player actually used in case of bodyguard</div>
 	 */
-	public final AbstractBodyguard getBodyguardPlayer() {
+	public final Player getBodyguardPlayer() {
 		return bodyguardPlayer;
 	}
 
@@ -144,7 +144,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *            <div lang="en">the actual bodyguard player</div>
 	 */
-	public final void setBodyguardPlayer(AbstractBodyguard bodyGuardPlayer) {
+	public final void setBodyguardPlayer(Player bodyGuardPlayer) {
 		this.bodyguardPlayer = bodyGuardPlayer;
 	}
 
@@ -157,7 +157,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *         <div lang="en">the player actually used in case of possessed</div>
 	 */
-	public final AbstractPossessed getPossessedPlayer() {
+	public final Player getPossessedPlayer() {
 		return possessedPlayer;
 	}
 
@@ -171,7 +171,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *            <div lang="en">the actual possessed player</div>
 	 */
-	public final void setPossessedPlayer(AbstractPossessed possesedPlayer) {
+	public final void setPossessedPlayer(Player possesedPlayer) {
 		this.possessedPlayer = possesedPlayer;
 	}
 
@@ -184,7 +184,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *         <div lang="en">the player actually used in case of werewolf</div>
 	 */
-	public final AbstractWerewolf getWerewolfPlayer() {
+	public final Player getWerewolfPlayer() {
 		return werewolfPlayer;
 	}
 
@@ -198,7 +198,7 @@ public abstract class AbstractRoleAssignPlayer implements Player {
 	 *
 	 *            <div lang="en">the actual werewolf player</div>
 	 */
-	public final void setWerewolfPlayer(AbstractWerewolf werewolfPlayer) {
+	public final void setWerewolfPlayer(Player werewolfPlayer) {
 		this.werewolfPlayer = werewolfPlayer;
 	}
 
