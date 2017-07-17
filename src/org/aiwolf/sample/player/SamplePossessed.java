@@ -277,10 +277,14 @@ public class SamplePossessed extends AbstractPossessed {
 			if (candidates.isEmpty()) {
 				candidates.addAll(villagers);
 				candidates.removeAll(fakeHumans);
-				// それでも候補がいなければ村人陣営から
-				if (candidates.isEmpty()) {
-					candidates.addAll(villagers);
-				}
+			}
+			// それでも候補がいなければ村人陣営から
+			if (candidates.isEmpty()) {
+				candidates.addAll(villagers);
+			}
+			// それでも候補がいなければ自分以外から
+			if (candidates.isEmpty()) {
+				candidates.addAll(agi.getAliveOthers());
 			}
 		}
 		if (candidates.contains(voteCandidate)) {
