@@ -1,30 +1,24 @@
-/**
- * SampleRoleAssignPlayer.java
- * 
- * Copyright (c) 2016 人狼知能プロジェクト
- */
 package org.aiwolf.sample.player;
 
 import org.aiwolf.sample.lib.AbstractRoleAssignPlayer;
+import org.aiwolf.sample.player.*;
 
 /**
- * Sampleのみを使って起動するPlayer
- * @author tori
- *
+ * 役職に実際のプレイヤークラスを割り当てるプレイヤークラス
  */
 public class SampleRoleAssignPlayer extends AbstractRoleAssignPlayer {
 
-	public SampleRoleAssignPlayer(){
+	public SampleRoleAssignPlayer() {
 		setVillagerPlayer(new SampleVillager());
-		setSeerPlayer(new SampleSeer());
-		setMediumPlayer(new SampleMedium());
 		setBodyguardPlayer(new SampleBodyguard());
+		setMediumPlayer(new SampleMedium());
+		setSeerPlayer(new SampleSeer());
 		setPossessedPlayer(new SamplePossessed());
 		setWerewolfPlayer(new SampleWerewolf());
 	}
 
-	@Override
 	public String getName() {
-		return SampleRoleAssignPlayer.class.getSimpleName();
-	}	
+		return "SampleRoleAssignPlayer";
+	}
+
 }
