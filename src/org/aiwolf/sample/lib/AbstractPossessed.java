@@ -13,6 +13,7 @@ import org.aiwolf.common.data.Player;
  *
  * <div lang="en">Abstract class for possessed. When the invalid method is called, it throws an exception.</div>
  */
+@Deprecated
 public abstract class AbstractPossessed implements Player {
 
 	@Override

@@ -13,6 +13,7 @@ import org.aiwolf.common.data.Player;
  * 
  * <div lang="en">Abstract class for bodyguard. When the invalid method is called, it throws an exception.</div>
  */
+@Deprecated
 public abstract class AbstractBodyguard implements Player {
 
 	@Override

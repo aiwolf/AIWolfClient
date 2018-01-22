@@ -13,6 +13,7 @@ import org.aiwolf.common.data.Player;
  *
  * <div lang="en">Abstract class for seer. When the invalid method is called, it throws an exception.</div>
  */
+@Deprecated
 public abstract class AbstractSeer implements Player {
 
 	@Override

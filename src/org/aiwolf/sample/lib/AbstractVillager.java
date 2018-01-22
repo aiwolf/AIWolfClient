@@ -13,6 +13,7 @@ import org.aiwolf.common.data.Player;
  *
  * <div lang="en">Abstract class for villager. When the invalid method is called, it throws an exception.</div>
  */
+@Deprecated
 public abstract class AbstractVillager implements Player {
 
 	@Override
