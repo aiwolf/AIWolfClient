@@ -25,6 +25,7 @@ public class SampleSeer extends SampleVillager {
 	List<Agent> semiWolves = new ArrayList<>();
 	List<Agent> possessedList = new ArrayList<>();
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		comingoutDay = (int) (Math.random() * 3 + 1);
@@ -38,6 +39,7 @@ public class SampleSeer extends SampleVillager {
 		possessedList.clear();
 	}
 
+	@Override
 	public void dayStart() {
 		super.dayStart();
 		// 占い結果を待ち行列に入れる
@@ -54,6 +56,7 @@ public class SampleSeer extends SampleVillager {
 		}
 	}
 
+	@Override
 	protected void chooseVoteCandidate() {
 		// 生存人狼がいれば当然投票
 		List<Agent> aliveWolves = new ArrayList<>();
@@ -127,6 +130,7 @@ public class SampleSeer extends SampleVillager {
 		}
 	}
 
+	@Override
 	public String talk() {
 		// カミングアウトする日になったら，あるいは占い結果が人狼だったら
 		// あるいは占い師カミングアウトが出たらカミングアウト
@@ -144,6 +148,7 @@ public class SampleSeer extends SampleVillager {
 		return super.talk();
 	}
 
+	@Override
 	public Agent divine() {
 		// 人狼候補がいればそれらからランダムに占う
 		if (!semiWolves.isEmpty()) {

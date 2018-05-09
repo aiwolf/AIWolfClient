@@ -13,11 +13,13 @@ public class SampleBodyguard extends SampleVillager {
 	/** 護衛したエージェント */
 	Agent guardedAgent;
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		guardedAgent = null;
 	}
 
+	@Override
 	public Agent guard() {
 		Agent guardCandidate = null;
 		// 前日の護衛が成功しているようなら同じエージェントを護衛

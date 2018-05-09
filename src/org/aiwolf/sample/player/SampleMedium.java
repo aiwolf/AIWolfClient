@@ -18,6 +18,7 @@ public class SampleMedium extends SampleVillager {
 	Deque<Judge> identQueue = new LinkedList<>();
 	Map<Agent, Species> myIdentMap = new HashMap<>();
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		comingoutDay = (int) (Math.random() * 3 + 1);
@@ -26,6 +27,7 @@ public class SampleMedium extends SampleVillager {
 		myIdentMap.clear();
 	}
 
+	@Override
 	public void dayStart() {
 		super.dayStart();
 		// 霊媒結果を待ち行列に入れる
@@ -36,6 +38,7 @@ public class SampleMedium extends SampleVillager {
 		}
 	}
 
+	@Override
 	protected void chooseVoteCandidate() {
 		werewolves.clear();
 		// 霊媒師をカミングアウトしている他のエージェントは人狼候補
@@ -71,6 +74,7 @@ public class SampleMedium extends SampleVillager {
 		}
 	}
 
+	@Override
 	public String talk() {
 		// カミングアウトする日になったら，あるいは霊媒結果が人狼だったら
 		// あるいは霊媒師カミングアウトが出たらカミングアウト

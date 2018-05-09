@@ -93,10 +93,12 @@ public class SampleBasePlayer implements Player {
 		}
 	}
 
+	@Override
 	public String getName() {
 		return "MyBasePlayer";
 	}
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		day = -1;
 		me = gameInfo.getAgent();
@@ -111,6 +113,7 @@ public class SampleBasePlayer implements Player {
 		werewolves.clear();
 	}
 
+	@Override
 	public void update(GameInfo gameInfo) {
 		currentGameInfo = gameInfo;
 		// 1日の最初の呼び出しはdayStart()の前なので何もしない
@@ -146,6 +149,7 @@ public class SampleBasePlayer implements Player {
 		talkListHead = currentGameInfo.getTalkList().size();
 	}
 
+	@Override
 	public void dayStart() {
 		canTalk = true;
 		canWhisper = false;
@@ -189,6 +193,7 @@ public class SampleBasePlayer implements Player {
 	protected void chooseVoteCandidate() {
 	}
 
+	@Override
 	public String talk() {
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
@@ -202,6 +207,7 @@ public class SampleBasePlayer implements Player {
 	protected void chooseAttackVoteCandidate() {
 	}
 
+	@Override
 	public String whisper() {
 		chooseAttackVoteCandidate();
 		if (attackVoteCandidate != null && attackVoteCandidate != declaredAttackVoteCandidate) {
@@ -211,12 +217,14 @@ public class SampleBasePlayer implements Player {
 		return whisperQueue.isEmpty() ? Talk.SKIP : whisperQueue.poll().getText();
 	}
 
+	@Override
 	public Agent vote() {
 		canTalk = false;
 		chooseVoteCandidate();
 		return voteCandidate;
 	}
 
+	@Override
 	public Agent attack() {
 		canWhisper = false;
 		chooseAttackVoteCandidate();
@@ -224,14 +232,17 @@ public class SampleBasePlayer implements Player {
 		return attackVoteCandidate;
 	}
 
+	@Override
 	public Agent divine() {
 		return null;
 	}
 
+	@Override
 	public Agent guard() {
 		return null;
 	}
 
+	@Override
 	public void finish() {
 	}
 

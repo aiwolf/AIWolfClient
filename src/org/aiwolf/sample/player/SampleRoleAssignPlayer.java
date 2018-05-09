@@ -1,7 +1,6 @@
 package org.aiwolf.sample.player;
 
 import org.aiwolf.sample.lib.AbstractRoleAssignPlayer;
-import org.aiwolf.sample.player.*;
 
 /**
  * 役職に実際のプレイヤークラスを割り当てるプレイヤークラス
@@ -17,6 +16,7 @@ public class SampleRoleAssignPlayer extends AbstractRoleAssignPlayer {
 		setWerewolfPlayer(new SampleWerewolf());
 	}
 
+	@Override
 	public String getName() {
 		return "SampleRoleAssignPlayer";
 	}

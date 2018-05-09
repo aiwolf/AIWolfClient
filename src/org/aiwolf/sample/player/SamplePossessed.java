@@ -19,6 +19,7 @@ public class SamplePossessed extends SampleVillager {
 	Deque<Judge> fakeDivinationQueue = new LinkedList<>();
 	List<Agent> divinedAgents = new ArrayList<>();
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		numWolves = gameSetting.getRoleNumMap().get(Role.WEREWOLF);
@@ -55,6 +56,7 @@ public class SamplePossessed extends SampleVillager {
 		return new Judge(day, me, target, result);
 	}
 
+	@Override
 	public void dayStart() {
 		super.dayStart();
 		// 偽の判定
@@ -68,6 +70,7 @@ public class SamplePossessed extends SampleVillager {
 		}
 	}
 
+	@Override
 	protected void chooseVoteCandidate() {
 		werewolves.clear();
 		List<Agent> candidates = new ArrayList<>();
@@ -124,6 +127,7 @@ public class SamplePossessed extends SampleVillager {
 		}
 	}
 
+	@Override
 	public String talk() {
 		// 即占い師カミングアウト
 		if (!isCameout) {

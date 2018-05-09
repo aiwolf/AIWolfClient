@@ -6,6 +6,7 @@ import org.aiwolf.common.data.*;
 /** 村人役エージェントクラス */
 public class SampleVillager extends SampleBasePlayer {
 
+	@Override
 	protected void chooseVoteCandidate() {
 		werewolves.clear();
 		for (Judge j : divinationList) {
@@ -34,18 +35,22 @@ public class SampleVillager extends SampleBasePlayer {
 		}
 	}
 
+	@Override
 	public String whisper() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Agent attack() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Agent divine() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Agent guard() {
 		throw new UnsupportedOperationException();
 	}

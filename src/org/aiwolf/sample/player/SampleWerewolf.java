@@ -41,6 +41,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 	/** talk()のターン */
 	int talkTurn;
 
+	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		numWolves = gameSetting.getRoleNumMap().get(Role.WEREWOLF);
@@ -69,6 +70,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 		possessedList.clear();
 	}
 
+	@Override
 	public void update(GameInfo gameInfo) {
 		super.update(gameInfo);
 		// 占い/霊媒結果が嘘の場合，裏切り者候補
@@ -138,6 +140,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 		return null;
 	}
 
+	@Override
 	public void dayStart() {
 		super.dayStart();
 		talkTurn = -1;
@@ -155,6 +158,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 	}
 
 	/** 投票先候補を選ぶ */
+	@Override
 	protected void chooseVoteCandidate() {
 		List<Agent> candidates = new ArrayList<>();
 		// 占い師/霊媒師騙りの場合
@@ -194,6 +198,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 		}
 	}
 
+	@Override
 	public String talk() {
 		talkTurn++;
 		if (fakeRole != Role.VILLAGER) {
@@ -241,6 +246,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 	}
 
 	/** 襲撃先候補を選ぶ */
+	@Override
 	protected void chooseAttackVoteCandidate() {
 		// カミングアウトした村人陣営は襲撃先候補
 		List<Agent> candidates = new ArrayList<>();
