@@ -7,9 +7,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.AttackContentBuilder;
+import org.aiwolf.client.lib.BecauseContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Player;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Status;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /** すべての役職のベースとなるクラス */
 public class SampleBasePlayer implements Player {
@@ -53,6 +62,10 @@ public class SampleBasePlayer implements Player {
 	List<Agent> humans = new ArrayList<>();
 	/** 人狼リスト */
 	List<Agent> werewolves = new ArrayList<>();
+	/** 推測理由マップ */
+	Map<Agent, Content> estimateReasonMap = new HashMap<>();
+	/** 投票理由マップ */
+	Map<Agent, Content> voteReasonMap = new HashMap<>();
 
 	/** エージェントが生きているかどうかを返す */
 	protected boolean isAlive(Agent agent) {
@@ -111,6 +124,8 @@ public class SampleBasePlayer implements Player {
 		comingoutMap.clear();
 		humans.clear();
 		werewolves.clear();
+		estimateReasonMap.clear();
+		voteReasonMap.clear();
 	}
 
 	@Override
@@ -197,7 +212,13 @@ public class SampleBasePlayer implements Player {
 	public String talk() {
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			talkQueue.offer(new Content(new VoteContentBuilder(voteCandidate)));
+			Content action = new Content(new VoteContentBuilder(voteCandidate));
+			if (voteReasonMap.containsKey(voteCandidate)) {
+				Content reason = voteReasonMap.get(voteCandidate);
+				talkQueue.offer(new Content(new BecauseContentBuilder(reason, action)));
+			} else {
+				talkQueue.offer(action);
+			}
 			declaredVoteCandidate = voteCandidate;
 		}
 		return talkQueue.isEmpty() ? Talk.SKIP : talkQueue.poll().getText();

@@ -1,7 +1,15 @@
 package org.aiwolf.sample.player;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
+import org.aiwolf.client.lib.BecauseContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivinationContentBuilder;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.RequestContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
 
 /** 村人役エージェントクラス */
 public class SampleVillager extends SampleBasePlayer {
@@ -15,6 +23,8 @@ public class SampleVillager extends SampleBasePlayer {
 				Agent candidate = j.getAgent();
 				if (isAlive(candidate) && !werewolves.contains(candidate)) {
 					werewolves.add(candidate);
+					Content reason = new Content(new DivinedResultContentBuilder(candidate, j.getTarget(), Species.WEREWOLF));
+					estimateReasonMap.put(candidate, reason);
 				}
 			}
 		}
@@ -28,8 +38,15 @@ public class SampleVillager extends SampleBasePlayer {
 				voteCandidate = randomSelect(werewolves);
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
-					talkQueue.offer(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
-					talkQueue.offer(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+					Content action = new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF));
+					if (estimateReasonMap.containsKey(voteCandidate)) {
+						talkQueue.offer(new Content(new BecauseContentBuilder(estimateReasonMap.get(voteCandidate), action)));
+					} else {
+						talkQueue.offer(action);
+					}
+					voteReasonMap.put(voteCandidate, action);
+					Content request = new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate))));
+					talkQueue.offer(new Content(new BecauseContentBuilder(action, request)));
 				}
 			}
 		}
