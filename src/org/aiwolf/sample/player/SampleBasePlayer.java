@@ -1,3 +1,9 @@
+/**
+ * SampleBasePlayer.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
+
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
@@ -10,6 +16,8 @@ import java.util.Map;
 import org.aiwolf.client.lib.AttackContentBuilder;
 import org.aiwolf.client.lib.BecauseContentBuilder;
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.Operator;
+import org.aiwolf.client.lib.Topic;
 import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
@@ -20,7 +28,11 @@ import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
-/** すべての役職のベースとなるクラス */
+/**
+ * すべての役職のベースとなるクラス
+ * 
+ * @author otsuki
+ */
 public class SampleBasePlayer implements Player {
 	/** このエージェント */
 	Agent me;
@@ -63,9 +75,9 @@ public class SampleBasePlayer implements Player {
 	/** 人狼リスト */
 	List<Agent> werewolves = new ArrayList<>();
 	/** 推測理由マップ */
-	Map<Agent, Content> estimateReasonMap = new HashMap<>();
+	EstimateReasonMaps estimateReasonMaps = new EstimateReasonMaps();
 	/** 投票理由マップ */
-	Map<Agent, Content> voteReasonMap = new HashMap<>();
+	VoteReasonMap voteReasonMap = new VoteReasonMap();
 
 	/** エージェントが生きているかどうかを返す */
 	protected boolean isAlive(Agent agent) {
@@ -108,7 +120,7 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public String getName() {
-		return "MyBasePlayer";
+		return "SampleBasePlayer";
 	}
 
 	@Override
@@ -124,7 +136,7 @@ public class SampleBasePlayer implements Player {
 		comingoutMap.clear();
 		humans.clear();
 		werewolves.clear();
-		estimateReasonMap.clear();
+		estimateReasonMaps.clear();
 		voteReasonMap.clear();
 	}
 
@@ -147,18 +159,39 @@ public class SampleBasePlayer implements Player {
 				continue;
 			}
 			Content content = new Content(talk.getText());
-			switch (content.getTopic()) {
-			case COMINGOUT:
-				comingoutMap.put(talker, content.getRole());
-				break;
-			case DIVINED:
-				divinationList.add(new Judge(day, talker, content.getTarget(), content.getResult()));
-				break;
-			case IDENTIFIED:
-				identList.add(new Judge(day, talker, content.getTarget(), content.getResult()));
-				break;
-			default:
-				break;
+
+			// 主語を補う
+			if (content.getSubject() == Agent.UNSPEC) {
+				content.setSubject(talker);
+			}
+			if (content.getTopic() == Topic.OPERATOR) {
+				content.getContentList().stream().forEach(c -> {
+					if (c.getSubject() == Agent.UNSPEC) {
+						if (c.getOperator() == Operator.INQUIRE || c.getOperator() == Operator.REQUEST) {
+							c.setSubject(content.getTarget());
+						} else {
+							c.setSubject(content.getSubject());
+						}
+					}
+				});
+			}
+
+			// 推測・投票発言があれば登録
+			if (!estimateReasonMaps.addEstimateReason(content) && !voteReasonMap.addVoteReason(content)) {
+				// それ以外の発言の処理
+				switch (content.getTopic()) {
+				case COMINGOUT:
+					comingoutMap.put(content.getTarget(), content.getRole());
+					break;
+				case DIVINED:
+					divinationList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
+					break;
+				case IDENTIFIED:
+					identList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
+					break;
+				default:
+					break;
+				}
 			}
 		}
 		talkListHead = currentGameInfo.getTalkList().size();
@@ -212,12 +245,12 @@ public class SampleBasePlayer implements Player {
 	public String talk() {
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			Content action = new Content(new VoteContentBuilder(voteCandidate));
-			if (voteReasonMap.containsKey(voteCandidate)) {
-				Content reason = voteReasonMap.get(voteCandidate);
-				talkQueue.offer(new Content(new BecauseContentBuilder(reason, action)));
+			Content vote = new Content(new VoteContentBuilder(voteCandidate));
+			Content reason = voteReasonMap.getReason(me, voteCandidate);
+			if (reason != null) {
+				talkQueue.offer(new Content(new BecauseContentBuilder(reason, vote)));
 			} else {
-				talkQueue.offer(action);
+				talkQueue.offer(vote);
 			}
 			declaredVoteCandidate = voteCandidate;
 		}
