@@ -6,7 +6,9 @@
 package org.aiwolf.sample.player;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.BecauseContentBuilder;
 import org.aiwolf.client.lib.Content;
@@ -22,7 +24,35 @@ import org.aiwolf.common.data.Agent;
  */
 class VoteReasonMap {
 
+	// 理由マップ
 	private Map<Agent, Content> voteReasonMap = new HashMap<>();
+	// 得票数マップ
+	private Map<Agent, Integer> voteCountMap = new HashMap<>();
+
+	// 得票数をカウント
+	private void countVote() {
+		voteReasonMap.keySet().stream().map(voter -> getTarget(voter)).distinct().forEach(voted -> {
+			voteCountMap.put(voted, (int) voteReasonMap.keySet().stream().filter(a -> getTarget(a) == voted).count());
+		});
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	List<Agent> getOrderedList() {
+		return voteReasonMap.keySet().stream().map(voter -> getTarget(voter)).distinct().sorted((a1, a2) -> getCount(a2) - getCount(a1)).collect(Collectors.toList());
+	}
+
+	/**
+	 * 
+	 * @param voted
+	 * @return
+	 */
+	int getCount(Agent voted) {
+		countVote();
+		return voteCountMap.get(voted) != null ? voteCountMap.get(voted) : 0;
+	}
 
 	/**
 	 * 
