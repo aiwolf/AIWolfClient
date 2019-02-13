@@ -1,3 +1,8 @@
+/**
+ * SampleSeer.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
@@ -7,9 +12,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.RequestContentBuilder;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /**
  * 占い師役エージェントクラス
@@ -57,7 +71,7 @@ public class SampleSeer extends SampleVillager {
 	}
 
 	@Override
-	protected void chooseVoteCandidate() {
+	void chooseVoteCandidate() {
 		// 生存人狼がいれば当然投票
 		List<Agent> aliveWolves = new ArrayList<>();
 		for (Agent a : blackList) {
@@ -70,7 +84,7 @@ public class SampleSeer extends SampleVillager {
 			if (!aliveWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveWolves);
 				if (canTalk) {
-					talkQueue.offer(new Content(new RequestContentBuilder(null, new Content(new VoteContentBuilder(voteCandidate)))));
+					enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new VoteContentBuilder(voteCandidate)))));
 				}
 			}
 			return;
@@ -98,7 +112,7 @@ public class SampleSeer extends SampleVillager {
 			// 人狼候補なのに人間⇒裏切り者
 			if (whiteList.contains(a)) {
 				if (!possessedList.contains(a)) {
-					talkQueue.offer(new Content(new EstimateContentBuilder(a, Role.POSSESSED)));
+					enqueueTalk(new Content(new EstimateContentBuilder(a, Role.POSSESSED)));
 					possessedList.add(a);
 				}
 			} else {
@@ -110,7 +124,7 @@ public class SampleSeer extends SampleVillager {
 				voteCandidate = randomSelect(semiWolves);
 				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
-					talkQueue.offer(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 				}
 			}
 		}
@@ -135,14 +149,14 @@ public class SampleSeer extends SampleVillager {
 		// カミングアウトする日になったら，あるいは占い結果が人狼だったら
 		// あるいは占い師カミングアウトが出たらカミングアウト
 		if (!isCameout && (day >= comingoutDay || (!divinationQueue.isEmpty() && divinationQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.SEER))) {
-			talkQueue.offer(new Content(new ComingoutContentBuilder(me, Role.SEER)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, Role.SEER)));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの占い結果をすべて公開
 		if (isCameout) {
 			while (!divinationQueue.isEmpty()) {
 				Judge ident = divinationQueue.poll();
-				talkQueue.offer(new Content(new DivinedResultContentBuilder(ident.getTarget(), ident.getResult())));
+				enqueueTalk(new Content(new DivinedResultContentBuilder(ident.getTarget(), ident.getResult())));
 			}
 		}
 		return super.talk();

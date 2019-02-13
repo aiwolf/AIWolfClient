@@ -1,3 +1,8 @@
+/**
+ * SampleMedium.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import java.util.Deque;
@@ -5,9 +10,18 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivinationContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
+import org.aiwolf.client.lib.RequestContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /**
  * 霊媒師役エージェントクラス
@@ -39,7 +53,7 @@ public class SampleMedium extends SampleVillager {
 	}
 
 	@Override
-	protected void chooseVoteCandidate() {
+	void chooseVoteCandidate() {
 		werewolves.clear();
 		// 霊媒師をカミングアウトしている他のエージェントは人狼候補
 		for (Agent agent : aliveOthers) {
@@ -67,8 +81,8 @@ public class SampleMedium extends SampleVillager {
 				voteCandidate = randomSelect(werewolves);
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
-					talkQueue.offer(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
-					talkQueue.offer(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+					enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
 				}
 			}
 		}
@@ -79,14 +93,14 @@ public class SampleMedium extends SampleVillager {
 		// カミングアウトする日になったら，あるいは霊媒結果が人狼だったら
 		// あるいは霊媒師カミングアウトが出たらカミングアウト
 		if (!isCameout && (day >= comingoutDay || (!identQueue.isEmpty() && identQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.MEDIUM))) {
-			talkQueue.offer(new Content(new ComingoutContentBuilder(me, Role.MEDIUM)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, Role.MEDIUM)));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの霊媒結果をすべて公開
 		if (isCameout) {
 			while (!identQueue.isEmpty()) {
 				Judge ident = identQueue.poll();
-				talkQueue.offer(new Content(new IdentContentBuilder(ident.getTarget(), ident.getResult())));
+				enqueueTalk(new Content(new IdentContentBuilder(ident.getTarget(), ident.getResult())));
 			}
 		}
 		return super.talk();

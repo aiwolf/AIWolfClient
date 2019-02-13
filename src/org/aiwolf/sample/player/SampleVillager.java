@@ -3,7 +3,6 @@
  * 
  * Copyright (c) 2018 人狼知能プロジェクト
  */
-
 package org.aiwolf.sample.player;
 
 import org.aiwolf.client.lib.BecauseContentBuilder;
@@ -24,7 +23,7 @@ import org.aiwolf.common.data.Species;
 public class SampleVillager extends SampleBasePlayer {
 
 	@Override
-	protected void chooseVoteCandidate() {
+	void chooseVoteCandidate() {
 		werewolves.clear();
 		for (Judge j : divinationList) {
 			// 自分あるいは殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補とする
@@ -51,12 +50,12 @@ public class SampleVillager extends SampleBasePlayer {
 					if (estimate != null) {
 						Content reason = estimateReasonMaps.getReason(me, voteCandidate);
 						if (reason != null) {
-							talkQueue.offer(new Content(new BecauseContentBuilder(reason, estimate)));
+							enqueueTalk(new Content(new BecauseContentBuilder(reason, estimate)));
 						} else {
-							talkQueue.offer(estimate);
+							enqueueTalk(estimate);
 						}
 						Content request = new Content(new RequestContentBuilder(Agent.ANY, new Content(new DivinationContentBuilder(voteCandidate))));
-						talkQueue.offer(new Content(new BecauseContentBuilder(estimate, request)));
+						enqueueTalk(new Content(new BecauseContentBuilder(estimate, request)));
 					}
 					voteReasonMap.addVoteReason(me, voteCandidate, estimate);
 				}

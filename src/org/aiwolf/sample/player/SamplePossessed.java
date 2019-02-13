@@ -1,3 +1,8 @@
+/**
+ * SamplePossessed.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
@@ -5,9 +10,18 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivinationContentBuilder;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.RequestContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /**
  * 裏切り者役エージェントクラス
@@ -71,7 +85,7 @@ public class SamplePossessed extends SampleVillager {
 	}
 
 	@Override
-	protected void chooseVoteCandidate() {
+	void chooseVoteCandidate() {
 		werewolves.clear();
 		List<Agent> candidates = new ArrayList<>();
 		// 自分や殺されたエージェントを人狼と判定している占い師は人狼候補
@@ -121,8 +135,8 @@ public class SamplePossessed extends SampleVillager {
 			voteCandidate = randomSelect(candidates);
 			// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 			if (canTalk) {
-				talkQueue.offer(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
-				talkQueue.offer(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+				enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
 			}
 		}
 	}
@@ -131,14 +145,14 @@ public class SamplePossessed extends SampleVillager {
 	public String talk() {
 		// 即占い師カミングアウト
 		if (!isCameout) {
-			talkQueue.offer(new Content(new ComingoutContentBuilder(me, Role.SEER)));
+			enqueueTalk(new Content(new ComingoutContentBuilder(me, Role.SEER)));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの偽占い結果をすべて公開
 		if (isCameout) {
 			while (!fakeDivinationQueue.isEmpty()) {
 				Judge divination = fakeDivinationQueue.poll();
-				talkQueue.offer(new Content(new DivinedResultContentBuilder(divination.getTarget(), divination.getResult())));
+				enqueueTalk(new Content(new DivinedResultContentBuilder(divination.getTarget(), divination.getResult())));
 			}
 		}
 		return super.talk();

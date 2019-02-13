@@ -1,3 +1,8 @@
+/**
+ * SampleRoleAssignPlayer.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import org.aiwolf.sample.lib.AbstractRoleAssignPlayer;

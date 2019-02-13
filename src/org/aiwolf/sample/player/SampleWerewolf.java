@@ -1,3 +1,8 @@
+/**
+ * SampleWerewolf.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
@@ -8,9 +13,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /**
  * 人狼役エージェントクラス
@@ -159,7 +172,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 
 	/** 投票先候補を選ぶ */
 	@Override
-	protected void chooseVoteCandidate() {
+	void chooseVoteCandidate() {
 		List<Agent> candidates = new ArrayList<>();
 		// 占い師/霊媒師騙りの場合
 		if (fakeRole != Role.VILLAGER) {
@@ -190,7 +203,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 			if (!candidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(candidates);
 				if (canTalk) {
-					talkQueue.offer(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
 				}
 			}
 		} else {
@@ -226,7 +239,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 					// カミングアウトするタイミングになったらカミングアウト
 					if (day >= comingoutDay && talkTurn >= comingoutTurn) {
 						isCameout = true;
-						talkQueue.offer(new Content(new ComingoutContentBuilder(me, fakeRole)));
+						enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
 					}
 				}
 			}
@@ -235,9 +248,9 @@ public class SampleWerewolf extends SampleBasePlayer {
 				while (!fakeJudgeQueue.isEmpty()) {
 					Judge judge = fakeJudgeQueue.poll();
 					if (fakeRole == Role.SEER) {
-						talkQueue.offer(new Content(new DivinedResultContentBuilder(judge.getTarget(), judge.getResult())));
+						enqueueTalk(new Content(new DivinedResultContentBuilder(judge.getTarget(), judge.getResult())));
 					} else if (fakeRole == Role.MEDIUM) {
-						talkQueue.offer(new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())));
+						enqueueTalk(new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())));
 					}
 				}
 			}
@@ -247,7 +260,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 
 	/** 襲撃先候補を選ぶ */
 	@Override
-	protected void chooseAttackVoteCandidate() {
+	void chooseAttackVoteCandidate() {
 		// カミングアウトした村人陣営は襲撃先候補
 		List<Agent> candidates = new ArrayList<>();
 		for (Agent a : villagers) {

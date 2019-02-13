@@ -3,7 +3,6 @@
  * 
  * Copyright (c) 2018 人狼知能プロジェクト
  */
-
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
@@ -34,115 +33,76 @@ import org.aiwolf.common.net.GameSetting;
  */
 public class SampleBasePlayer implements Player {
 
-	/**
-	 * このエージェント
-	 */
-	protected Agent me;
+	/** このエージェント */
+	Agent me;
 
-	/**
-	 * 日付
-	 */
-	protected int day;
+	/** 日付 */
+	int day;
 
-	/**
-	 * talk()できるか時間帯か
-	 */
-	protected boolean canTalk;
+	/** talk()できるか時間帯か */
+	boolean canTalk;
 
-	/**
-	 * whisper()できるか時間帯か
-	 */
-	protected boolean canWhisper;
+	/** whisper()できるか時間帯か */
+	// TODO: SampleWerewolf.javaに移動
+	boolean canWhisper;
 
-	/**
-	 * 最新のゲーム情報
-	 */
-	protected GameInfo currentGameInfo;
+	/** 最新のゲーム情報 */
+	GameInfo currentGameInfo;
 
-	/**
-	 * 自分以外の生存エージェント
-	 */
-	protected List<Agent> aliveOthers;
+	/** 自分以外の生存エージェント */
+	List<Agent> aliveOthers;
 
-	/**
-	 * 追放されたエージェント
-	 */
-	protected List<Agent> executedAgents = new ArrayList<>();
+	/** 追放されたエージェント */
+	List<Agent> executedAgents = new ArrayList<>();
 
-	/**
-	 * 殺されたエージェント
-	 */
-	protected List<Agent> killedAgents = new ArrayList<>();
+	/** 殺されたエージェント */
+	List<Agent> killedAgents = new ArrayList<>();
 
-	/**
-	 * 発言された占い結果報告のリスト
-	 */
-	protected List<Judge> divinationList = new ArrayList<>();
+	/** 発言された占い結果報告のリスト */
+	List<Judge> divinationList = new ArrayList<>();
 
-	/**
-	 * 発言された霊媒結果報告のリスト
-	 */
-	protected List<Judge> identList = new ArrayList<>();
+	/** 発言された霊媒結果報告のリスト */
+	List<Judge> identList = new ArrayList<>();
 
-	/**
-	 * 発言用待ち行列
-	 */
-	protected Deque<Content> talkQueue = new LinkedList<>();
+	/** 発言用待ち行列 */
+	private Deque<Content> talkQueue = new LinkedList<>();
 
-	/**
-	 * 囁き用待ち行列
-	 */
-	protected Deque<Content> whisperQueue = new LinkedList<>();
+	/** 囁き用待ち行列 */
+	// TODO: SampleWerewolf.javaに移動
+	Deque<Content> whisperQueue = new LinkedList<>();
 
-	/**
-	 * 投票先候補
-	 */
-	protected Agent voteCandidate;
+	/** 投票先候補 */
+	Agent voteCandidate;
 
-	/**
-	 * 宣言済み投票先候補
-	 */
-	protected Agent declaredVoteCandidate;
+	/** 宣言済み投票先候補 */
+	Agent declaredVoteCandidate;
 
-	/**
-	 * 襲撃投票先候補
-	 */
-	protected Agent attackVoteCandidate;
+	/** 襲撃投票先候補 */
+	// TODO: SampleWerewolf.javaに移動
+	Agent attackVoteCandidate;
 
-	/**
-	 * 宣言済み襲撃投票先候補
-	 */
-	protected Agent declaredAttackVoteCandidate;
+	/** 宣言済み襲撃投票先候補 */
+	// TODO: SampleWerewolf.javaに移動
+	Agent declaredAttackVoteCandidate;
 
-	/**
-	 * カミングアウト状況
-	 */
-	protected Map<Agent, Role> comingoutMap = new HashMap<>();
+	/** カミングアウト状況 */
+	Map<Agent, Role> comingoutMap = new HashMap<>();
 
-	/**
-	 * GameInfo.talkList読み込みのヘッド
-	 */
-	protected int talkListHead;
+	/** GameInfo.talkList読み込みのヘッド */
+	int talkListHead;
 
-	/**
-	 * 人間リスト
-	 */
-	protected List<Agent> humans = new ArrayList<>();
+	/** 人間リスト */
+	// TODO: 占い師や人狼固有なので廃止
+	List<Agent> humans = new ArrayList<>();
 
-	/**
-	 * 人狼リスト
-	 */
-	protected List<Agent> werewolves = new ArrayList<>();
+	/** 人狼リスト */
+	List<Agent> werewolves = new ArrayList<>();
 
-	/**
-	 * 推測理由マップ
-	 */
-	protected EstimateReasonMaps estimateReasonMaps = new EstimateReasonMaps();
+	/** 推測理由マップ */
+	EstimateReasonMaps estimateReasonMaps = new EstimateReasonMaps();
 
-	/**
-	 * 投票理由マップ
-	 */
-	protected VoteReasonMap voteReasonMap = new VoteReasonMap();
+	/** 投票理由マップ */
+	VoteReasonMap voteReasonMap = new VoteReasonMap();
 
 	/**
 	 * エージェントが生きているかどうかを返す
@@ -150,7 +110,7 @@ public class SampleBasePlayer implements Player {
 	 * @param agent
 	 * @return
 	 */
-	protected boolean isAlive(Agent agent) {
+	boolean isAlive(Agent agent) {
 		return currentGameInfo.getStatusMap().get(agent) == Status.ALIVE;
 	}
 
@@ -160,7 +120,7 @@ public class SampleBasePlayer implements Player {
 	 * @param agent
 	 * @return
 	 */
-	protected boolean isKilled(Agent agent) {
+	boolean isKilled(Agent agent) {
 		return killedAgents.contains(agent);
 	}
 
@@ -170,7 +130,7 @@ public class SampleBasePlayer implements Player {
 	 * @param agent
 	 * @return
 	 */
-	protected boolean isCo(Agent agent) {
+	boolean isCo(Agent agent) {
 		return comingoutMap.containsKey(agent);
 	}
 
@@ -180,14 +140,18 @@ public class SampleBasePlayer implements Player {
 	 * @param role
 	 * @return
 	 */
-	protected boolean isCo(Role role) {
+	boolean isCo(Role role) {
 		return comingoutMap.containsValue(role);
 	}
 
 	/**
 	 * エージェントが人間かどうかを返す
+	 * 
+	 * @param agent
+	 * @return
 	 */
-	protected boolean isHuman(Agent agent) {
+	// TODO: 廃止
+	boolean isHuman(Agent agent) {
 		return humans.contains(agent);
 	}
 
@@ -197,7 +161,8 @@ public class SampleBasePlayer implements Player {
 	 * @param agent
 	 * @return
 	 */
-	protected boolean isWerewolf(Agent agent) {
+	// TODO: 廃止
+	boolean isWerewolf(Agent agent) {
 		return werewolves.contains(agent);
 	}
 
@@ -207,7 +172,7 @@ public class SampleBasePlayer implements Player {
 	 * @param list
 	 * @return
 	 */
-	protected <T> T randomSelect(List<T> list) {
+	<T> T randomSelect(List<T> list) {
 		if (list.isEmpty()) {
 			return null;
 		} else {
@@ -326,7 +291,7 @@ public class SampleBasePlayer implements Player {
 	/**
 	 * 投票先候補を選びvoteCandidateにセットする
 	 */
-	protected void chooseVoteCandidate() {
+	void chooseVoteCandidate() {
 	}
 
 	@Override
@@ -345,7 +310,7 @@ public class SampleBasePlayer implements Player {
 		return dequeueTalk();
 	}
 
-	protected void enqueueTalk(Content content) {
+	void enqueueTalk(Content content) {
 		if (content.getSubject() == Agent.UNSPEC) {
 			talkQueue.offer(replaceSubject(content, me));
 		} else {
@@ -353,7 +318,7 @@ public class SampleBasePlayer implements Player {
 		}
 	}
 
-	protected String dequeueTalk() {
+	String dequeueTalk() {
 		if (talkQueue.isEmpty()) {
 			return Talk.SKIP;
 		}
@@ -367,7 +332,8 @@ public class SampleBasePlayer implements Player {
 	/**
 	 * 襲撃先候補を選びattackVoteCandidateにセットする
 	 */
-	protected void chooseAttackVoteCandidate() {
+	// TODO: SampleWerewolf.javaに移動
+	void chooseAttackVoteCandidate() {
 	}
 
 	@Override

@@ -1,10 +1,17 @@
+/**
+ * SampleBodyguard.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
 /**
  * 狩人役エージェントクラス
