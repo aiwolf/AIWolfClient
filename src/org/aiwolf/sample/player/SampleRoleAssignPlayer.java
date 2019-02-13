@@ -10,7 +10,7 @@ import org.aiwolf.sample.lib.AbstractRoleAssignPlayer;
 /**
  * 役職に実際のプレイヤークラスを割り当てるプレイヤークラス
  */
-public class SampleRoleAssignPlayer extends AbstractRoleAssignPlayer {
+public final class SampleRoleAssignPlayer extends AbstractRoleAssignPlayer {
 
 	public SampleRoleAssignPlayer() {
 		setVillagerPlayer(new SampleVillager());

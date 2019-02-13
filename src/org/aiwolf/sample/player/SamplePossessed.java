@@ -26,7 +26,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 裏切り者役エージェントクラス
  */
-public class SamplePossessed extends SampleVillager {
+public final class SamplePossessed extends SampleVillager {
 	int numWolves;
 	boolean isCameout;
 	List<Judge> fakeDivinationList = new ArrayList<>();
@@ -86,20 +86,20 @@ public class SamplePossessed extends SampleVillager {
 
 	@Override
 	void chooseVoteCandidate() {
-		werewolves.clear();
-		List<Agent> candidates = new ArrayList<>();
+		wolfCandidates.clear();
+		List<Agent> voteCandidates = new ArrayList<>();
 		// 自分や殺されたエージェントを人狼と判定している占い師は人狼候補
 		for (Judge j : divinationList) {
 			if (j.getResult() == Species.WEREWOLF && (j.getTarget() == me || isKilled(j.getTarget()))) {
-				if (!werewolves.contains(j.getAgent())) {
-					werewolves.add(j.getAgent());
+				if (!wolfCandidates.contains(j.getAgent())) {
+					wolfCandidates.add(j.getAgent());
 				}
 			}
 		}
 		// 対抗カミングアウトのエージェントは投票先候補
 		for (Agent a : aliveOthers) {
-			if (!werewolves.contains(a) && comingoutMap.get(a) == Role.SEER) {
-				candidates.add(a);
+			if (!wolfCandidates.contains(a) && comingoutMap.get(a) == Role.SEER) {
+				voteCandidates.add(a);
 			}
 		}
 		// 人狼と判定したエージェントは投票先候補
@@ -110,29 +110,29 @@ public class SamplePossessed extends SampleVillager {
 					fakeHumans.add(j.getTarget());
 				}
 			} else {
-				if (!candidates.contains(j.getTarget())) {
-					candidates.add(j.getTarget());
+				if (!voteCandidates.contains(j.getTarget())) {
+					voteCandidates.add(j.getTarget());
 				}
 			}
 		}
 		// 候補がいなければ人間と判定していない村人陣営から
-		if (candidates.isEmpty()) {
+		if (voteCandidates.isEmpty()) {
 			for (Agent a : aliveOthers) {
-				if (!werewolves.contains(a) && !fakeHumans.contains(a)) {
-					candidates.add(a);
+				if (!wolfCandidates.contains(a) && !fakeHumans.contains(a)) {
+					voteCandidates.add(a);
 				}
 			}
 		}
 		// それでも候補がいなければ村人陣営から
-		if (candidates.isEmpty()) {
+		if (voteCandidates.isEmpty()) {
 			for (Agent a : aliveOthers) {
-				if (!werewolves.contains(a)) {
-					candidates.add(a);
+				if (!wolfCandidates.contains(a)) {
+					voteCandidates.add(a);
 				}
 			}
 		}
-		if (!candidates.contains(voteCandidate)) {
-			voteCandidate = randomSelect(candidates);
+		if (!voteCandidates.contains(voteCandidate)) {
+			voteCandidate = randomSelect(voteCandidates);
 			// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 			if (canTalk) {
 				enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));

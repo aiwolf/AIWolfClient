@@ -28,7 +28,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 占い師役エージェントクラス
  */
-public class SampleSeer extends SampleVillager {
+public final class SampleSeer extends SampleVillager {
 	int comingoutDay;
 	boolean isCameout;
 	Deque<Judge> divinationQueue = new LinkedList<>();
@@ -90,25 +90,25 @@ public class SampleSeer extends SampleVillager {
 			return;
 		}
 		// 確定人狼がいない場合は推測する
-		werewolves.clear();
+		wolfCandidates.clear();
 		// 偽占い師
 		for (Agent a : aliveOthers) {
 			if (comingoutMap.get(a) == Role.SEER) {
-				werewolves.add(a);
+				wolfCandidates.add(a);
 			}
 		}
 		// 偽霊媒師
 		for (Judge j : identList) {
 			Agent agent = j.getAgent();
 			if ((myDivinationMap.containsKey(j.getTarget()) && j.getResult() != myDivinationMap.get(j.getTarget()))) {
-				if (isAlive(agent) && !werewolves.contains(agent)) {
-					werewolves.add(agent);
+				if (isAlive(agent) && !wolfCandidates.contains(agent)) {
+					wolfCandidates.add(agent);
 				}
 			}
 		}
 		possessedList.clear();
 		semiWolves.clear();
-		for (Agent a : werewolves) {
+		for (Agent a : wolfCandidates) {
 			// 人狼候補なのに人間⇒裏切り者
 			if (whiteList.contains(a)) {
 				if (!possessedList.contains(a)) {

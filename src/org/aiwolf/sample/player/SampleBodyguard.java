@@ -16,7 +16,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 狩人役エージェントクラス
  */
-public class SampleBodyguard extends SampleVillager {
+public final class SampleBodyguard extends SampleVillager {
 	/** 護衛したエージェント */
 	Agent guardedAgent;
 
@@ -38,14 +38,14 @@ public class SampleBodyguard extends SampleVillager {
 			// 占い師をカミングアウトしていて，かつ人狼候補になっていないエージェントを探す
 			List<Agent> candidates = new ArrayList<>();
 			for (Agent agent : aliveOthers) {
-				if (comingoutMap.get(agent) == Role.SEER && !werewolves.contains(agent)) {
+				if (comingoutMap.get(agent) == Role.SEER && !wolfCandidates.contains(agent)) {
 					candidates.add(agent);
 				}
 			}
 			// 見つからなければ霊媒師をカミングアウトしていて，かつ人狼候補になっていないエージェントを探す
 			if (candidates.isEmpty()) {
 				for (Agent agent : aliveOthers) {
-					if (comingoutMap.get(agent) == Role.MEDIUM && !werewolves.contains(agent)) {
+					if (comingoutMap.get(agent) == Role.MEDIUM && !wolfCandidates.contains(agent)) {
 						candidates.add(agent);
 					}
 				}
@@ -53,7 +53,7 @@ public class SampleBodyguard extends SampleVillager {
 			// それでも見つからなければ自分と人狼候補以外から護衛
 			if (candidates.isEmpty()) {
 				for (Agent agent : aliveOthers) {
-					if (!werewolves.contains(agent)) {
+					if (!wolfCandidates.contains(agent)) {
 						candidates.add(agent);
 					}
 				}

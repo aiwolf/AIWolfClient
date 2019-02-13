@@ -26,7 +26,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 霊媒師役エージェントクラス
  */
-public class SampleMedium extends SampleVillager {
+public final class SampleMedium extends SampleVillager {
 	int comingoutDay;
 	boolean isCameout;
 	Deque<Judge> identQueue = new LinkedList<>();
@@ -54,11 +54,11 @@ public class SampleMedium extends SampleVillager {
 
 	@Override
 	void chooseVoteCandidate() {
-		werewolves.clear();
+		wolfCandidates.clear();
 		// 霊媒師をカミングアウトしている他のエージェントは人狼候補
 		for (Agent agent : aliveOthers) {
 			if (comingoutMap.get(agent) == Role.MEDIUM) {
-				werewolves.add(agent);
+				wolfCandidates.add(agent);
 			}
 		}
 		// 自分や殺されたエージェントを人狼と判定，あるいは自分と異なる判定の占い師は人狼候補
@@ -66,19 +66,19 @@ public class SampleMedium extends SampleVillager {
 			Agent agent = j.getAgent();
 			Agent target = j.getTarget();
 			if (j.getResult() == Species.WEREWOLF && (target == me || isKilled(target)) || (myIdentMap.containsKey(target) && j.getResult() != myIdentMap.get(target))) {
-				if (isAlive(agent) && !werewolves.contains(agent)) {
-					werewolves.add(agent);
+				if (isAlive(agent) && !wolfCandidates.contains(agent)) {
+					wolfCandidates.add(agent);
 				}
 			}
 		}
 		// 候補がいない場合はランダム
-		if (werewolves.isEmpty()) {
+		if (wolfCandidates.isEmpty()) {
 			if (!aliveOthers.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveOthers);
 			}
 		} else {
-			if (!werewolves.contains(voteCandidate)) {
-				voteCandidate = randomSelect(werewolves);
+			if (!wolfCandidates.contains(voteCandidate)) {
+				voteCandidate = randomSelect(wolfCandidates);
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
 					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
