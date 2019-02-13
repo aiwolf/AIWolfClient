@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.AttackContentBuilder;
 import org.aiwolf.client.lib.BecauseContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.Topic;
@@ -42,10 +41,6 @@ public class SampleBasePlayer implements Player {
 	/** talk()できるか時間帯か */
 	boolean canTalk;
 
-	/** whisper()できるか時間帯か */
-	// TODO: SampleWerewolf.javaに移動
-	boolean canWhisper;
-
 	/** 最新のゲーム情報 */
 	GameInfo currentGameInfo;
 
@@ -67,36 +62,17 @@ public class SampleBasePlayer implements Player {
 	/** 発言用待ち行列 */
 	private Deque<Content> talkQueue = new LinkedList<>();
 
-	/** 囁き用待ち行列 */
-	// TODO: SampleWerewolf.javaに移動
-	Deque<Content> whisperQueue = new LinkedList<>();
-
 	/** 投票先候補 */
 	Agent voteCandidate;
 
 	/** 宣言済み投票先候補 */
 	Agent declaredVoteCandidate;
 
-	/** 襲撃投票先候補 */
-	// TODO: SampleWerewolf.javaに移動
-	Agent attackVoteCandidate;
-
-	/** 宣言済み襲撃投票先候補 */
-	// TODO: SampleWerewolf.javaに移動
-	Agent declaredAttackVoteCandidate;
-
 	/** カミングアウト状況 */
 	Map<Agent, Role> comingoutMap = new HashMap<>();
 
 	/** GameInfo.talkList読み込みのヘッド */
 	int talkListHead;
-
-	/** 人間リスト */
-	// TODO: 占い師や人狼固有なので廃止
-	List<Agent> humans = new ArrayList<>();
-
-	/** 人狼リスト */
-	List<Agent> werewolves = new ArrayList<>();
 
 	/** 推測理由マップ */
 	EstimateReasonMaps estimateReasonMaps = new EstimateReasonMaps();
@@ -145,28 +121,6 @@ public class SampleBasePlayer implements Player {
 	}
 
 	/**
-	 * エージェントが人間かどうかを返す
-	 * 
-	 * @param agent
-	 * @return
-	 */
-	// TODO: 廃止
-	boolean isHuman(Agent agent) {
-		return humans.contains(agent);
-	}
-
-	/**
-	 * エージェントが人狼かどうかを返す
-	 * 
-	 * @param agent
-	 * @return
-	 */
-	// TODO: 廃止
-	boolean isWerewolf(Agent agent) {
-		return werewolves.contains(agent);
-	}
-
-	/**
 	 * リストからランダムに選んで返す
 	 * 
 	 * @param list
@@ -196,8 +150,6 @@ public class SampleBasePlayer implements Player {
 		divinationList.clear();
 		identList.clear();
 		comingoutMap.clear();
-		humans.clear();
-		werewolves.clear();
 		estimateReasonMaps.clear();
 		voteReasonMap.clear();
 	}
@@ -251,16 +203,9 @@ public class SampleBasePlayer implements Player {
 	@Override
 	public void dayStart() {
 		canTalk = true;
-		canWhisper = false;
-		if (currentGameInfo.getRole() == Role.WEREWOLF) {
-			canWhisper = true;
-		}
 		talkQueue.clear();
-		whisperQueue.clear();
 		declaredVoteCandidate = null;
 		voteCandidate = null;
-		declaredAttackVoteCandidate = null;
-		attackVoteCandidate = null;
 		talkListHead = 0;
 		// 前日に追放されたエージェントを登録
 		addExecutedAgent(currentGameInfo.getExecutedAgent());
@@ -329,21 +274,9 @@ public class SampleBasePlayer implements Player {
 		return content.getText();
 	}
 
-	/**
-	 * 襲撃先候補を選びattackVoteCandidateにセットする
-	 */
-	// TODO: SampleWerewolf.javaに移動
-	void chooseAttackVoteCandidate() {
-	}
-
 	@Override
 	public String whisper() {
-		chooseAttackVoteCandidate();
-		if (attackVoteCandidate != null && attackVoteCandidate != declaredAttackVoteCandidate) {
-			whisperQueue.offer(new Content(new AttackContentBuilder(attackVoteCandidate)));
-			declaredAttackVoteCandidate = attackVoteCandidate;
-		}
-		return whisperQueue.isEmpty() ? Talk.SKIP : whisperQueue.poll().getText();
+		return null;
 	}
 
 	@Override
@@ -355,10 +288,7 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public Agent attack() {
-		canWhisper = false;
-		chooseAttackVoteCandidate();
-		canWhisper = true;
-		return attackVoteCandidate;
+		return null;
 	}
 
 	@Override

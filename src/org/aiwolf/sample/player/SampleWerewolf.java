@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.aiwolf.client.lib.AttackContentBuilder;
 import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DivinedResultContentBuilder;
@@ -22,41 +23,67 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Talk;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
 /**
  * 人狼役エージェントクラス
  */
-public class SampleWerewolf extends SampleBasePlayer {
+public final class SampleWerewolf extends SampleBasePlayer {
+
 	/** 規定人狼数 */
 	int numWolves;
+
 	/** 騙る役職 */
 	Role fakeRole;
+
 	/** カミングアウトする日 */
 	int comingoutDay;
+
 	/** カミングアウトするターン */
 	int comingoutTurn;
+
 	/** カミングアウト済みか */
 	boolean isCameout;
+
+	/** whisper()できるか時間帯か */
+	boolean canWhisper;
+
+	/** 囁き用待ち行列 */
+	Deque<Content> whisperQueue = new LinkedList<>();
+
 	/** 偽判定マップ */
 	Map<Agent, Species> fakeJudgeMap = new HashMap<>();
+
 	/** 未公表偽判定の待ち行列 */
 	Deque<Judge> fakeJudgeQueue = new LinkedList<>();
+
 	/** 裏切り者リスト */
 	List<Agent> possessedList = new ArrayList<>();
+
 	/** 人狼リスト */
 	List<Agent> werewolves;
+
 	/** 人間リスト */
 	List<Agent> humans;
+
 	/** 村人リスト */
 	List<Agent> villagers = new ArrayList<>();
+
 	/** talk()のターン */
 	int talkTurn;
+
+	/** 襲撃投票先候補 */
+	Agent attackVoteCandidate;
+
+	/** 宣言済み襲撃投票先候補 */
+	Agent declaredAttackVoteCandidate;
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
+		whisperQueue.clear();
 		numWolves = gameSetting.getRoleNumMap().get(Role.WEREWOLF);
 		werewolves = new ArrayList<>(gameInfo.getRoleMap().keySet());
 		humans = new ArrayList<>();
@@ -92,7 +119,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 			if (!werewolves.contains(agent) && ((humans.contains(j.getTarget()) && j.getResult() == Species.WEREWOLF) || (werewolves.contains(j.getTarget()) && j.getResult() == Species.HUMAN))) {
 				if (!possessedList.contains(agent)) {
 					possessedList.add(agent);
-					whisperQueue.offer(new Content(new EstimateContentBuilder(agent, Role.POSSESSED)));
+					enqueueWhisper(new Content(new EstimateContentBuilder(me, agent, Role.POSSESSED)));
 				}
 			}
 		}
@@ -156,9 +183,12 @@ public class SampleWerewolf extends SampleBasePlayer {
 	@Override
 	public void dayStart() {
 		super.dayStart();
+		canWhisper = true;
+		declaredAttackVoteCandidate = null;
+		attackVoteCandidate = null;
 		talkTurn = -1;
 		if (day == 0) {
-			whisperQueue.offer(new Content(new ComingoutContentBuilder(me, fakeRole)));
+			enqueueWhisper(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 		}
 		// 偽の判定
 		else {
@@ -203,7 +233,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 			if (!candidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(candidates);
 				if (canTalk) {
-					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
+					enqueueTalk(new Content(new EstimateContentBuilder(me, voteCandidate, Role.WEREWOLF)));
 				}
 			}
 		} else {
@@ -228,7 +258,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 				}
 				if (fakeRole == Role.SEER && fakeSeerCo > 0 || fakeRole == Role.MEDIUM && fakeMediumCo > 0) {
 					fakeRole = Role.VILLAGER; // 潜伏人狼
-					whisperQueue.offer(new Content(new ComingoutContentBuilder(me, fakeRole)));
+					enqueueWhisper(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 				} else {
 					// 対抗カミングアウトがある場合，今日カミングアウトする
 					for (Agent a : humans) {
@@ -239,7 +269,7 @@ public class SampleWerewolf extends SampleBasePlayer {
 					// カミングアウトするタイミングになったらカミングアウト
 					if (day >= comingoutDay && talkTurn >= comingoutTurn) {
 						isCameout = true;
-						enqueueTalk(new Content(new ComingoutContentBuilder(me, fakeRole)));
+						enqueueTalk(new Content(new ComingoutContentBuilder(me, me, fakeRole)));
 					}
 				}
 			}
@@ -248,9 +278,9 @@ public class SampleWerewolf extends SampleBasePlayer {
 				while (!fakeJudgeQueue.isEmpty()) {
 					Judge judge = fakeJudgeQueue.poll();
 					if (fakeRole == Role.SEER) {
-						enqueueTalk(new Content(new DivinedResultContentBuilder(judge.getTarget(), judge.getResult())));
+						enqueueTalk(new Content(new DivinedResultContentBuilder(me, judge.getTarget(), judge.getResult())));
 					} else if (fakeRole == Role.MEDIUM) {
-						enqueueTalk(new Content(new IdentContentBuilder(judge.getTarget(), judge.getResult())));
+						enqueueTalk(new Content(new IdentContentBuilder(me, judge.getTarget(), judge.getResult())));
 					}
 				}
 			}
@@ -259,7 +289,6 @@ public class SampleWerewolf extends SampleBasePlayer {
 	}
 
 	/** 襲撃先候補を選ぶ */
-	@Override
 	void chooseAttackVoteCandidate() {
 		// カミングアウトした村人陣営は襲撃先候補
 		List<Agent> candidates = new ArrayList<>();
@@ -281,6 +310,43 @@ public class SampleWerewolf extends SampleBasePlayer {
 		} else {
 			attackVoteCandidate = null;
 		}
+	}
+
+	@Override
+	public Agent attack() {
+		canWhisper = false;
+		chooseAttackVoteCandidate();
+		canWhisper = true;
+		return attackVoteCandidate;
+	}
+
+	@Override
+	public String whisper() {
+		chooseAttackVoteCandidate();
+		if (attackVoteCandidate != null && attackVoteCandidate != declaredAttackVoteCandidate) {
+			enqueueWhisper(new Content(new AttackContentBuilder(me, attackVoteCandidate)));
+			declaredAttackVoteCandidate = attackVoteCandidate;
+		}
+		return dequeueWhisper();
+	}
+
+	void enqueueWhisper(Content content) {
+		if (content.getSubject() == Agent.UNSPEC) {
+			whisperQueue.offer(replaceSubject(content, me));
+		} else {
+			whisperQueue.offer(content);
+		}
+	}
+
+	String dequeueWhisper() {
+		if (whisperQueue.isEmpty()) {
+			return Talk.SKIP;
+		}
+		Content content = whisperQueue.poll();
+		if (content.getSubject() == me) {
+			return Content.stripSubject(content.getText());
+		}
+		return content.getText();
 	}
 
 }

@@ -5,6 +5,9 @@
  */
 package org.aiwolf.sample.player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.aiwolf.client.lib.BecauseContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DivinationContentBuilder;
@@ -22,28 +25,31 @@ import org.aiwolf.common.data.Species;
  */
 public class SampleVillager extends SampleBasePlayer {
 
+	/** 人狼候補リスト */
+	List<Agent> wolfCandidates = new ArrayList<>();
+
 	@Override
 	void chooseVoteCandidate() {
-		werewolves.clear();
+		wolfCandidates.clear();
 		for (Judge j : divinationList) {
 			// 自分あるいは殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補とする
 			if (j.getResult() == Species.WEREWOLF && (j.getTarget() == me || isKilled(j.getTarget()))) {
 				Agent candidate = j.getAgent();
-				if (isAlive(candidate) && !werewolves.contains(candidate)) {
-					werewolves.add(candidate);
+				if (isAlive(candidate) && !wolfCandidates.contains(candidate)) {
+					wolfCandidates.add(candidate);
 					Content reason = new Content(new DivinedResultContentBuilder(candidate, j.getTarget(), Species.WEREWOLF));
 					estimateReasonMaps.addEstimateReason(me, candidate, Role.WEREWOLF, reason);
 				}
 			}
 		}
 		// 候補がいない場合はランダム
-		if (werewolves.isEmpty()) {
+		if (wolfCandidates.isEmpty()) {
 			if (!aliveOthers.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveOthers);
 			}
 		} else {
-			if (!werewolves.contains(voteCandidate)) {
-				voteCandidate = randomSelect(werewolves);
+			if (!wolfCandidates.contains(voteCandidate)) {
+				voteCandidate = randomSelect(wolfCandidates);
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
 					Content estimate = estimateReasonMaps.getEstimate(me, voteCandidate);
