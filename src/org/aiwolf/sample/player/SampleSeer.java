@@ -112,7 +112,7 @@ public final class SampleSeer extends SampleVillager {
 				wolfCandidates.add(a);
 				if (isCameout) {
 					Content reason = new Content(new AndContentBuilder(me, iAm, heIs));
-					estimateReasonMaps.addEstimateReason(me, a, Role.WEREWOLF, reason);
+					estimateMaps.addEstimateReason(me, a, Role.WEREWOLF, reason);
 				}
 			}
 		}
@@ -126,7 +126,7 @@ public final class SampleSeer extends SampleVillager {
 					if (isCameout) {
 						Content myDivination = new Content(new DivinedResultContentBuilder(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult()));
 						Content reason = new Content(new AndContentBuilder(me, iAm, myDivination, hisIdent));
-						estimateReasonMaps.addEstimateReason(me, candidate, Role.WEREWOLF, reason);
+						estimateMaps.addEstimateReason(me, candidate, Role.WEREWOLF, reason);
 					}
 				}
 			}
@@ -144,7 +144,7 @@ public final class SampleSeer extends SampleVillager {
 		if (!possessedList.isEmpty()) {
 			if (Agent.UNSPEC == possessed || !possessedList.contains(possessed)) {
 				possessed = randomSelect(possessedList);
-				Content reason1 = estimateReasonMaps.getReason(me, possessed);
+				Content reason1 = estimateMaps.getReason(me, possessed);
 				Content reason2 = new Content(new DivinedResultContentBuilder(me, possessed, Species.HUMAN));
 				Content reason = new Content(new AndContentBuilder(me, reason1, reason2));
 				Content estimate = new Content(new EstimateContentBuilder(me, possessed, Role.POSSESSED));
@@ -156,9 +156,9 @@ public final class SampleSeer extends SampleVillager {
 				voteCandidate = randomSelect(semiWolves);
 				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
-					Content estimate = estimateReasonMaps.getEstimate(me, voteCandidate);
+					Content estimate = estimateMaps.getEstimate(me, voteCandidate);
 					if (estimate != null) {
-						Content reason = estimateReasonMaps.getReason(me, voteCandidate);
+						Content reason = estimateMaps.getReason(me, voteCandidate);
 						if (reason != null) {
 							enqueueTalk(new Content(new BecauseContentBuilder(me, reason, estimate)));
 						} else {

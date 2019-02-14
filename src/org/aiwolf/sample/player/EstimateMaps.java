@@ -1,5 +1,5 @@
 /**
- * EstimateReasonMaps.java
+ * EstimateMaps.java
  * 
  * Copyright (c) 2019 人狼知能プロジェクト
  */
@@ -21,7 +21,7 @@ import org.aiwolf.common.data.Role;
  * 
  * @author otsuki
  */
-class EstimateReasonMaps {
+class EstimateMaps {
 
 	private Map<Agent, Map<Agent, Content>> estimateReasonMaps = new HashMap<>();
 

@@ -75,7 +75,7 @@ public class SampleBasePlayer implements Player {
 	int talkListHead;
 
 	/** 推測理由マップ */
-	EstimateReasonMaps estimateReasonMaps = new EstimateReasonMaps();
+	EstimateMaps estimateMaps = new EstimateMaps();
 
 	/** 投票理由マップ */
 	VoteReasonMap voteReasonMap = new VoteReasonMap();
@@ -150,7 +150,7 @@ public class SampleBasePlayer implements Player {
 		divinationList.clear();
 		identList.clear();
 		comingoutMap.clear();
-		estimateReasonMaps.clear();
+		estimateMaps.clear();
 		voteReasonMap.clear();
 	}
 
@@ -180,7 +180,7 @@ public class SampleBasePlayer implements Player {
 			}
 
 			// 推測・投票発言があれば登録
-			if (!estimateReasonMaps.addEstimateReason(content) && !voteReasonMap.addVoteReason(content)) {
+			if (!estimateMaps.addEstimateReason(content) && !voteReasonMap.addVoteReason(content)) {
 				// それ以外の発言の処理
 				switch (content.getTopic()) {
 				case COMINGOUT:

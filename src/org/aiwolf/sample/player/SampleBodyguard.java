@@ -67,7 +67,7 @@ public final class SampleBodyguard extends SampleVillager {
 					wolfCandidates.add(j.getAgent());
 					Content iAmVillager = new Content(new ComingoutContentBuilder(me, Role.VILLAGER));
 					Content reason = new Content(new AndContentBuilder(me, iAmVillager, fakeDivination));
-					estimateReasonMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimateMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
 				}
 			}
 			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
@@ -75,7 +75,7 @@ public final class SampleBodyguard extends SampleVillager {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
 					Content reason = fakeDivination;
-					estimateReasonMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimateMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
 				}
 			}
 		}
@@ -90,9 +90,9 @@ public final class SampleBodyguard extends SampleVillager {
 				voteCandidate = randomSelect(wolfCandidates);
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
-					Content estimate = estimateReasonMaps.getEstimate(me, voteCandidate);
+					Content estimate = estimateMaps.getEstimate(me, voteCandidate);
 					if (estimate != null) {
-						Content reason = estimateReasonMaps.getReason(me, voteCandidate);
+						Content reason = estimateMaps.getReason(me, voteCandidate);
 						if (reason != null) {
 							enqueueTalk(new Content(new BecauseContentBuilder(me, reason, estimate)));
 						} else {
