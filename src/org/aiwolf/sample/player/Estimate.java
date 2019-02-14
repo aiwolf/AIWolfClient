@@ -28,38 +28,38 @@ class Estimate {
 	private List<Role> roles = new ArrayList<>();
 	private List<Content> reasons = new ArrayList<>();
 
-	public Estimate(Agent estimater, Agent estimated, Role role) {
+	Estimate(Agent estimater, Agent estimated, Role role) {
 		this.estimater = estimater;
 		this.estimated = Agent.UNSPEC == estimated ? Agent.ANY : estimated;
 		roles.add(role);
 	}
 
-	public Estimate(Agent estimater, Agent estimated, Role role, Content reason) {
+	Estimate(Agent estimater, Agent estimated, Role role, Content reason) {
 		this(estimater, estimated, role);
 		addReason(reason);
 	}
 
-	public void addRole(Role role) {
+	void addRole(Role role) {
 		if (!roles.contains(role)) {
 			roles.add(role);
 		}
 	}
 
-	public void addReason(Content reason) {
+	void addReason(Content reason) {
 		if (!reasons.contains(reason)) {
 			reasons.add(reason);
 		}
 	}
 
-	public boolean hasRole(Role role) {
+	boolean hasRole(Role role) {
 		return roles.contains(role);
 	}
 
-	public boolean hasReason(Content reason) {
+	boolean hasReason(Content reason) {
 		return reasons.contains(reason);
 	}
 
-	public Content toContent() {
+	Content toContent() {
 		List<Content> estimateList = roles.stream().map(r -> new Content(new EstimateContentBuilder(estimater, estimated, r))).collect(Collectors.toList());
 		if (estimateList.isEmpty()) {
 			return null;
@@ -80,6 +80,14 @@ class Estimate {
 			reason = new Content(new AndContentBuilder(estimater, reasons));
 		}
 		return new Content(new BecauseContentBuilder(estimater, reason, estimate));
+	}
+
+	Agent getEstimater() {
+		return estimater;
+	}
+
+	Agent getEstimated() {
+		return estimated;
 	}
 
 }
