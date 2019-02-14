@@ -10,7 +10,6 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DivinationContentBuilder;
 import org.aiwolf.client.lib.DivinedResultContentBuilder;
@@ -145,7 +144,7 @@ public final class SamplePossessed extends SampleVillager {
 	public String talk() {
 		// 即占い師カミングアウト
 		if (!isCameout) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, Role.SEER)));
+			enqueueTalk(CoContent(me, me, Role.SEER));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの偽占い結果をすべて公開

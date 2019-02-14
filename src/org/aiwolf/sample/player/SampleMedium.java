@@ -12,11 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.client.lib.DivinationContentBuilder;
 import org.aiwolf.client.lib.EstimateContentBuilder;
-import org.aiwolf.client.lib.IdentContentBuilder;
 import org.aiwolf.client.lib.RequestContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
@@ -95,14 +93,14 @@ public final class SampleMedium extends SampleVillager {
 		// カミングアウトする日になったら，あるいは霊媒結果が人狼だったら
 		// あるいは霊媒師カミングアウトが出たらカミングアウト
 		if (!isCameout && (day >= comingoutDay || (!identQueue.isEmpty() && identQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.MEDIUM))) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, Role.MEDIUM)));
+			enqueueTalk(CoContent(me, me, Role.MEDIUM));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの霊媒結果をすべて公開
 		if (isCameout) {
 			while (!identQueue.isEmpty()) {
 				Judge ident = identQueue.poll();
-				enqueueTalk(new Content(new IdentContentBuilder(ident.getTarget(), ident.getResult())));
+				enqueueTalk(IdentContent(me, ident.getTarget(), ident.getResult()));
 			}
 		}
 		return super.talk();

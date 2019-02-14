@@ -12,16 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.AndContentBuilder;
-import org.aiwolf.client.lib.BecauseContentBuilder;
-import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.DayContentBuilder;
-import org.aiwolf.client.lib.DivinedResultContentBuilder;
-import org.aiwolf.client.lib.EstimateContentBuilder;
-import org.aiwolf.client.lib.IdentContentBuilder;
-import org.aiwolf.client.lib.RequestContentBuilder;
-import org.aiwolf.client.lib.VoteContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
@@ -78,9 +69,9 @@ public final class SampleSeer extends SampleVillager {
 
 	@Override
 	void chooseVoteCandidate() {
-		Content iAm = new Content(new ComingoutContentBuilder(me, me, Role.VILLAGER));
+		Content iAm = CoContent(me, me, Role.VILLAGER);
 		if (isCameout) {
-			iAm = new Content(new ComingoutContentBuilder(me, me, Role.SEER));
+			iAm = CoContent(me, me, Role.SEER);
 		}
 
 		// 生存人狼がいれば当然投票
@@ -95,10 +86,10 @@ public final class SampleSeer extends SampleVillager {
 			if (!aliveWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveWolves);
 				if (canTalk) {
-					Content myDivination = new Content(new DivinedResultContentBuilder(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult()));
-					Content reason = new Content(new DayContentBuilder(me, myDivinationMap.get(voteCandidate).getDay(), myDivination));
-					Content request = new Content(new RequestContentBuilder(me, Agent.ANY, new Content(new VoteContentBuilder(Agent.ANY, voteCandidate))));
-					enqueueTalk(new Content(new BecauseContentBuilder(me, reason, request)));
+					Content myDivination = DivinedContent(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult());
+					Content reason = DayContent(me, myDivinationMap.get(voteCandidate).getDay(), myDivination);
+					Content request = RequestContent(me, Agent.ANY, VoteContent(Agent.ANY, voteCandidate));
+					enqueueTalk(BecauseContent(me, reason, request));
 				}
 			}
 			return;
@@ -108,24 +99,24 @@ public final class SampleSeer extends SampleVillager {
 		// 偽占い師
 		for (Agent a : aliveOthers) {
 			if (comingoutMap.get(a) == Role.SEER) {
-				Content heIs = new Content(new ComingoutContentBuilder(a, a, Role.SEER));
+				Content heIs = CoContent(a, a, Role.SEER);
 				wolfCandidates.add(a);
 				if (isCameout) {
-					Content reason = new Content(new AndContentBuilder(me, iAm, heIs));
+					Content reason = AndContent(me, iAm, heIs);
 					estimateMaps.addEstimate(me, a, Role.WEREWOLF, reason);
 				}
 			}
 		}
 		// 偽霊媒師
 		for (Judge j : identList) {
-			Content hisIdent = new Content(new IdentContentBuilder(j.getAgent(), j.getTarget(), j.getResult()));
+			Content hisIdent = IdentContent(j.getAgent(), j.getTarget(), j.getResult());
 			if ((myDivinationMap.containsKey(j.getTarget()) && j.getResult() != myDivinationMap.get(j.getTarget()).getResult())) {
 				Agent candidate = j.getAgent();
 				if (isAlive(candidate) && !wolfCandidates.contains(candidate)) {
 					wolfCandidates.add(candidate);
 					if (isCameout) {
-						Content myDivination = new Content(new DivinedResultContentBuilder(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult()));
-						Content reason = new Content(new AndContentBuilder(me, iAm, myDivination, hisIdent));
+						Content myDivination = DivinedContent(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult());
+						Content reason = AndContent(me, iAm, myDivination, hisIdent);
 						estimateMaps.addEstimate(me, candidate, Role.WEREWOLF, reason);
 					}
 				}
@@ -145,10 +136,10 @@ public final class SampleSeer extends SampleVillager {
 			if (Agent.UNSPEC == possessed || !possessedList.contains(possessed)) {
 				possessed = randomSelect(possessedList);
 				Content reason1 = estimateMaps.getReason(me, possessed);
-				Content reason2 = new Content(new DivinedResultContentBuilder(me, possessed, Species.HUMAN));
-				Content reason = new Content(new AndContentBuilder(me, reason1, reason2));
-				Content estimate = new Content(new EstimateContentBuilder(me, possessed, Role.POSSESSED));
-				enqueueTalk(new Content(new BecauseContentBuilder(me, reason, estimate)));
+				Content reason2 = DivinedContent(me, possessed, Species.HUMAN);
+				Content reason = AndContent(me, reason1, reason2);
+				Content estimate = EstimateContent(me, possessed, Role.POSSESSED);
+				enqueueTalk(BecauseContent(me, reason, estimate));
 			}
 		}
 		if (!semiWolves.isEmpty()) {
@@ -185,14 +176,14 @@ public final class SampleSeer extends SampleVillager {
 		// カミングアウトする日になったら，あるいは占い結果が人狼だったら
 		// あるいは占い師カミングアウトが出たらカミングアウト
 		if (!isCameout && (day >= comingoutDay || (!divinationQueue.isEmpty() && divinationQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.SEER))) {
-			enqueueTalk(new Content(new ComingoutContentBuilder(me, me, Role.SEER)));
+			enqueueTalk(CoContent(me, me, Role.SEER));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの占い結果をすべて公開
 		if (isCameout) {
 			while (!divinationQueue.isEmpty()) {
 				Judge divination = divinationQueue.poll();
-				enqueueTalk(new Content(new DivinedResultContentBuilder(me, divination.getTarget(), divination.getResult())));
+				enqueueTalk(DivinedContent(me, divination.getTarget(), divination.getResult()));
 			}
 		}
 		return super.talk();
