@@ -25,22 +25,26 @@ public class SampleVillager extends SampleBasePlayer {
 	void chooseVoteCandidate() {
 		List<Agent> wolfCandidates = new ArrayList<>();
 		for (Judge j : divinationList) {
-			Content fakeDivination = DayContent(me, j.getDay(), DivinedContent(j.getAgent(), j.getTarget(), j.getResult()));
+			Content dayDivination = DayContent(me, j.getDay(), DivinedContent(j.getAgent(), j.getTarget(), j.getResult()));
 			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
 					Content iAmVillager = CoContent(me, me, Role.VILLAGER);
-					Content reason = AndContent(me, iAmVillager, fakeDivination);
-					estimateMaps.addEstimate(me, j.getAgent(), Role.WEREWOLF, reason);
+					Content reason = AndContent(me, iAmVillager, dayDivination);
+					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimate.addRole(Role.POSSESSED);
+					estimateMaps.addEstimate(estimate);
 				}
 			}
 			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
-					Content reason = fakeDivination;
-					estimateMaps.addEstimate(me, j.getAgent(), Role.WEREWOLF, reason);
+					Content reason = AndContent(me, AttackedContent(Agent.ANY, j.getTarget()), dayDivination);
+					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimate.addRole(Role.POSSESSED);
+					estimateMaps.addEstimate(estimate);
 				}
 			}
 		}
@@ -62,18 +66,6 @@ public class SampleVillager extends SampleBasePlayer {
 				voteReasonMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 			}
 		}
-	}
-
-	@Override
-	public String talk() {
-		// TODO 自分への投票を表明しているプレイヤーにやめるように頼む
-		// List<Content> contentsList = aliveOthers.stream().filter(a -> voteReasonMap.getTarget(a) == me)
-		// .map(a -> {
-		// Content notVote = new Content(new NotContentBuilder(new Content(new VoteContentBuilder(me))));
-		// return new Content(new RequestContentBuilder(a, notVote));
-		// }).collect(Collectors.toList());
-		// enqueueTalk(new Content(new AndContentBuilder(contentsList)));
-		return super.talk();
 	}
 
 	@Override
