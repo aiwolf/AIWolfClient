@@ -112,7 +112,7 @@ public final class SampleSeer extends SampleVillager {
 				wolfCandidates.add(a);
 				if (isCameout) {
 					Content reason = new Content(new AndContentBuilder(me, iAm, heIs));
-					estimateMaps.addEstimateReason(me, a, Role.WEREWOLF, reason);
+					estimateMaps.addEstimate(me, a, Role.WEREWOLF, reason);
 				}
 			}
 		}
@@ -126,7 +126,7 @@ public final class SampleSeer extends SampleVillager {
 					if (isCameout) {
 						Content myDivination = new Content(new DivinedResultContentBuilder(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult()));
 						Content reason = new Content(new AndContentBuilder(me, iAm, myDivination, hisIdent));
-						estimateMaps.addEstimateReason(me, candidate, Role.WEREWOLF, reason);
+						estimateMaps.addEstimate(me, candidate, Role.WEREWOLF, reason);
 					}
 				}
 			}
@@ -154,18 +154,13 @@ public final class SampleSeer extends SampleVillager {
 		if (!semiWolves.isEmpty()) {
 			if (!semiWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(semiWolves);
+				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
 				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
-					Content estimate = estimateMaps.getEstimate(me, voteCandidate);
 					if (estimate != null) {
-						Content reason = estimateMaps.getReason(me, voteCandidate);
-						if (reason != null) {
-							enqueueTalk(new Content(new BecauseContentBuilder(me, reason, estimate)));
-						} else {
-							enqueueTalk(estimate);
-						}
+						enqueueTalk(estimate.toContent());
 					}
-					voteReasonMap.addVoteReason(me, voteCandidate, estimate);
+					voteReasonMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 				}
 			}
 		}

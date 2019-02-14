@@ -40,7 +40,7 @@ public class SampleVillager extends SampleBasePlayer {
 					wolfCandidates.add(j.getAgent());
 					Content iAmVillager = new Content(new ComingoutContentBuilder(me, Role.VILLAGER));
 					Content reason = new Content(new AndContentBuilder(me, iAmVillager, fakeDivination));
-					estimateMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimateMaps.addEstimate(me, j.getAgent(), Role.WEREWOLF, reason);
 				}
 			}
 			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
@@ -48,7 +48,7 @@ public class SampleVillager extends SampleBasePlayer {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
 					Content reason = fakeDivination;
-					estimateMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimateMaps.addEstimate(me, j.getAgent(), Role.WEREWOLF, reason);
 				}
 			}
 		}
@@ -60,21 +60,14 @@ public class SampleVillager extends SampleBasePlayer {
 		} else {
 			if (!wolfCandidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(wolfCandidates);
+				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
-					Content estimate = estimateMaps.getEstimate(me, voteCandidate);
-					if (estimate != null) {
-						Content reason = estimateMaps.getReason(me, voteCandidate);
-						if (reason != null) {
-							enqueueTalk(new Content(new BecauseContentBuilder(me, reason, estimate)));
-						} else {
-							enqueueTalk(estimate);
-						}
-						Content request = new Content(new RequestContentBuilder(me, Agent.ANY, new Content(new DivinationContentBuilder(voteCandidate))));
-						enqueueTalk(new Content(new BecauseContentBuilder(me, estimate, request)));
-					}
-					voteReasonMap.addVoteReason(me, voteCandidate, estimate);
+					enqueueTalk(estimate.toContent());
+					Content request = new Content(new RequestContentBuilder(me, Agent.ANY, new Content(new DivinationContentBuilder(Agent.ANY, voteCandidate))));
+					enqueueTalk(new Content(new BecauseContentBuilder(me, estimate.getEstimateContent(), request)));
 				}
+				voteReasonMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 			}
 		}
 	}

@@ -180,7 +180,7 @@ public class SampleBasePlayer implements Player {
 			}
 
 			// 推測・投票発言があれば登録
-			if (!estimateMaps.addEstimateReason(content) && !voteReasonMap.addVoteReason(content)) {
+			if (!estimateMaps.addEstimate(content) && !voteReasonMap.addVoteReason(content)) {
 				// それ以外の発言の処理
 				switch (content.getTopic()) {
 				case COMINGOUT:

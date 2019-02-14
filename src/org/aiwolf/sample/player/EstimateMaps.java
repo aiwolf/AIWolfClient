@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.aiwolf.client.lib.BecauseContentBuilder;
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.EstimateContentBuilder;
 import org.aiwolf.client.lib.Operator;
 import org.aiwolf.client.lib.Topic;
 import org.aiwolf.common.data.Agent;
@@ -23,13 +22,19 @@ import org.aiwolf.common.data.Role;
  */
 class EstimateMaps {
 
-	private Map<Agent, Map<Agent, Content>> estimateReasonMaps = new HashMap<>();
+	private Map<Agent, Map<Agent, Estimate>> estimateMaps = new HashMap<>();
 
-	private void putContent(Agent estimater, Agent estimated, Content content) {
-		if (!estimateReasonMaps.containsKey(estimater)) {
-			estimateReasonMaps.put(estimater, new HashMap<Agent, Content>());
+	boolean addEstimate(Estimate estimate) {
+		Agent estimater = estimate.getEstimater();
+		Agent estimated = estimate.getEstimated();
+		if (Agent.ANY == estimater || Agent.UNSPEC == estimater || Agent.ANY == estimated) {
+			return false;
 		}
-		estimateReasonMaps.get(estimater).put(estimated, content);
+		if (!estimateMaps.containsKey(estimater)) {
+			estimateMaps.put(estimater, new HashMap<Agent, Estimate>());
+		}
+		estimateMaps.get(estimater).put(estimated, estimate);
+		return true;
 	}
 
 	/**
@@ -39,15 +44,8 @@ class EstimateMaps {
 	 *            発言
 	 * @return 登録の成否
 	 */
-	boolean addEstimateReason(Content content) {
-		if (content.getTopic() == Topic.ESTIMATE) {
-			putContent(content.getSubject(), content.getTarget(), content);
-			return true;
-		} else if (content.getOperator() == Operator.BECAUSE && content.getContentList().get(1).getTopic() == Topic.ESTIMATE) {
-			putContent(content.getContentList().get(1).getSubject(), content.getContentList().get(1).getTarget(), content);
-			return true;
-		}
-		return false;
+	boolean addEstimate(Content content) {
+		return addEstimate(new Estimate(content));
 	}
 
 	/**
@@ -61,10 +59,9 @@ class EstimateMaps {
 	 *            推測される役職
 	 * @param reason
 	 *            理由
-	 * @return 登録の成否
 	 */
-	boolean addEstimateReason(Agent estimater, Agent estimated, Role role, Content reason) {
-		return addEstimateReason(new Content(new EstimateContentBuilder(estimater, estimated, role)), reason);
+	boolean addEstimate(Agent estimater, Agent estimated, Role role, Content reason) {
+		return addEstimate(new Estimate(estimater, estimated, role, reason));
 	}
 
 	/**
@@ -73,12 +70,12 @@ class EstimateMaps {
 	 * @param reason
 	 * @return
 	 */
-	boolean addEstimateReason(Content estimate, Content reason) {
+	boolean addEstimate(Content estimate, Content reason) {
 		if (estimate.getTopic() == Topic.ESTIMATE) {
 			if (null == reason) {
-				return addEstimateReason(estimate);
+				return addEstimate(estimate);
 			}
-			return addEstimateReason(new Content(new BecauseContentBuilder(estimate.getSubject(), reason, estimate)));
+			return addEstimate(new Content(new BecauseContentBuilder(estimate.getSubject(), reason, estimate)));
 		}
 		return false;
 	}
@@ -90,7 +87,7 @@ class EstimateMaps {
 	 * @return
 	 */
 	Content getContent(Agent estimater, Agent estimated) {
-		return estimateReasonMaps.get(estimater) != null ? estimateReasonMaps.get(estimater).get(estimated) : null;
+		return estimateMaps.get(estimater) != null ? estimateMaps.get(estimater).get(estimated).toContent() : null;
 	}
 
 	/**
@@ -99,18 +96,8 @@ class EstimateMaps {
 	 * @param estimated
 	 * @return
 	 */
-	Content getEstimate(Agent estimater, Agent estimated) {
-		Content content = getContent(estimater, estimated);
-		if (null == content) {
-			return null;
-		}
-		if (content.getTopic() == Topic.ESTIMATE) {
-			return content;
-		}
-		if (content.getOperator() == Operator.BECAUSE && content.getContentList().get(1).getTopic() == Topic.ESTIMATE) {
-			return content.getContentList().get(1);
-		}
-		return null;
+	Estimate getEstimate(Agent estimater, Agent estimated) {
+		return estimateMaps.get(estimater) != null ? estimateMaps.get(estimater).get(estimated) : null;
 	}
 
 	/**
@@ -128,7 +115,7 @@ class EstimateMaps {
 	 * 
 	 */
 	void clear() {
-		estimateReasonMaps.entrySet().stream().forEach(e -> e.getValue().clear());
-		estimateReasonMaps.clear();
+		estimateMaps.entrySet().stream().forEach(e -> e.getValue().clear());
+		estimateMaps.clear();
 	}
 }
