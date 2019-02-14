@@ -86,7 +86,7 @@ public final class SamplePossessed extends SampleVillager {
 
 	@Override
 	void chooseVoteCandidate() {
-		wolfCandidates.clear();
+		List<Agent> wolfCandidates = new ArrayList<>();
 		List<Agent> voteCandidates = new ArrayList<>();
 		// 自分や殺されたエージェントを人狼と判定している占い師は人狼候補
 		for (Judge j : divinationList) {

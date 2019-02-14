@@ -5,9 +5,11 @@
  */
 package org.aiwolf.sample.player;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.aiwolf.client.lib.ComingoutContentBuilder;
@@ -54,7 +56,7 @@ public final class SampleMedium extends SampleVillager {
 
 	@Override
 	void chooseVoteCandidate() {
-		wolfCandidates.clear();
+		List<Agent> wolfCandidates = new ArrayList<>();
 		// 霊媒師をカミングアウトしている他のエージェントは人狼候補
 		for (Agent agent : aliveOthers) {
 			if (comingoutMap.get(agent) == Role.MEDIUM) {

@@ -8,8 +8,11 @@ package org.aiwolf.sample.player;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aiwolf.client.lib.AndContentBuilder;
 import org.aiwolf.client.lib.BecauseContentBuilder;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
 import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DayContentBuilder;
 import org.aiwolf.client.lib.DivinationContentBuilder;
 import org.aiwolf.client.lib.DivinedResultContentBuilder;
 import org.aiwolf.client.lib.RequestContentBuilder;
@@ -25,20 +28,27 @@ import org.aiwolf.common.data.Species;
  */
 public class SampleVillager extends SampleBasePlayer {
 
-	/** 人狼候補リスト */
-	List<Agent> wolfCandidates = new ArrayList<>();
-
 	@Override
 	void chooseVoteCandidate() {
-		wolfCandidates.clear();
+		List<Agent> wolfCandidates = new ArrayList<>();
 		for (Judge j : divinationList) {
-			// 自分あるいは殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補とする
-			if (j.getResult() == Species.WEREWOLF && (j.getTarget() == me || isKilled(j.getTarget()))) {
-				Agent candidate = j.getAgent();
-				if (isAlive(candidate) && !wolfCandidates.contains(candidate)) {
-					wolfCandidates.add(candidate);
-					Content reason = new Content(new DivinedResultContentBuilder(candidate, j.getTarget(), Species.WEREWOLF));
-					estimateReasonMaps.addEstimateReason(me, candidate, Role.WEREWOLF, reason);
+			Content fakeDivination = new Content(new DayContentBuilder(me, j.getDay(),
+					new Content(new DivinedResultContentBuilder(j.getAgent(), j.getTarget(), j.getResult()))));
+			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
+			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
+				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
+					wolfCandidates.add(j.getAgent());
+					Content iAmVillager = new Content(new ComingoutContentBuilder(me, Role.VILLAGER));
+					Content reason = new Content(new AndContentBuilder(me, iAmVillager, fakeDivination));
+					estimateReasonMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
+				}
+			}
+			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
+			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
+				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
+					wolfCandidates.add(j.getAgent());
+					Content reason = fakeDivination;
+					estimateReasonMaps.addEstimateReason(me, j.getAgent(), Role.WEREWOLF, reason);
 				}
 			}
 		}
@@ -56,17 +66,29 @@ public class SampleVillager extends SampleBasePlayer {
 					if (estimate != null) {
 						Content reason = estimateReasonMaps.getReason(me, voteCandidate);
 						if (reason != null) {
-							enqueueTalk(new Content(new BecauseContentBuilder(reason, estimate)));
+							enqueueTalk(new Content(new BecauseContentBuilder(me, reason, estimate)));
 						} else {
 							enqueueTalk(estimate);
 						}
-						Content request = new Content(new RequestContentBuilder(Agent.ANY, new Content(new DivinationContentBuilder(voteCandidate))));
-						enqueueTalk(new Content(new BecauseContentBuilder(estimate, request)));
+						Content request = new Content(new RequestContentBuilder(me, Agent.ANY, new Content(new DivinationContentBuilder(voteCandidate))));
+						enqueueTalk(new Content(new BecauseContentBuilder(me, estimate, request)));
 					}
 					voteReasonMap.addVoteReason(me, voteCandidate, estimate);
 				}
 			}
 		}
+	}
+
+	@Override
+	public String talk() {
+		// TODO 自分への投票を表明しているプレイヤーにやめるように頼む
+		// List<Content> contentsList = aliveOthers.stream().filter(a -> voteReasonMap.getTarget(a) == me)
+		// .map(a -> {
+		// Content notVote = new Content(new NotContentBuilder(new Content(new VoteContentBuilder(me))));
+		// return new Content(new RequestContentBuilder(a, notVote));
+		// }).collect(Collectors.toList());
+		// enqueueTalk(new Content(new AndContentBuilder(contentsList)));
+		return super.talk();
 	}
 
 	@Override
