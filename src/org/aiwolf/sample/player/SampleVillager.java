@@ -63,7 +63,7 @@ public class SampleVillager extends SampleBasePlayer {
 					Content request = RequestContent(me, Agent.ANY, DivinationContent(Agent.ANY, voteCandidate));
 					enqueueTalk(BecauseContent(me, estimate.getEstimateContent(), request));
 				}
-				voteReasonMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+				voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 			}
 		}
 	}

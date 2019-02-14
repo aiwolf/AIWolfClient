@@ -151,7 +151,7 @@ public final class SampleSeer extends SampleVillager {
 					if (estimate != null) {
 						enqueueTalk(estimate.toContent());
 					}
-					voteReasonMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+					voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 				}
 			}
 		}

@@ -99,7 +99,7 @@ public class SampleBasePlayer implements Player {
 	EstimateMaps estimateMaps = new EstimateMaps();
 
 	/** 投票理由マップ */
-	VoteReasonMap voteReasonMap = new VoteReasonMap();
+	VoteMap voteMap = new VoteMap();
 
 	/**
 	 * エージェントが生きているかどうかを返す
@@ -172,7 +172,7 @@ public class SampleBasePlayer implements Player {
 		identList.clear();
 		comingoutMap.clear();
 		estimateMaps.clear();
-		voteReasonMap.clear();
+		voteMap.clear();
 	}
 
 	@Override
@@ -201,7 +201,7 @@ public class SampleBasePlayer implements Player {
 			}
 
 			// 推測・投票発言があれば登録
-			if (!estimateMaps.addEstimate(content) && !voteReasonMap.addVoteReason(content)) {
+			if (!estimateMaps.addEstimate(content) && !voteMap.addVoteReason(content)) {
 				// それ以外の発言の処理
 				switch (content.getTopic()) {
 				case COMINGOUT:
@@ -265,7 +265,7 @@ public class SampleBasePlayer implements Player {
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
 			Content vote = VoteContent(me, voteCandidate);
-			Content reason = voteReasonMap.getReason(me, voteCandidate);
+			Content reason = voteMap.getReason(me, voteCandidate);
 			if (reason != null) {
 				enqueueTalk(BecauseContent(me, reason, vote));
 			} else {

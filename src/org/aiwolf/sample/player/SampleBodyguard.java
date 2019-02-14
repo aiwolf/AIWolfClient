@@ -88,7 +88,7 @@ public final class SampleBodyguard extends SampleVillager {
 						Content request = RequestContent(me, Agent.ANY, DivinationContent(Agent.ANY, voteCandidate));
 						enqueueTalk(BecauseContent(me, estimate.getEstimateContent(), request));
 					}
-					voteReasonMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+					voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 				}
 			}
 		}
