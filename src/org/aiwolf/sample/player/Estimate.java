@@ -86,24 +86,13 @@ class Estimate {
 	}
 
 	Content toContent() {
-		List<Content> estimateList = roles.stream().map(r -> new Content(new EstimateContentBuilder(estimater, estimated, r))).collect(Collectors.toList());
-		if (estimateList.isEmpty()) {
+		Content estimate = getEstimateContent();
+		if (null == estimate) {
 			return null;
 		}
-		Content estimate;
-		if (estimateList.size() == 1) {
-			estimate = estimateList.get(0);
-		} else {
-			estimate = new Content(new XorContentBuilder(estimater, estimateList.get(0), estimateList.get(1))); // 3つ目以降は無視
-		}
-		if (reasons.isEmpty()) {
+		Content reason = getReasonContent();
+		if (null == reason) {
 			return estimate;
-		}
-		Content reason;
-		if (reasons.size() == 1) {
-			reason = reasons.get(0);
-		} else {
-			reason = new Content(new AndContentBuilder(estimater, reasons));
 		}
 		return new Content(new BecauseContentBuilder(estimater, reason, estimate));
 	}
@@ -114,6 +103,27 @@ class Estimate {
 
 	Agent getEstimated() {
 		return estimated;
+	}
+
+	Content getEstimateContent() {
+		List<Content> estimateList = roles.stream().map(r -> new Content(new EstimateContentBuilder(estimater, estimated, r))).collect(Collectors.toList());
+		if (estimateList.isEmpty()) {
+			return null;
+		}
+		if (estimateList.size() == 1) {
+			return estimateList.get(0);
+		}
+		return new Content(new XorContentBuilder(estimater, estimateList.get(0), estimateList.get(1))); // 3つ目以降は無視
+	}
+
+	Content getReasonContent() {
+		if (reasons.isEmpty()) {
+			return null;
+		}
+		if (reasons.size() == 1) {
+			return reasons.get(0);
+		}
+		return new Content(new AndContentBuilder(estimater, reasons));
 	}
 
 }
