@@ -101,6 +101,9 @@ public class SampleBasePlayer implements Player {
 	/** 投票理由マップ */
 	VoteMap voteMap = new VoteMap();
 
+	/** talk()のターン */
+	int talkTurn;
+
 	/**
 	 * エージェントが生きているかどうかを返す
 	 * 
@@ -228,6 +231,7 @@ public class SampleBasePlayer implements Player {
 		declaredVoteCandidate = null;
 		voteCandidate = null;
 		talkListHead = 0;
+		talkTurn = -1;
 		// 前日に追放されたエージェントを登録
 		addExecutedAgent(currentGameInfo.getExecutedAgent());
 		// 昨夜死亡した（襲撃された）エージェントを登録
@@ -262,16 +266,19 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public String talk() {
+		talkTurn++;
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			Content vote = voteContent(me, voteCandidate);
 			Content reason = voteMap.getReason(me, voteCandidate);
-			if (reason != null) {
-				enqueueTalk(becauseContent(me, reason, vote));
-			} else {
-				enqueueTalk(vote);
+			// ターン2以降，投票理由がある場合か話すことがない場合は投票先を宣言
+			if (talkTurn > 1 && (talkQueue.isEmpty() || reason != null)) {
+				if (reason != null) {
+					enqueueTalk(becauseContent(me, reason, voteContent(me, voteCandidate)));
+				} else {
+					enqueueTalk(voteContent(me, voteCandidate));
+				}
+				declaredVoteCandidate = voteCandidate;
 			}
-			declaredVoteCandidate = voteCandidate;
 		}
 		return dequeueTalk();
 	}
@@ -330,7 +337,7 @@ public class SampleBasePlayer implements Player {
 		if (content.getTopic() == Topic.SKIP || content.getTopic() == Topic.OVER) {
 			return content;
 		}
-		if (Agent.UNSPEC == newSubject) {
+		if (newSubject == Agent.UNSPEC) {
 			return new Content(Content.stripSubject(content.getText()));
 		} else {
 			return new Content(newSubject + " " + Content.stripSubject(content.getText()));

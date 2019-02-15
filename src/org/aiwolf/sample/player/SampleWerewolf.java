@@ -66,9 +66,6 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	/** 村人リスト */
 	List<Agent> villagers = new ArrayList<>();
 
-	/** talk()のターン */
-	int talkTurn;
-
 	/** 襲撃投票先候補 */
 	Agent attackVoteCandidate;
 
@@ -181,7 +178,6 @@ public final class SampleWerewolf extends SampleBasePlayer {
 		canWhisper = true;
 		declaredAttackVoteCandidate = null;
 		attackVoteCandidate = null;
-		talkTurn = -1;
 		if (day == 0) {
 			enqueueWhisper(coContent(me, me, fakeRole));
 		}
@@ -238,7 +234,6 @@ public final class SampleWerewolf extends SampleBasePlayer {
 
 	@Override
 	public String talk() {
-		talkTurn++;
 		if (fakeRole != Role.VILLAGER) {
 			if (!isCameout) {
 				// 他の人狼のカミングアウト状況を調べて騙る役職が重複しないようにする
