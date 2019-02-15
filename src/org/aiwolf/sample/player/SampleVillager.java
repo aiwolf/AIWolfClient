@@ -30,8 +30,8 @@ public final class SampleVillager extends SampleBasePlayer {
 			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
-					Content iAmVillager = coContent(me, me, Role.VILLAGER);
-					Content reason = andContent(me, iAmVillager, dayDivination);
+					Content iAm = coContent(me, me, Role.VILLAGER);
+					Content reason = andContent(me, iAm, dayDivination);
 					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);
@@ -59,9 +59,13 @@ public final class SampleVillager extends SampleBasePlayer {
 				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
 				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
-					enqueueTalk(estimate.toContent());
+					if (estimate != null) {
+						enqueueTalk(estimate.toContent());
+						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+					} else {
+						voteMap.addVoteReason(me, voteCandidate, null);
+					}
 				}
-				voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 			}
 		}
 	}

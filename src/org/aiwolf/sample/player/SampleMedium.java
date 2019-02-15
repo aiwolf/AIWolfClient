@@ -13,9 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.aiwolf.client.lib.Content;
-import org.aiwolf.client.lib.DivinationContentBuilder;
-import org.aiwolf.client.lib.EstimateContentBuilder;
-import org.aiwolf.client.lib.RequestContentBuilder;
 import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
@@ -54,20 +51,58 @@ public final class SampleMedium extends SampleBasePlayer {
 
 	@Override
 	void chooseVoteCandidate() {
+		Content iAm = isCameout ? coContent(me, me, Role.MEDIUM) : coContent(me, me, Role.VILLAGER);
 		List<Agent> wolfCandidates = new ArrayList<>();
 		// 霊媒師をカミングアウトしている他のエージェントは人狼候補
 		for (Agent agent : aliveOthers) {
 			if (comingoutMap.get(agent) == Role.MEDIUM) {
 				wolfCandidates.add(agent);
+				Estimate estimate = new Estimate(me, agent, Role.WEREWOLF);
+				estimate.addRole(Role.POSSESSED);
+				if (isCameout) {
+					Content heIs = coContent(agent, agent, Role.MEDIUM);
+					Content reason = andContent(me, iAm, heIs);
+					estimate.addReason(reason);
+				}
+				estimateMaps.addEstimate(estimate);
 			}
 		}
-		// 自分や殺されたエージェントを人狼と判定，あるいは自分と異なる判定の占い師は人狼候補
 		for (Judge j : divinationList) {
-			Agent agent = j.getAgent();
+			Agent he = j.getAgent();
 			Agent target = j.getTarget();
-			if (j.getResult() == Species.WEREWOLF && (target == me || isKilled(target)) || (myIdentMap.containsKey(target) && j.getResult() != myIdentMap.get(target))) {
-				if (isAlive(agent) && !wolfCandidates.contains(agent)) {
-					wolfCandidates.add(agent);
+			Species result = j.getResult();
+			Content dayDivination = dayContent(me, j.getDay(), divinedContent(he, target, result));
+			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
+			if (target == me && result == Species.WEREWOLF) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Content reason = andContent(me, iAm, dayDivination);
+					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
+					estimate.addRole(Role.POSSESSED);
+					estimateMaps.addEstimate(estimate);
+				}
+			}
+			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
+			if (isKilled(target) && result == Species.WEREWOLF) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Content reason = andContent(me, attackedContent(Agent.ANY, target), dayDivination);
+					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
+					estimate.addRole(Role.POSSESSED);
+					estimateMaps.addEstimate(estimate);
+				}
+			}
+			// 自分と異なる判定の占い師を投票先候補に追加
+			if (myIdentMap.containsKey(target) && result != myIdentMap.get(target)) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Estimate estimate = new Estimate(me, he, Role.WEREWOLF);
+					estimate.addRole(Role.POSSESSED);
+					if (isCameout) {
+						Content reason = andContent(me, identContent(me, target, myIdentMap.get(target)), dayDivination);
+						estimate.addReason(reason);
+					}
+					estimateMaps.addEstimate(estimate);
 				}
 			}
 		}
@@ -79,10 +114,15 @@ public final class SampleMedium extends SampleBasePlayer {
 		} else {
 			if (!wolfCandidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(wolfCandidates);
-				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
+				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
+				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
-					enqueueTalk(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
-					enqueueTalk(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+					if (estimate != null) {
+						enqueueTalk(estimate.toContent());
+						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+					} else {
+						voteMap.addVoteReason(me, voteCandidate, null);
+					}
 				}
 			}
 		}
@@ -98,10 +138,14 @@ public final class SampleMedium extends SampleBasePlayer {
 		}
 		// カミングアウトしたらこれまでの霊媒結果をすべて公開
 		if (isCameout) {
-			while (!identQueue.isEmpty()) {
-				Judge ident = identQueue.poll();
-				enqueueTalk(identContent(me, ident.getTarget(), ident.getResult()));
+			Content[] judges = identQueue.stream().map(j -> dayContent(me, j.getDay(), identContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
+			if (judges.length == 1) {
+				enqueueTalk(judges[0]);
+
+			} else if (judges.length > 1) {
+				enqueueTalk(andContent(me, judges));
 			}
+			identQueue.clear();
 		}
 		return super.talk();
 	}

@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.common.data.Agent;
@@ -28,10 +29,10 @@ public final class SampleSeer extends SampleBasePlayer {
 	boolean isCameout;
 	Deque<Judge> divinationQueue = new LinkedList<>();
 	Map<Agent, Judge> myDivinationMap = new HashMap<>();
+	List<Agent> wolfCandidates = new ArrayList<>();
 	List<Agent> whiteList = new ArrayList<>();
 	List<Agent> blackList = new ArrayList<>();
-	List<Agent> grayList;
-	List<Agent> semiWolves = new ArrayList<>();
+	List<Agent> grayList = new ArrayList<>();
 	List<Agent> possessedList = new ArrayList<>();
 	Agent possessed;
 
@@ -42,10 +43,10 @@ public final class SampleSeer extends SampleBasePlayer {
 		isCameout = false;
 		divinationQueue.clear();
 		myDivinationMap.clear();
+		wolfCandidates.clear();
 		whiteList.clear();
 		blackList.clear();
-		grayList = new ArrayList<>();
-		semiWolves.clear();
+		grayList.clear();
 		possessedList.clear();
 		possessed = Agent.UNSPEC;
 	}
@@ -69,18 +70,10 @@ public final class SampleSeer extends SampleBasePlayer {
 
 	@Override
 	void chooseVoteCandidate() {
-		Content iAm = coContent(me, me, Role.VILLAGER);
-		if (isCameout) {
-			iAm = coContent(me, me, Role.SEER);
-		}
+		Content iAm = isCameout ? coContent(me, me, Role.SEER) : coContent(me, me, Role.VILLAGER);
 
 		// 生存人狼がいれば当然投票
-		List<Agent> aliveWolves = new ArrayList<>();
-		for (Agent a : blackList) {
-			if (isAlive(a)) {
-				aliveWolves.add(a);
-			}
-		}
+		List<Agent> aliveWolves = blackList.stream().filter(a -> isAlive(a)).collect(Collectors.toList());
 		// 既定の投票先が生存人狼でない場合投票先を変える
 		if (!aliveWolves.isEmpty()) {
 			if (!aliveWolves.contains(voteCandidate)) {
@@ -94,46 +87,55 @@ public final class SampleSeer extends SampleBasePlayer {
 			}
 			return;
 		}
+
 		// 確定人狼がいない場合は推測する
-		List<Agent> wolfCandidates = new ArrayList<>();
+		wolfCandidates.clear();
+		;
 		// 偽占い師
 		for (Agent a : aliveOthers) {
 			if (comingoutMap.get(a) == Role.SEER) {
-				Content heIs = coContent(a, a, Role.SEER);
 				wolfCandidates.add(a);
+				Estimate estimate = new Estimate(me, a, Role.WEREWOLF);
+				estimate.addRole(Role.POSSESSED);
 				if (isCameout) {
+					Content heIs = coContent(a, a, Role.SEER);
 					Content reason = andContent(me, iAm, heIs);
-					estimateMaps.addEstimate(me, a, Role.WEREWOLF, reason);
+					estimate.addReason(reason);
 				}
+				estimateMaps.addEstimate(estimate);
 			}
 		}
 		// 偽霊媒師
 		for (Judge j : identList) {
-			Content hisIdent = identContent(j.getAgent(), j.getTarget(), j.getResult());
-			if ((myDivinationMap.containsKey(j.getTarget()) && j.getResult() != myDivinationMap.get(j.getTarget()).getResult())) {
-				Agent candidate = j.getAgent();
-				if (isAlive(candidate) && !wolfCandidates.contains(candidate)) {
-					wolfCandidates.add(candidate);
+			Agent he = j.getAgent();
+			Agent target = j.getTarget();
+			Species result = j.getResult();
+			Content dayIdent = dayContent(me, j.getDay(), identContent(he, target, result));
+			if ((myDivinationMap.containsKey(target) && result != myDivinationMap.get(target).getResult())) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Estimate estimate = new Estimate(me, he, Role.WEREWOLF);
+					estimate.addRole(Role.POSSESSED);
 					if (isCameout) {
-						Content myDivination = divinedContent(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult());
-						Content reason = andContent(me, iAm, myDivination, hisIdent);
-						estimateMaps.addEstimate(me, candidate, Role.WEREWOLF, reason);
+						Content reason = andContent(me, divinedContent(me, target, myDivinationMap.get(target).getResult()), dayIdent);
+						estimate.addReason(reason);
 					}
+					estimateMaps.addEstimate(estimate);
 				}
 			}
 		}
+		// 裏切り者
 		possessedList.clear();
-		semiWolves.clear();
 		for (Agent a : wolfCandidates) {
 			// 人狼候補なのに人間⇒裏切り者
 			if (whiteList.contains(a)) {
 				possessedList.add(a);
 			} else {
-				semiWolves.add(a);
 			}
 		}
+		wolfCandidates = wolfCandidates.stream().filter(a -> !possessedList.contains(a)).collect(Collectors.toList());
 		if (!possessedList.isEmpty()) {
-			if (Agent.UNSPEC == possessed || !possessedList.contains(possessed)) {
+			if (possessed == Agent.UNSPEC || !possessedList.contains(possessed)) {
 				possessed = randomSelect(possessedList);
 				Content reason1 = estimateMaps.getReason(me, possessed);
 				Content reason2 = divinedContent(me, possessed, Species.HUMAN);
@@ -142,16 +144,18 @@ public final class SampleSeer extends SampleBasePlayer {
 				enqueueTalk(becauseContent(me, reason, estimate));
 			}
 		}
-		if (!semiWolves.isEmpty()) {
-			if (!semiWolves.contains(voteCandidate)) {
-				voteCandidate = randomSelect(semiWolves);
+		if (!wolfCandidates.isEmpty()) {
+			if (!wolfCandidates.contains(voteCandidate)) {
+				voteCandidate = randomSelect(wolfCandidates);
 				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
 				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
 					if (estimate != null) {
 						enqueueTalk(estimate.toContent());
+						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+					} else {
+						voteMap.addVoteReason(me, voteCandidate, null);
 					}
-					voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 				}
 			}
 		}
@@ -181,10 +185,14 @@ public final class SampleSeer extends SampleBasePlayer {
 		}
 		// カミングアウトしたらこれまでの占い結果をすべて公開
 		if (isCameout) {
-			while (!divinationQueue.isEmpty()) {
-				Judge divination = divinationQueue.poll();
-				enqueueTalk(divinedContent(me, divination.getTarget(), divination.getResult()));
+			Content[] judges = divinationQueue.stream().map(j -> dayContent(me, j.getDay(), identContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
+			if (judges.length == 1) {
+				enqueueTalk(judges[0]);
+
+			} else if (judges.length > 1) {
+				enqueueTalk(andContent(me, judges));
 			}
+			divinationQueue.clear();
 		}
 		return super.talk();
 	}
@@ -192,16 +200,11 @@ public final class SampleSeer extends SampleBasePlayer {
 	@Override
 	public Agent divine() {
 		// 人狼候補がいればそれらからランダムに占う
-		if (!semiWolves.isEmpty()) {
-			return randomSelect(semiWolves);
+		if (!wolfCandidates.isEmpty()) {
+			return randomSelect(wolfCandidates);
 		}
 		// 人狼候補がいない場合，まだ占っていない生存者からランダムに占う
-		List<Agent> candidates = new ArrayList<>();
-		for (Agent a : aliveOthers) {
-			if (!myDivinationMap.containsKey(a)) {
-				candidates.add(a);
-			}
-		}
+		List<Agent> candidates = aliveOthers.stream().filter(a -> !myDivinationMap.containsKey(a)).collect(Collectors.toList());
 		if (candidates.isEmpty()) {
 			return null;
 		}
