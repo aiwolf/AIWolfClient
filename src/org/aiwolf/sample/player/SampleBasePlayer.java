@@ -264,10 +264,10 @@ public class SampleBasePlayer implements Player {
 	public String talk() {
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			Content vote = VoteContent(me, voteCandidate);
+			Content vote = voteContent(me, voteCandidate);
 			Content reason = voteMap.getReason(me, voteCandidate);
 			if (reason != null) {
-				enqueueTalk(BecauseContent(me, reason, vote));
+				enqueueTalk(becauseContent(me, reason, vote));
 			} else {
 				enqueueTalk(vote);
 			}
@@ -337,87 +337,87 @@ public class SampleBasePlayer implements Player {
 		}
 	}
 
-	Content AgreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
+	Content agreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
 		return new Content(new AgreeContentBuilder(subject, talkType, talkDay, talkID));
 	}
 
-	Content DisagreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
+	Content disagreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
 		return new Content(new DisagreeContentBuilder(subject, talkType, talkDay, talkID));
 	}
 
-	Content VoteContent(Agent subject, Agent target) {
+	Content voteContent(Agent subject, Agent target) {
 		return new Content(new VoteContentBuilder(subject, target));
 	}
 
-	Content VotedContent(Agent subject, Agent target) {
+	Content votedContent(Agent subject, Agent target) {
 		return new Content(new VotedContentBuilder(subject, target));
 	}
 
-	Content AttackContent(Agent subject, Agent target) {
+	Content attackContent(Agent subject, Agent target) {
 		return new Content(new AttackContentBuilder(subject, target));
 	}
 
-	Content AttackedContent(Agent subject, Agent target) {
+	Content attackedContent(Agent subject, Agent target) {
 		return new Content(new AttackedContentBuilder(subject, target));
 	}
 
-	Content GuardContent(Agent subject, Agent target) {
+	Content guardContent(Agent subject, Agent target) {
 		return new Content(new GuardCandidateContentBuilder(subject, target));
 	}
 
-	Content GuardedContent(Agent subject, Agent target) {
+	Content guardedContent(Agent subject, Agent target) {
 		return new Content(new GuardedAgentContentBuilder(subject, target));
 	}
 
-	Content EstimateContent(Agent subject, Agent target, Role role) {
+	Content estimateContent(Agent subject, Agent target, Role role) {
 		return new Content(new EstimateContentBuilder(subject, target, role));
 	}
 
-	Content CoContent(Agent subject, Agent target, Role role) {
+	Content coContent(Agent subject, Agent target, Role role) {
 		return new Content(new ComingoutContentBuilder(subject, target, role));
 	}
 
-	Content RequestContent(Agent subject, Agent target, Content content) {
+	Content requestContent(Agent subject, Agent target, Content content) {
 		return new Content(new RequestContentBuilder(subject, target, content));
 	}
 
-	Content InquiryContent(Agent subject, Agent target, Content content) {
+	Content inquiryContent(Agent subject, Agent target, Content content) {
 		return new Content(new InquiryContentBuilder(subject, target, content));
 	}
 
-	Content DivinationContent(Agent subject, Agent target) {
+	Content divinationContent(Agent subject, Agent target) {
 		return new Content(new DivinationContentBuilder(subject, target));
 	}
 
-	Content DivinedContent(Agent subject, Agent target, Species result) {
+	Content divinedContent(Agent subject, Agent target, Species result) {
 		return new Content(new DivinedResultContentBuilder(subject, target, result));
 	}
 
-	Content IdentContent(Agent subject, Agent target, Species result) {
+	Content identContent(Agent subject, Agent target, Species result) {
 		return new Content(new IdentContentBuilder(subject, target, result));
 	}
 
-	Content AndContent(Agent subject, Content... contents) {
+	Content andContent(Agent subject, Content... contents) {
 		return new Content(new AndContentBuilder(subject, contents));
 	}
 
-	Content OrContent(Agent subject, Content... contents) {
+	Content orContent(Agent subject, Content... contents) {
 		return new Content(new OrContentBuilder(subject, contents));
 	}
 
-	Content XorContent(Agent subject, Content content1, Content content2) {
+	Content xorContent(Agent subject, Content content1, Content content2) {
 		return new Content(new XorContentBuilder(subject, content1, content2));
 	}
 
-	Content NotContent(Agent subject, Content content) {
+	Content notContent(Agent subject, Content content) {
 		return new Content(new NotContentBuilder(subject, content));
 	}
 
-	Content DayContent(Agent subject, int day, Content content) {
+	Content dayContent(Agent subject, int day, Content content) {
 		return new Content(new DayContentBuilder(subject, day, content));
 	}
 
-	Content BecauseContent(Agent subject, Content reason, Content action) {
+	Content becauseContent(Agent subject, Content reason, Content action) {
 		return new Content(new BecauseContentBuilder(subject, reason, action));
 	}
 

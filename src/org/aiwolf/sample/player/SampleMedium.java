@@ -93,14 +93,14 @@ public final class SampleMedium extends SampleVillager {
 		// カミングアウトする日になったら，あるいは霊媒結果が人狼だったら
 		// あるいは霊媒師カミングアウトが出たらカミングアウト
 		if (!isCameout && (day >= comingoutDay || (!identQueue.isEmpty() && identQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.MEDIUM))) {
-			enqueueTalk(CoContent(me, me, Role.MEDIUM));
+			enqueueTalk(coContent(me, me, Role.MEDIUM));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの霊媒結果をすべて公開
 		if (isCameout) {
 			while (!identQueue.isEmpty()) {
 				Judge ident = identQueue.poll();
-				enqueueTalk(IdentContent(me, ident.getTarget(), ident.getResult()));
+				enqueueTalk(identContent(me, ident.getTarget(), ident.getResult()));
 			}
 		}
 		return super.talk();

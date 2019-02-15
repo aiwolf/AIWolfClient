@@ -114,7 +114,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 			if (!werewolves.contains(agent) && ((humans.contains(j.getTarget()) && j.getResult() == Species.WEREWOLF) || (werewolves.contains(j.getTarget()) && j.getResult() == Species.HUMAN))) {
 				if (!possessedList.contains(agent)) {
 					possessedList.add(agent);
-					enqueueWhisper(EstimateContent(me, agent, Role.POSSESSED));
+					enqueueWhisper(estimateContent(me, agent, Role.POSSESSED));
 				}
 			}
 		}
@@ -183,7 +183,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 		attackVoteCandidate = null;
 		talkTurn = -1;
 		if (day == 0) {
-			enqueueWhisper(CoContent(me, me, fakeRole));
+			enqueueWhisper(coContent(me, me, fakeRole));
 		}
 		// 偽の判定
 		else {
@@ -228,7 +228,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 			if (!candidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(candidates);
 				if (canTalk) {
-					enqueueTalk(EstimateContent(me, voteCandidate, Role.WEREWOLF));
+					enqueueTalk(estimateContent(me, voteCandidate, Role.WEREWOLF));
 				}
 			}
 		} else {
@@ -253,7 +253,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 				}
 				if (fakeRole == Role.SEER && fakeSeerCo > 0 || fakeRole == Role.MEDIUM && fakeMediumCo > 0) {
 					fakeRole = Role.VILLAGER; // 潜伏人狼
-					enqueueWhisper(CoContent(me, me, fakeRole));
+					enqueueWhisper(coContent(me, me, fakeRole));
 				} else {
 					// 対抗カミングアウトがある場合，今日カミングアウトする
 					for (Agent a : humans) {
@@ -264,7 +264,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 					// カミングアウトするタイミングになったらカミングアウト
 					if (day >= comingoutDay && talkTurn >= comingoutTurn) {
 						isCameout = true;
-						enqueueTalk(CoContent(me, me, fakeRole));
+						enqueueTalk(coContent(me, me, fakeRole));
 					}
 				}
 			}
@@ -273,9 +273,9 @@ public final class SampleWerewolf extends SampleBasePlayer {
 				while (!fakeJudgeQueue.isEmpty()) {
 					Judge judge = fakeJudgeQueue.poll();
 					if (fakeRole == Role.SEER) {
-						enqueueTalk(DivinedContent(me, judge.getTarget(), judge.getResult()));
+						enqueueTalk(divinedContent(me, judge.getTarget(), judge.getResult()));
 					} else if (fakeRole == Role.MEDIUM) {
-						enqueueTalk(IdentContent(me, judge.getTarget(), judge.getResult()));
+						enqueueTalk(identContent(me, judge.getTarget(), judge.getResult()));
 					}
 				}
 			}
@@ -319,7 +319,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	public String whisper() {
 		chooseAttackVoteCandidate();
 		if (attackVoteCandidate != null && attackVoteCandidate != declaredAttackVoteCandidate) {
-			enqueueWhisper(AttackContent(me, attackVoteCandidate));
+			enqueueWhisper(attackContent(me, attackVoteCandidate));
 			declaredAttackVoteCandidate = attackVoteCandidate;
 		}
 		return dequeueWhisper();

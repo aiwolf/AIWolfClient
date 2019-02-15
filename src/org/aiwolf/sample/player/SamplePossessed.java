@@ -144,7 +144,7 @@ public final class SamplePossessed extends SampleVillager {
 	public String talk() {
 		// 即占い師カミングアウト
 		if (!isCameout) {
-			enqueueTalk(CoContent(me, me, Role.SEER));
+			enqueueTalk(coContent(me, me, Role.SEER));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの偽占い結果をすべて公開

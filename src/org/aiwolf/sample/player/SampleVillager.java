@@ -25,13 +25,13 @@ public class SampleVillager extends SampleBasePlayer {
 	void chooseVoteCandidate() {
 		List<Agent> wolfCandidates = new ArrayList<>();
 		for (Judge j : divinationList) {
-			Content dayDivination = DayContent(me, j.getDay(), DivinedContent(j.getAgent(), j.getTarget(), j.getResult()));
+			Content dayDivination = dayContent(me, j.getDay(), divinedContent(j.getAgent(), j.getTarget(), j.getResult()));
 			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
-					Content iAmVillager = CoContent(me, me, Role.VILLAGER);
-					Content reason = AndContent(me, iAmVillager, dayDivination);
+					Content iAmVillager = coContent(me, me, Role.VILLAGER);
+					Content reason = andContent(me, iAmVillager, dayDivination);
 					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);
@@ -41,7 +41,7 @@ public class SampleVillager extends SampleBasePlayer {
 			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
-					Content reason = AndContent(me, AttackedContent(Agent.ANY, j.getTarget()), dayDivination);
+					Content reason = andContent(me, attackedContent(Agent.ANY, j.getTarget()), dayDivination);
 					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);
@@ -60,8 +60,8 @@ public class SampleVillager extends SampleBasePlayer {
 				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
 				if (canTalk) {
 					enqueueTalk(estimate.toContent());
-					Content request = RequestContent(me, Agent.ANY, DivinationContent(Agent.ANY, voteCandidate));
-					enqueueTalk(BecauseContent(me, estimate.getEstimateContent(), request));
+					Content request = requestContent(me, Agent.ANY, divinationContent(Agent.ANY, voteCandidate));
+					enqueueTalk(becauseContent(me, estimate.getEstimateContent(), request));
 				}
 				voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 			}

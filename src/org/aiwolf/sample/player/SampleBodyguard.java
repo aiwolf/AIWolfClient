@@ -52,13 +52,13 @@ public final class SampleBodyguard extends SampleVillager {
 	void chooseVoteCandidate() {
 		wolfCandidates.clear();
 		for (Judge j : divinationList) {
-			Content fakeDivination = DayContent(me, j.getDay(), DivinedContent(j.getAgent(), j.getTarget(), j.getResult()));
+			Content fakeDivination = dayContent(me, j.getDay(), divinedContent(j.getAgent(), j.getTarget(), j.getResult()));
 			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
-					Content iAmVillager = CoContent(me, me, Role.VILLAGER);
-					Content reason = AndContent(me, iAmVillager, fakeDivination);
+					Content iAmVillager = coContent(me, me, Role.VILLAGER);
+					Content reason = andContent(me, iAmVillager, fakeDivination);
 					estimateMaps.addEstimate(me, j.getAgent(), Role.WEREWOLF, reason);
 				}
 			}
@@ -85,8 +85,8 @@ public final class SampleBodyguard extends SampleVillager {
 				if (canTalk) {
 					if (estimate != null) {
 						enqueueTalk(estimate.toContent());
-						Content request = RequestContent(me, Agent.ANY, DivinationContent(Agent.ANY, voteCandidate));
-						enqueueTalk(BecauseContent(me, estimate.getEstimateContent(), request));
+						Content request = requestContent(me, Agent.ANY, divinationContent(Agent.ANY, voteCandidate));
+						enqueueTalk(becauseContent(me, estimate.getEstimateContent(), request));
 					}
 					voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 				}

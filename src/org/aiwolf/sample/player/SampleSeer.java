@@ -69,9 +69,9 @@ public final class SampleSeer extends SampleVillager {
 
 	@Override
 	void chooseVoteCandidate() {
-		Content iAm = CoContent(me, me, Role.VILLAGER);
+		Content iAm = coContent(me, me, Role.VILLAGER);
 		if (isCameout) {
-			iAm = CoContent(me, me, Role.SEER);
+			iAm = coContent(me, me, Role.SEER);
 		}
 
 		// 生存人狼がいれば当然投票
@@ -86,10 +86,10 @@ public final class SampleSeer extends SampleVillager {
 			if (!aliveWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveWolves);
 				if (canTalk) {
-					Content myDivination = DivinedContent(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult());
-					Content reason = DayContent(me, myDivinationMap.get(voteCandidate).getDay(), myDivination);
-					Content request = RequestContent(me, Agent.ANY, VoteContent(Agent.ANY, voteCandidate));
-					enqueueTalk(BecauseContent(me, reason, request));
+					Content myDivination = divinedContent(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult());
+					Content reason = dayContent(me, myDivinationMap.get(voteCandidate).getDay(), myDivination);
+					Content request = requestContent(me, Agent.ANY, voteContent(Agent.ANY, voteCandidate));
+					enqueueTalk(becauseContent(me, reason, request));
 				}
 			}
 			return;
@@ -99,24 +99,24 @@ public final class SampleSeer extends SampleVillager {
 		// 偽占い師
 		for (Agent a : aliveOthers) {
 			if (comingoutMap.get(a) == Role.SEER) {
-				Content heIs = CoContent(a, a, Role.SEER);
+				Content heIs = coContent(a, a, Role.SEER);
 				wolfCandidates.add(a);
 				if (isCameout) {
-					Content reason = AndContent(me, iAm, heIs);
+					Content reason = andContent(me, iAm, heIs);
 					estimateMaps.addEstimate(me, a, Role.WEREWOLF, reason);
 				}
 			}
 		}
 		// 偽霊媒師
 		for (Judge j : identList) {
-			Content hisIdent = IdentContent(j.getAgent(), j.getTarget(), j.getResult());
+			Content hisIdent = identContent(j.getAgent(), j.getTarget(), j.getResult());
 			if ((myDivinationMap.containsKey(j.getTarget()) && j.getResult() != myDivinationMap.get(j.getTarget()).getResult())) {
 				Agent candidate = j.getAgent();
 				if (isAlive(candidate) && !wolfCandidates.contains(candidate)) {
 					wolfCandidates.add(candidate);
 					if (isCameout) {
-						Content myDivination = DivinedContent(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult());
-						Content reason = AndContent(me, iAm, myDivination, hisIdent);
+						Content myDivination = divinedContent(me, j.getTarget(), myDivinationMap.get(j.getTarget()).getResult());
+						Content reason = andContent(me, iAm, myDivination, hisIdent);
 						estimateMaps.addEstimate(me, candidate, Role.WEREWOLF, reason);
 					}
 				}
@@ -136,10 +136,10 @@ public final class SampleSeer extends SampleVillager {
 			if (Agent.UNSPEC == possessed || !possessedList.contains(possessed)) {
 				possessed = randomSelect(possessedList);
 				Content reason1 = estimateMaps.getReason(me, possessed);
-				Content reason2 = DivinedContent(me, possessed, Species.HUMAN);
-				Content reason = AndContent(me, reason1, reason2);
-				Content estimate = EstimateContent(me, possessed, Role.POSSESSED);
-				enqueueTalk(BecauseContent(me, reason, estimate));
+				Content reason2 = divinedContent(me, possessed, Species.HUMAN);
+				Content reason = andContent(me, reason1, reason2);
+				Content estimate = estimateContent(me, possessed, Role.POSSESSED);
+				enqueueTalk(becauseContent(me, reason, estimate));
 			}
 		}
 		if (!semiWolves.isEmpty()) {
@@ -176,14 +176,14 @@ public final class SampleSeer extends SampleVillager {
 		// カミングアウトする日になったら，あるいは占い結果が人狼だったら
 		// あるいは占い師カミングアウトが出たらカミングアウト
 		if (!isCameout && (day >= comingoutDay || (!divinationQueue.isEmpty() && divinationQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.SEER))) {
-			enqueueTalk(CoContent(me, me, Role.SEER));
+			enqueueTalk(coContent(me, me, Role.SEER));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの占い結果をすべて公開
 		if (isCameout) {
 			while (!divinationQueue.isEmpty()) {
 				Judge divination = divinationQueue.poll();
-				enqueueTalk(DivinedContent(me, divination.getTarget(), divination.getResult()));
+				enqueueTalk(divinedContent(me, divination.getTarget(), divination.getResult()));
 			}
 		}
 		return super.talk();
