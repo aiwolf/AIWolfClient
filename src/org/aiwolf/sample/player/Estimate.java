@@ -7,7 +7,6 @@ package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.AndContentBuilder;
 import org.aiwolf.client.lib.BecauseContentBuilder;
@@ -35,7 +34,7 @@ class Estimate {
 	}
 
 	private void setEstimated(Agent estimated) {
-		this.estimated = Agent.UNSPEC == estimated ? Agent.ANY : estimated;
+		this.estimated = estimated == Agent.UNSPEC ? Agent.ANY : estimated;
 	}
 
 	Estimate(Agent estimater, Agent estimated, Role role) {
@@ -87,11 +86,11 @@ class Estimate {
 
 	Content toContent() {
 		Content estimate = getEstimateContent();
-		if (null == estimate) {
+		if (estimate == null) {
 			return null;
 		}
 		Content reason = getReasonContent();
-		if (null == reason) {
+		if (reason == null) {
 			return estimate;
 		}
 		return new Content(new BecauseContentBuilder(estimater, reason, estimate));
@@ -106,14 +105,14 @@ class Estimate {
 	}
 
 	Content getEstimateContent() {
-		List<Content> estimateList = roles.stream().map(r -> new Content(new EstimateContentBuilder(estimater, estimated, r))).collect(Collectors.toList());
-		if (estimateList.isEmpty()) {
+		Content[] estimates = roles.stream().map(r -> new Content(new EstimateContentBuilder(estimater, estimated, r))).toArray(size -> new Content[size]);
+		if (estimates.length == 0) {
 			return null;
 		}
-		if (estimateList.size() == 1) {
-			return estimateList.get(0);
+		if (estimates.length == 1) {
+			return estimates[0];
 		}
-		return new Content(new XorContentBuilder(estimater, estimateList.get(0), estimateList.get(1))); // 3つ目以降は無視
+		return new Content(new XorContentBuilder(estimater, estimates[0], estimates[1])); // 3つ目以降は無視
 	}
 
 	Content getReasonContent() {
