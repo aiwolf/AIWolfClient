@@ -125,4 +125,9 @@ class Estimate {
 		return new Content(new AndContentBuilder(estimater, reasons));
 	}
 
+	@Override
+	public String toString() {
+		return toContent().getText();
+	}
+
 }
