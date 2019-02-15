@@ -25,7 +25,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 裏切り者役エージェントクラス
  */
-public final class SamplePossessed extends SampleVillager {
+public final class SamplePossessed extends SampleBasePlayer {
 	int numWolves;
 	boolean isCameout;
 	List<Judge> fakeDivinationList = new ArrayList<>();

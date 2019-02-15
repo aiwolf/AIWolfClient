@@ -20,7 +20,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 狩人役エージェントクラス
  */
-public final class SampleBodyguard extends SampleVillager {
+public final class SampleBodyguard extends SampleBasePlayer {
 
 	/** 人狼候補リスト */
 	List<Agent> wolfCandidates = new ArrayList<>();

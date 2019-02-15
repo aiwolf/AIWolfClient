@@ -26,7 +26,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 霊媒師役エージェントクラス
  */
-public final class SampleMedium extends SampleVillager {
+public final class SampleMedium extends SampleBasePlayer {
 	int comingoutDay;
 	boolean isCameout;
 	Deque<Judge> identQueue = new LinkedList<>();

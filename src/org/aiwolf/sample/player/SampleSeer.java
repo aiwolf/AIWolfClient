@@ -23,7 +23,7 @@ import org.aiwolf.common.net.GameSetting;
 /**
  * 占い師役エージェントクラス
  */
-public final class SampleSeer extends SampleVillager {
+public final class SampleSeer extends SampleBasePlayer {
 	int comingoutDay;
 	boolean isCameout;
 	Deque<Judge> divinationQueue = new LinkedList<>();

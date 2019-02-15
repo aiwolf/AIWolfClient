@@ -19,7 +19,7 @@ import org.aiwolf.common.data.Species;
  * 
  * @author otsuki
  */
-public class SampleVillager extends SampleBasePlayer {
+public final class SampleVillager extends SampleBasePlayer {
 
 	@Override
 	void chooseVoteCandidate() {
@@ -57,11 +57,9 @@ public class SampleVillager extends SampleBasePlayer {
 			if (!wolfCandidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(wolfCandidates);
 				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
-				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
+				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
 					enqueueTalk(estimate.toContent());
-					Content request = requestContent(me, Agent.ANY, divinationContent(Agent.ANY, voteCandidate));
-					enqueueTalk(becauseContent(me, estimate.getEstimateContent(), request));
 				}
 				voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
 			}
