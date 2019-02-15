@@ -27,7 +27,7 @@ class EstimateMaps {
 	boolean addEstimate(Estimate estimate) {
 		Agent estimater = estimate.getEstimater();
 		Agent estimated = estimate.getEstimated();
-		if (Agent.ANY == estimater || Agent.UNSPEC == estimater || Agent.ANY == estimated) {
+		if (estimater == Agent.ANY || estimater == Agent.UNSPEC || estimated == Agent.ANY || estimated == Agent.UNSPEC) {
 			return false;
 		}
 		if (!estimateMaps.containsKey(estimater)) {
@@ -72,7 +72,7 @@ class EstimateMaps {
 	 */
 	boolean addEstimate(Content estimate, Content reason) {
 		if (estimate.getTopic() == Topic.ESTIMATE) {
-			if (null == reason) {
+			if (reason == null) {
 				return addEstimate(estimate);
 			}
 			return addEstimate(new Content(new BecauseContentBuilder(estimate.getSubject(), reason, estimate)));
