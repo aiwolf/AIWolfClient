@@ -337,87 +337,88 @@ public class SampleBasePlayer implements Player {
 		}
 	}
 
-	Content agreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
+	// 発話生成を簡略化するためのwrapper
+	static Content agreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
 		return new Content(new AgreeContentBuilder(subject, talkType, talkDay, talkID));
 	}
 
-	Content disagreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
+	static Content disagreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
 		return new Content(new DisagreeContentBuilder(subject, talkType, talkDay, talkID));
 	}
 
-	Content voteContent(Agent subject, Agent target) {
+	static Content voteContent(Agent subject, Agent target) {
 		return new Content(new VoteContentBuilder(subject, target));
 	}
 
-	Content votedContent(Agent subject, Agent target) {
+	static Content votedContent(Agent subject, Agent target) {
 		return new Content(new VotedContentBuilder(subject, target));
 	}
 
-	Content attackContent(Agent subject, Agent target) {
+	static Content attackContent(Agent subject, Agent target) {
 		return new Content(new AttackContentBuilder(subject, target));
 	}
 
-	Content attackedContent(Agent subject, Agent target) {
+	static Content attackedContent(Agent subject, Agent target) {
 		return new Content(new AttackedContentBuilder(subject, target));
 	}
 
-	Content guardContent(Agent subject, Agent target) {
+	static Content guardContent(Agent subject, Agent target) {
 		return new Content(new GuardCandidateContentBuilder(subject, target));
 	}
 
-	Content guardedContent(Agent subject, Agent target) {
+	static Content guardedContent(Agent subject, Agent target) {
 		return new Content(new GuardedAgentContentBuilder(subject, target));
 	}
 
-	Content estimateContent(Agent subject, Agent target, Role role) {
+	static Content estimateContent(Agent subject, Agent target, Role role) {
 		return new Content(new EstimateContentBuilder(subject, target, role));
 	}
 
-	Content coContent(Agent subject, Agent target, Role role) {
+	static Content coContent(Agent subject, Agent target, Role role) {
 		return new Content(new ComingoutContentBuilder(subject, target, role));
 	}
 
-	Content requestContent(Agent subject, Agent target, Content content) {
+	static Content requestContent(Agent subject, Agent target, Content content) {
 		return new Content(new RequestContentBuilder(subject, target, content));
 	}
 
-	Content inquiryContent(Agent subject, Agent target, Content content) {
+	static Content inquiryContent(Agent subject, Agent target, Content content) {
 		return new Content(new InquiryContentBuilder(subject, target, content));
 	}
 
-	Content divinationContent(Agent subject, Agent target) {
+	static Content divinationContent(Agent subject, Agent target) {
 		return new Content(new DivinationContentBuilder(subject, target));
 	}
 
-	Content divinedContent(Agent subject, Agent target, Species result) {
+	static Content divinedContent(Agent subject, Agent target, Species result) {
 		return new Content(new DivinedResultContentBuilder(subject, target, result));
 	}
 
-	Content identContent(Agent subject, Agent target, Species result) {
+	static Content identContent(Agent subject, Agent target, Species result) {
 		return new Content(new IdentContentBuilder(subject, target, result));
 	}
 
-	Content andContent(Agent subject, Content... contents) {
+	static Content andContent(Agent subject, Content... contents) {
 		return new Content(new AndContentBuilder(subject, contents));
 	}
 
-	Content orContent(Agent subject, Content... contents) {
+	static Content orContent(Agent subject, Content... contents) {
 		return new Content(new OrContentBuilder(subject, contents));
 	}
 
-	Content xorContent(Agent subject, Content content1, Content content2) {
+	static Content xorContent(Agent subject, Content content1, Content content2) {
 		return new Content(new XorContentBuilder(subject, content1, content2));
 	}
 
-	Content notContent(Agent subject, Content content) {
+	static Content notContent(Agent subject, Content content) {
 		return new Content(new NotContentBuilder(subject, content));
 	}
 
-	Content dayContent(Agent subject, int day, Content content) {
+	static Content dayContent(Agent subject, int day, Content content) {
 		return new Content(new DayContentBuilder(subject, day, content));
 	}
 
-	Content becauseContent(Agent subject, Content reason, Content action) {
+	static Content becauseContent(Agent subject, Content reason, Content action) {
 		return new Content(new BecauseContentBuilder(subject, reason, action));
 	}
 
