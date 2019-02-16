@@ -80,9 +80,11 @@ public final class SampleSeer extends SampleBasePlayer {
 				voteCandidate = randomSelect(aliveWolves);
 				if (canTalk) {
 					Content myDivination = divinedContent(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult());
+					Content vote = voteContent(Agent.ANY, voteCandidate);
 					Content reason = dayContent(me, myDivinationMap.get(voteCandidate).getDay(), myDivination);
-					Content request = requestContent(me, Agent.ANY, voteContent(Agent.ANY, voteCandidate));
+					Content request = requestContent(me, Agent.ANY, vote);
 					enqueueTalk(becauseContent(me, reason, request));
+					enqueueTalk(inquiryContent(me, Agent.ANY, vote));
 				}
 			}
 			return;
@@ -187,7 +189,7 @@ public final class SampleSeer extends SampleBasePlayer {
 		}
 		// カミングアウトしたらこれまでの占い結果をすべて公開
 		if (isCameout) {
-			Content[] judges = divinationQueue.stream().map(j -> dayContent(me, j.getDay(), identContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
+			Content[] judges = divinationQueue.stream().map(j -> dayContent(me, j.getDay(), divinedContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
 			if (judges.length == 1) {
 				enqueueTalk(judges[0]);
 
