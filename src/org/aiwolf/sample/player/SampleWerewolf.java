@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.common.data.Agent;
@@ -35,9 +36,6 @@ public final class SampleWerewolf extends SampleBasePlayer {
 
 	/** カミングアウトする日 */
 	int comingoutDay;
-
-	/** カミングアウトするターン */
-	int comingoutTurn;
 
 	/** カミングアウト済みか */
 	boolean isCameout;
@@ -72,67 +70,83 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	/** 宣言済み襲撃投票先候補 */
 	Agent declaredAttackVoteCandidate;
 
+	/** 襲撃理由マップ */
+	Map<Agent, Content> attackReasonMap = new HashMap<>();
+
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		whisperQueue.clear();
 		numWolves = gameSetting.getRoleNumMap().get(Role.WEREWOLF);
 		werewolves = new ArrayList<>(gameInfo.getRoleMap().keySet());
-		humans = new ArrayList<>();
-		for (Agent a : aliveOthers) {
-			if (!werewolves.contains(a)) {
-				humans.add(a);
-			}
-		}
+		humans = aliveOthers.stream().filter(a -> !werewolves.contains(a)).collect(Collectors.toList());
 		// ランダムに騙る役職を決める
-		List<Role> roles = new ArrayList<>();
-		for (Role r : Arrays.asList(Role.VILLAGER, Role.SEER, Role.MEDIUM)) {
-			if (gameInfo.getExistingRoles().contains(r)) {
-				roles.add(r);
-			}
-		}
-		fakeRole = randomSelect(roles);
+		fakeRole = randomSelect(Arrays.asList(Role.VILLAGER, Role.SEER, Role.MEDIUM).stream().filter(r -> gameInfo.getExistingRoles().contains(r)).collect(Collectors.toList()));
 		// 1～3日目からランダムにカミングアウトする
 		comingoutDay = (int) (Math.random() * 3 + 1);
-		// 第0～4ターンからランダムにカミングアウトする
-		comingoutTurn = (int) (Math.random() * 5);
 		isCameout = false;
 		fakeJudgeMap.clear();
 		fakeJudgeQueue.clear();
 		possessedList.clear();
+		attackReasonMap.clear();
 	}
 
 	@Override
 	public void update(GameInfo gameInfo) {
 		super.update(gameInfo);
-		// 占い/霊媒結果が嘘の場合，裏切り者候補
+		// 占い結果が嘘の場合，裏切り者候補
 		for (Judge j : divinationList) {
-			Agent agent = j.getAgent();
-			if (!werewolves.contains(agent) && ((humans.contains(j.getTarget()) && j.getResult() == Species.WEREWOLF) || (werewolves.contains(j.getTarget()) && j.getResult() == Species.HUMAN))) {
-				if (!possessedList.contains(agent)) {
-					possessedList.add(agent);
-					enqueueWhisper(estimateContent(me, agent, Role.POSSESSED));
+			Agent he = j.getAgent();
+			Agent target = j.getTarget();
+			Species result = j.getResult();
+			if (!werewolves.contains(he) && !possessedList.contains(he)
+					&& ((humans.contains(target) && result == Species.WEREWOLF) || (werewolves.contains(target) && result == Species.HUMAN))) {
+				possessedList.add(he);
+				Content heIs = notContent(me, coContent(me, he, Role.WEREWOLF));
+				Content hisDayDivination = dayContent(me, j.getDay(), divinedContent(he, target, result));
+				Content targetIs;
+				if (humans.contains(target)) {
+					targetIs = notContent(me, coContent(me, target, Role.WEREWOLF));
+				} else {
+					targetIs = coContent(me, target, Role.WEREWOLF);
 				}
+				Content reason = andContent(me, heIs, targetIs, hisDayDivination);
+				Estimate estimate = new Estimate(me, he, Role.POSSESSED, reason);
+				estimateMaps.addEstimate(estimate);
+				enqueueWhisper(estimate.toContent());
 			}
 		}
-		villagers.clear();
-		for (Agent agent : aliveOthers) {
-			if (!werewolves.contains(agent) && !possessedList.contains(agent)) {
-				villagers.add(agent);
+		// 霊媒結果が嘘の場合，裏切り者候補
+		for (Judge j : identList) {
+			Agent he = j.getAgent();
+			Agent target = j.getTarget();
+			Species result = j.getResult();
+			if (!werewolves.contains(he) && !possessedList.contains(he)
+					&& ((humans.contains(target) && result == Species.WEREWOLF) || (werewolves.contains(target) && result == Species.HUMAN))) {
+				possessedList.add(he);
+				Content heIs = notContent(me, coContent(me, he, Role.WEREWOLF));
+				Content hisDayIdent = dayContent(me, j.getDay(), identContent(he, target, result));
+				Content targetIs;
+				if (humans.contains(target)) {
+					targetIs = notContent(me, coContent(me, target, Role.WEREWOLF));
+				} else {
+					targetIs = coContent(me, target, Role.WEREWOLF);
+				}
+				Content reason = andContent(me, heIs, targetIs, hisDayIdent);
+				Estimate estimate = new Estimate(me, he, Role.POSSESSED, reason);
+				estimateMaps.addEstimate(estimate);
+				enqueueWhisper(estimate.toContent());
 			}
 		}
+		villagers = aliveOthers.stream().filter(a -> !werewolves.contains(a) && !possessedList.contains(a)).collect(Collectors.toList());
 	}
 
 	private Judge getFakeJudge() {
 		Agent target = null;
 		// 占い師騙りの場合
 		if (fakeRole == Role.SEER) {
-			List<Agent> candidates = new ArrayList<>();
-			for (Agent a : aliveOthers) {
-				if (!fakeJudgeMap.containsKey(a) && comingoutMap.get(a) != Role.SEER) {
-					candidates.add(a);
-				}
-			}
+			List<Agent> candidates = aliveOthers.stream()
+					.filter(a -> !fakeJudgeMap.containsKey(a) && comingoutMap.get(a) != Role.SEER).collect(Collectors.toList());
 			if (candidates.isEmpty()) {
 				target = randomSelect(aliveOthers);
 			} else {
@@ -198,27 +212,21 @@ public final class SampleWerewolf extends SampleBasePlayer {
 		// 占い師/霊媒師騙りの場合
 		if (fakeRole != Role.VILLAGER) {
 			// 対抗カミングアウトした，あるいは人狼と判定した村人は投票先候補
-			for (Agent a : villagers) {
-				if (comingoutMap.get(a) == fakeRole || fakeJudgeMap.get(a) == Species.WEREWOLF) {
-					candidates.add(a);
-				}
-			}
+			candidates = villagers.stream()
+					.filter(a -> comingoutMap.get(a) == fakeRole || fakeJudgeMap.get(a) == Species.WEREWOLF).collect(Collectors.toList());
 			// 候補がいなければ人間と判定していない村人陣営から
 			if (candidates.isEmpty()) {
-				for (Agent a : villagers) {
-					if (fakeJudgeMap.get(a) != Species.HUMAN) {
-						candidates.add(a);
-					}
-				}
+				candidates = villagers.stream()
+						.filter(a -> fakeJudgeMap.get(a) != Species.HUMAN).collect(Collectors.toList());
 			}
 		}
 		// 村人騙り，あるいは候補がいない場合ば村人陣営から選ぶ
 		if (candidates.isEmpty()) {
-			candidates.addAll(villagers);
+			candidates = villagers;
 		}
 		// それでも候補がいない場合は裏切り者に投票
 		if (candidates.isEmpty()) {
-			candidates.addAll(possessedList);
+			candidates = possessedList;
 		}
 		if (!candidates.isEmpty()) {
 			if (!candidates.contains(voteCandidate)) {
@@ -257,7 +265,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 						}
 					}
 					// カミングアウトするタイミングになったらカミングアウト
-					if (day >= comingoutDay && talkTurn >= comingoutTurn) {
+					if (day >= comingoutDay) {
 						isCameout = true;
 						enqueueTalk(coContent(me, me, fakeRole));
 					}
@@ -281,21 +289,19 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	/** 襲撃先候補を選ぶ */
 	void chooseAttackVoteCandidate() {
 		// カミングアウトした村人陣営は襲撃先候補
-		List<Agent> candidates = new ArrayList<>();
-		for (Agent a : villagers) {
-			if (isCo(a)) {
-				candidates.add(a);
-			}
+		List<Agent> candidates = villagers.stream().filter(a -> isCo(a)).collect(Collectors.toList());
+		for (Agent a : candidates) {
+			attackReasonMap.put(a, coContent(a, a, comingoutMap.get(a)));
 		}
 		// 候補がいなければ村人陣営から
 		if (candidates.isEmpty()) {
-			candidates.addAll(villagers);
+			candidates = villagers;
 		}
 		// 村人陣営がいない場合は裏切り者を襲う
 		if (candidates.isEmpty()) {
-			candidates.addAll(possessedList);
+			candidates = possessedList;
 		}
-		if (!candidates.isEmpty()) {
+		if (!candidates.isEmpty() && !candidates.contains(declaredAttackVoteCandidate)) {
 			attackVoteCandidate = randomSelect(candidates);
 		} else {
 			attackVoteCandidate = null;
@@ -314,7 +320,12 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	public String whisper() {
 		chooseAttackVoteCandidate();
 		if (attackVoteCandidate != null && attackVoteCandidate != declaredAttackVoteCandidate) {
-			enqueueWhisper(attackContent(me, attackVoteCandidate));
+			Content reason = attackReasonMap.get(attackVoteCandidate);
+			if (reason != null) {
+				enqueueWhisper(becauseContent(me, reason, attackContent(me, attackVoteCandidate)));
+			} else {
+				enqueueWhisper(attackContent(me, attackVoteCandidate));
+			}
 			declaredAttackVoteCandidate = attackVoteCandidate;
 		}
 		return dequeueWhisper();
