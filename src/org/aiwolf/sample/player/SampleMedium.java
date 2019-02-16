@@ -27,7 +27,7 @@ public final class SampleMedium extends SampleBasePlayer {
 	int comingoutDay;
 	boolean isCameout;
 	Deque<Judge> identQueue = new LinkedList<>();
-	Map<Agent, Species> myIdentMap = new HashMap<>();
+	Map<Agent, Judge> myIdentMap = new HashMap<>();
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
@@ -45,7 +45,7 @@ public final class SampleMedium extends SampleBasePlayer {
 		Judge ident = currentGameInfo.getMediumResult();
 		if (ident != null) {
 			identQueue.offer(ident);
-			myIdentMap.put(ident.getTarget(), ident.getResult());
+			myIdentMap.put(ident.getTarget(), ident);
 		}
 	}
 
@@ -71,12 +71,12 @@ public final class SampleMedium extends SampleBasePlayer {
 			Agent he = j.getAgent();
 			Agent target = j.getTarget();
 			Species result = j.getResult();
-			Content dayDivination = dayContent(me, j.getDay(), divinedContent(he, target, result));
+			Content hisDayDivination = dayContent(me, j.getDay(), divinedContent(he, target, result));
 			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (target == me && result == Species.WEREWOLF) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					Content reason = andContent(me, iAm, dayDivination);
+					Content reason = andContent(me, iAm, hisDayDivination);
 					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);
@@ -86,20 +86,22 @@ public final class SampleMedium extends SampleBasePlayer {
 			if (isKilled(target) && result == Species.WEREWOLF) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					Content reason = andContent(me, attackedContent(Agent.ANY, target), dayDivination);
+					Content reason = andContent(me, attackedContent(Agent.ANY, target), hisDayDivination);
 					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);
 				}
 			}
-			// 自分と異なる判定の占い師を投票先候補に追加
-			if (myIdentMap.containsKey(target) && result != myIdentMap.get(target)) {
+			Judge myJudge = myIdentMap.get(target);
+			// 偽占い師
+			if (myJudge != null && result != myJudge.getResult()) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
 					Estimate estimate = new Estimate(me, he, Role.WEREWOLF);
 					estimate.addRole(Role.POSSESSED);
 					if (isCameout) {
-						Content reason = andContent(me, identContent(me, target, myIdentMap.get(target)), dayDivination);
+						Content myDayIdent = dayContent(me, myJudge.getDay(), identContent(me, myJudge.getTarget(), myJudge.getResult()));
+						Content reason = andContent(me, myDayIdent, hisDayDivination);
 						estimate.addReason(reason);
 					}
 					estimateMaps.addEstimate(estimate);

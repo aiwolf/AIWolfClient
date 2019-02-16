@@ -110,14 +110,16 @@ public final class SampleSeer extends SampleBasePlayer {
 			Agent he = j.getAgent();
 			Agent target = j.getTarget();
 			Species result = j.getResult();
-			Content dayIdent = dayContent(me, j.getDay(), identContent(he, target, result));
-			if ((myDivinationMap.containsKey(target) && result != myDivinationMap.get(target).getResult())) {
+			Content hisDayIdent = dayContent(me, j.getDay(), identContent(he, target, result));
+			Judge myJudge = myDivinationMap.get(target);
+			if ((myJudge != null && result != myJudge.getResult())) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
 					Estimate estimate = new Estimate(me, he, Role.WEREWOLF);
 					estimate.addRole(Role.POSSESSED);
 					if (isCameout) {
-						Content reason = andContent(me, divinedContent(me, target, myDivinationMap.get(target).getResult()), dayIdent);
+						Content myDayDivination = dayContent(me, myJudge.getDay(), divinedContent(me, myJudge.getTarget(), myJudge.getResult()));
+						Content reason = andContent(me, myDayDivination, hisDayIdent);
 						estimate.addReason(reason);
 					}
 					estimateMaps.addEstimate(estimate);
