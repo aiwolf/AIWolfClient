@@ -29,18 +29,10 @@ class Estimate {
 	private List<Role> roles = new ArrayList<>();
 	private List<Content> reasons = new ArrayList<>();
 
-	private void setEstimater(Agent estimater) {
-		this.estimater = estimater;
-	}
-
-	private void setEstimated(Agent estimated) {
-		this.estimated = estimated == Content.UNSPEC ? Content.ANY : estimated;
-	}
-
 	Estimate(Agent estimater, Agent estimated, Role role) {
-		setEstimater(estimater);
-		setEstimated(estimated);
-		roles.add(role);
+		this.estimater = estimater;
+		this.estimated = estimated;
+		addRole(role);
 	}
 
 	Estimate(Agent estimater, Agent estimated, Role role, Content reason) {
@@ -50,18 +42,17 @@ class Estimate {
 
 	Estimate(Content content) {
 		if (content.getTopic() == Topic.ESTIMATE) {
-			setEstimater(content.getSubject());
-			setEstimated(content.getTarget());
+			estimater = content.getSubject();
+			estimated = content.getTarget();
 			addRole(content.getRole());
 		} else if (content.getOperator() == Operator.BECAUSE && content.getContentList().get(1).getTopic() == Topic.ESTIMATE) {
 			Content estimate = content.getContentList().get(1);
 			Content reason = content.getContentList().get(0);
-			setEstimater(estimate.getSubject());
-			setEstimated(estimate.getTarget());
+			estimater = estimate.getSubject();
+			estimated = estimate.getTarget();
 			addRole(estimate.getRole());
 			addReason(reason);
 		}
-
 	}
 
 	void addRole(Role role) {
