@@ -1,35 +1,70 @@
+/**
+ * SampleVillager.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/** 村人役エージェントクラス */
-public class SampleVillager extends SampleBasePlayer {
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+
+/**
+ * 村人役エージェントクラス
+ * 
+ * @author otsuki
+ */
+public final class SampleVillager extends SampleBasePlayer {
 
 	@Override
-	protected void chooseVoteCandidate() {
-		werewolves.clear();
+	void chooseVoteCandidate() {
+		List<Agent> wolfCandidates = new ArrayList<>();
 		for (Judge j : divinationList) {
-			// 自分あるいは殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補とする
-			if (j.getResult() == Species.WEREWOLF && (j.getTarget() == me || isKilled(j.getTarget()))) {
-				Agent candidate = j.getAgent();
-				if (isAlive(candidate) && !werewolves.contains(candidate)) {
-					werewolves.add(candidate);
+			Content dayDivination = dayContent(me, j.getDay(), divinedContent(j.getAgent(), j.getTarget(), j.getResult()));
+			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
+			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
+				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
+					wolfCandidates.add(j.getAgent());
+					Content iAm = coContent(me, me, Role.VILLAGER);
+					Content reason = andContent(me, iAm, dayDivination);
+					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimate.addRole(Role.POSSESSED);
+					estimateMaps.addEstimate(estimate);
+				}
+			}
+			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
+			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
+				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
+					wolfCandidates.add(j.getAgent());
+					Content reason = andContent(me, attackedContent(Content.ANY, j.getTarget()), dayDivination);
+					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
+					estimate.addRole(Role.POSSESSED);
+					estimateMaps.addEstimate(estimate);
 				}
 			}
 		}
 		// 候補がいない場合はランダム
-		if (werewolves.isEmpty()) {
+		if (wolfCandidates.isEmpty()) {
 			if (!aliveOthers.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveOthers);
 			}
 		} else {
-			if (!werewolves.contains(voteCandidate)) {
-				voteCandidate = randomSelect(werewolves);
-				// 以前の投票先から変わる場合，新たに推測発言と占い要請をする
+			if (!wolfCandidates.contains(voteCandidate)) {
+				voteCandidate = randomSelect(wolfCandidates);
+				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
+				// 以前の投票先から変わる場合，新たに推測発言をする
 				if (canTalk) {
-					talkQueue.offer(new Content(new EstimateContentBuilder(voteCandidate, Role.WEREWOLF)));
-					talkQueue.offer(new Content(new RequestContentBuilder(null, new Content(new DivinationContentBuilder(voteCandidate)))));
+					if (estimate != null) {
+						enqueueTalk(estimate.toContent());
+						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
+					} else {
+						voteMap.addVoteReason(me, voteCandidate, null);
+					}
 				}
 			}
 		}

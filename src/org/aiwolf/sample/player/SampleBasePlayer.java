@@ -1,3 +1,8 @@
+/**
+ * SampleBasePlayer.java
+ * 
+ * Copyright (c) 2018 人狼知能プロジェクト
+ */
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
@@ -7,85 +12,145 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.aiwolf.client.lib.*;
-import org.aiwolf.common.data.*;
-import org.aiwolf.common.net.*;
+import org.aiwolf.client.lib.AgreeContentBuilder;
+import org.aiwolf.client.lib.AndContentBuilder;
+import org.aiwolf.client.lib.AttackContentBuilder;
+import org.aiwolf.client.lib.AttackedContentBuilder;
+import org.aiwolf.client.lib.BecauseContentBuilder;
+import org.aiwolf.client.lib.ComingoutContentBuilder;
+import org.aiwolf.client.lib.Content;
+import org.aiwolf.client.lib.DayContentBuilder;
+import org.aiwolf.client.lib.DisagreeContentBuilder;
+import org.aiwolf.client.lib.DivinationContentBuilder;
+import org.aiwolf.client.lib.DivinedResultContentBuilder;
+import org.aiwolf.client.lib.EstimateContentBuilder;
+import org.aiwolf.client.lib.GuardCandidateContentBuilder;
+import org.aiwolf.client.lib.GuardedAgentContentBuilder;
+import org.aiwolf.client.lib.IdentContentBuilder;
+import org.aiwolf.client.lib.InquiryContentBuilder;
+import org.aiwolf.client.lib.NotContentBuilder;
+import org.aiwolf.client.lib.OrContentBuilder;
+import org.aiwolf.client.lib.RequestContentBuilder;
+import org.aiwolf.client.lib.TalkType;
+import org.aiwolf.client.lib.Topic;
+import org.aiwolf.client.lib.VoteContentBuilder;
+import org.aiwolf.client.lib.VotedContentBuilder;
+import org.aiwolf.client.lib.XorContentBuilder;
+import org.aiwolf.common.data.Agent;
+import org.aiwolf.common.data.Judge;
+import org.aiwolf.common.data.Player;
+import org.aiwolf.common.data.Role;
+import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Status;
+import org.aiwolf.common.data.Talk;
+import org.aiwolf.common.net.GameInfo;
+import org.aiwolf.common.net.GameSetting;
 
-/** すべての役職のベースとなるクラス */
+/**
+ * すべての役職のベースとなるクラス
+ * 
+ * @author otsuki
+ */
 public class SampleBasePlayer implements Player {
+
 	/** このエージェント */
 	Agent me;
+
 	/** 日付 */
 	int day;
+
 	/** talk()できるか時間帯か */
 	boolean canTalk;
-	/** whisper()できるか時間帯か */
-	boolean canWhisper;
+
 	/** 最新のゲーム情報 */
 	GameInfo currentGameInfo;
+
 	/** 自分以外の生存エージェント */
 	List<Agent> aliveOthers;
+
 	/** 追放されたエージェント */
 	List<Agent> executedAgents = new ArrayList<>();
+
 	/** 殺されたエージェント */
 	List<Agent> killedAgents = new ArrayList<>();
+
 	/** 発言された占い結果報告のリスト */
 	List<Judge> divinationList = new ArrayList<>();
+
 	/** 発言された霊媒結果報告のリスト */
 	List<Judge> identList = new ArrayList<>();
+
 	/** 発言用待ち行列 */
-	Deque<Content> talkQueue = new LinkedList<>();
-	/** 囁き用待ち行列 */
-	Deque<Content> whisperQueue = new LinkedList<>();
+	private Deque<Content> talkQueue = new LinkedList<>();
+
 	/** 投票先候補 */
 	Agent voteCandidate;
+
 	/** 宣言済み投票先候補 */
 	Agent declaredVoteCandidate;
-	/** 襲撃投票先候補 */
-	Agent attackVoteCandidate;
-	/** 宣言済み襲撃投票先候補 */
-	Agent declaredAttackVoteCandidate;
+
 	/** カミングアウト状況 */
 	Map<Agent, Role> comingoutMap = new HashMap<>();
+
 	/** GameInfo.talkList読み込みのヘッド */
 	int talkListHead;
-	/** 人間リスト */
-	List<Agent> humans = new ArrayList<>();
-	/** 人狼リスト */
-	List<Agent> werewolves = new ArrayList<>();
 
-	/** エージェントが生きているかどうかを返す */
-	protected boolean isAlive(Agent agent) {
+	/** 推測理由マップ */
+	EstimateMaps estimateMaps = new EstimateMaps();
+
+	/** 投票理由マップ */
+	VoteMap voteMap = new VoteMap();
+
+	/** talk()のターン */
+	int talkTurn;
+
+	/**
+	 * エージェントが生きているかどうかを返す
+	 * 
+	 * @param agent
+	 * @return
+	 */
+	boolean isAlive(Agent agent) {
 		return currentGameInfo.getStatusMap().get(agent) == Status.ALIVE;
 	}
 
-	/** エージェントが殺されたかどうかを返す */
-	protected boolean isKilled(Agent agent) {
+	/**
+	 * エージェントが殺されたかどうかを返す
+	 * 
+	 * @param agent
+	 * @return
+	 */
+	boolean isKilled(Agent agent) {
 		return killedAgents.contains(agent);
 	}
 
-	/** エージェントがカミングアウトしたかどうかを返す */
-	protected boolean isCo(Agent agent) {
+	/**
+	 * エージェントがカミングアウトしたかどうかを返す
+	 * 
+	 * @param agent
+	 * @return
+	 */
+	boolean isCo(Agent agent) {
 		return comingoutMap.containsKey(agent);
 	}
 
-	/** 役職がカミングアウトされたかどうかを返す */
-	protected boolean isCo(Role role) {
+	/**
+	 * 役職がカミングアウトされたかどうかを返す
+	 * 
+	 * @param role
+	 * @return
+	 */
+	boolean isCo(Role role) {
 		return comingoutMap.containsValue(role);
 	}
 
-	/** エージェントが人間かどうかを返す */
-	protected boolean isHuman(Agent agent) {
-		return humans.contains(agent);
-	}
-
-	/** エージェントが人狼かどうかを返す */
-	protected boolean isWerewolf(Agent agent) {
-		return werewolves.contains(agent);
-	}
-
-	/** リストからランダムに選んで返す */
-	protected <T> T randomSelect(List<T> list) {
+	/**
+	 * リストからランダムに選んで返す
+	 * 
+	 * @param list
+	 * @return
+	 */
+	<T> T randomSelect(List<T> list) {
 		if (list.isEmpty()) {
 			return null;
 		} else {
@@ -95,7 +160,7 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public String getName() {
-		return "MyBasePlayer";
+		return "SampleBasePlayer";
 	}
 
 	@Override
@@ -109,8 +174,8 @@ public class SampleBasePlayer implements Player {
 		divinationList.clear();
 		identList.clear();
 		comingoutMap.clear();
-		humans.clear();
-		werewolves.clear();
+		estimateMaps.clear();
+		voteMap.clear();
 	}
 
 	@Override
@@ -132,37 +197,72 @@ public class SampleBasePlayer implements Player {
 				continue;
 			}
 			Content content = new Content(talk.getText());
-			switch (content.getTopic()) {
-			case COMINGOUT:
-				comingoutMap.put(talker, content.getRole());
-				break;
-			case DIVINED:
-				divinationList.add(new Judge(day, talker, content.getTarget(), content.getResult()));
-				break;
-			case IDENTIFIED:
-				identList.add(new Judge(day, talker, content.getTarget(), content.getResult()));
-				break;
-			default:
-				break;
+
+			// subjectがUNSPECの場合は発話者に入れ替える
+			if (content.getSubject() == Content.UNSPEC) {
+				content = replaceSubject(content, talker);
 			}
+
+			parseSentence(content);
 		}
 		talkListHead = currentGameInfo.getTalkList().size();
+	}
+
+	// 再帰的に文を解析する
+	void parseSentence(Content content) {
+		if (estimateMaps.addEstimate(content)) {
+			return; // 理由付き推測文と解析できた
+		}
+		if (voteMap.addVoteReason(content)) {
+			return; // 理由付き投票宣言と解析できた
+		}
+		switch (content.getTopic()) {
+		case COMINGOUT:
+			comingoutMap.put(content.getTarget(), content.getRole());
+			return;
+		case DIVINED:
+			divinationList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
+			return;
+		case IDENTIFIED:
+			identList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
+			return;
+		case OPERATOR:
+			parseOperator(content);
+			return;
+		default:
+			break;
+		}
+	}
+
+	// 演算子文を解析する
+	void parseOperator(Content content) {
+		switch (content.getOperator()) {
+		case BECAUSE:
+			parseSentence(content.getContentList().get(1));
+			return;
+		case DAY:
+			parseSentence(content.getContentList().get(0));
+			return;
+		case AND:
+		case OR:
+		case XOR:
+			for (Content c : content.getContentList()) {
+				parseSentence(c);
+			}
+			return;
+		default:
+			break;
+		}
 	}
 
 	@Override
 	public void dayStart() {
 		canTalk = true;
-		canWhisper = false;
-		if (currentGameInfo.getRole() == Role.WEREWOLF) {
-			canWhisper = true;
-		}
 		talkQueue.clear();
-		whisperQueue.clear();
 		declaredVoteCandidate = null;
 		voteCandidate = null;
-		declaredAttackVoteCandidate = null;
-		attackVoteCandidate = null;
 		talkListHead = 0;
+		talkTurn = -1;
 		// 前日に追放されたエージェントを登録
 		addExecutedAgent(currentGameInfo.getExecutedAgent());
 		// 昨夜死亡した（襲撃された）エージェントを登録
@@ -189,32 +289,55 @@ public class SampleBasePlayer implements Player {
 		}
 	}
 
-	/** 投票先候補を選びvoteCandidateにセットする */
-	protected void chooseVoteCandidate() {
+	/**
+	 * 投票先候補を選びvoteCandidateにセットする
+	 * 
+	 * <blockquote>talk()とvote()から呼ばれる</blockquote>
+	 */
+	void chooseVoteCandidate() {
 	}
 
 	@Override
 	public String talk() {
+		talkTurn++;
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			talkQueue.offer(new Content(new VoteContentBuilder(voteCandidate)));
-			declaredVoteCandidate = voteCandidate;
+			Content reason = voteMap.getReason(me, voteCandidate);
+			// ターン2以降，投票理由がある場合か話すことがない場合は投票先を宣言
+			if (talkTurn > 1 && (talkQueue.isEmpty() || reason != null)) {
+				if (reason != null) {
+					enqueueTalk(becauseContent(me, reason, voteContent(me, voteCandidate)));
+				} else {
+					enqueueTalk(voteContent(me, voteCandidate));
+				}
+				declaredVoteCandidate = voteCandidate;
+			}
 		}
-		return talkQueue.isEmpty() ? Talk.SKIP : talkQueue.poll().getText();
+		return dequeueTalk();
 	}
 
-	/** 襲撃先候補を選びattackVoteCandidateにセットする */
-	protected void chooseAttackVoteCandidate() {
+	void enqueueTalk(Content content) {
+		if (content.getSubject() == Content.UNSPEC) {
+			talkQueue.offer(replaceSubject(content, me));
+		} else {
+			talkQueue.offer(content);
+		}
+	}
+
+	String dequeueTalk() {
+		if (talkQueue.isEmpty()) {
+			return Talk.SKIP;
+		}
+		Content content = talkQueue.poll();
+		if (content.getSubject() == me) {
+			return Content.stripSubject(content.getText());
+		}
+		return content.getText();
 	}
 
 	@Override
 	public String whisper() {
-		chooseAttackVoteCandidate();
-		if (attackVoteCandidate != null && attackVoteCandidate != declaredAttackVoteCandidate) {
-			whisperQueue.offer(new Content(new AttackContentBuilder(attackVoteCandidate)));
-			declaredAttackVoteCandidate = attackVoteCandidate;
-		}
-		return whisperQueue.isEmpty() ? Talk.SKIP : whisperQueue.poll().getText();
+		return null;
 	}
 
 	@Override
@@ -226,10 +349,7 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public Agent attack() {
-		canWhisper = false;
-		chooseAttackVoteCandidate();
-		canWhisper = true;
-		return attackVoteCandidate;
+		return null;
 	}
 
 	@Override
@@ -244,6 +364,102 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public void finish() {
+	}
+
+	static Content replaceSubject(Content content, Agent newSubject) {
+		if (content.getTopic() == Topic.SKIP || content.getTopic() == Topic.OVER) {
+			return content;
+		}
+		if (newSubject == Content.UNSPEC) {
+			return new Content(Content.stripSubject(content.getText()));
+		} else {
+			return new Content(newSubject + " " + Content.stripSubject(content.getText()));
+		}
+	}
+
+	// 発話生成を簡略化するためのwrapper
+	static Content agreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
+		return new Content(new AgreeContentBuilder(subject, talkType, talkDay, talkID));
+	}
+
+	static Content disagreeContent(Agent subject, TalkType talkType, int talkDay, int talkID) {
+		return new Content(new DisagreeContentBuilder(subject, talkType, talkDay, talkID));
+	}
+
+	static Content voteContent(Agent subject, Agent target) {
+		return new Content(new VoteContentBuilder(subject, target));
+	}
+
+	static Content votedContent(Agent subject, Agent target) {
+		return new Content(new VotedContentBuilder(subject, target));
+	}
+
+	static Content attackContent(Agent subject, Agent target) {
+		return new Content(new AttackContentBuilder(subject, target));
+	}
+
+	static Content attackedContent(Agent subject, Agent target) {
+		return new Content(new AttackedContentBuilder(subject, target));
+	}
+
+	static Content guardContent(Agent subject, Agent target) {
+		return new Content(new GuardCandidateContentBuilder(subject, target));
+	}
+
+	static Content guardedContent(Agent subject, Agent target) {
+		return new Content(new GuardedAgentContentBuilder(subject, target));
+	}
+
+	static Content estimateContent(Agent subject, Agent target, Role role) {
+		return new Content(new EstimateContentBuilder(subject, target, role));
+	}
+
+	static Content coContent(Agent subject, Agent target, Role role) {
+		return new Content(new ComingoutContentBuilder(subject, target, role));
+	}
+
+	static Content requestContent(Agent subject, Agent target, Content content) {
+		return new Content(new RequestContentBuilder(subject, target, content));
+	}
+
+	static Content inquiryContent(Agent subject, Agent target, Content content) {
+		return new Content(new InquiryContentBuilder(subject, target, content));
+	}
+
+	static Content divinationContent(Agent subject, Agent target) {
+		return new Content(new DivinationContentBuilder(subject, target));
+	}
+
+	static Content divinedContent(Agent subject, Agent target, Species result) {
+		return new Content(new DivinedResultContentBuilder(subject, target, result));
+	}
+
+	static Content identContent(Agent subject, Agent target, Species result) {
+		return new Content(new IdentContentBuilder(subject, target, result));
+	}
+
+	static Content andContent(Agent subject, Content... contents) {
+		return new Content(new AndContentBuilder(subject, contents));
+	}
+
+	static Content orContent(Agent subject, Content... contents) {
+		return new Content(new OrContentBuilder(subject, contents));
+	}
+
+	static Content xorContent(Agent subject, Content content1, Content content2) {
+		return new Content(new XorContentBuilder(subject, content1, content2));
+	}
+
+	static Content notContent(Agent subject, Content content) {
+		return new Content(new NotContentBuilder(subject, content));
+	}
+
+	static Content dayContent(Agent subject, int day, Content content) {
+		return new Content(new DayContentBuilder(subject, day, content));
+	}
+
+	static Content becauseContent(Agent subject, Content reason, Content action) {
+		return new Content(new BecauseContentBuilder(subject, reason, action));
 	}
 
 }
