@@ -34,7 +34,7 @@ class Estimate {
 	}
 
 	private void setEstimated(Agent estimated) {
-		this.estimated = estimated == Agent.UNSPEC ? Agent.ANY : estimated;
+		this.estimated = estimated == Content.UNSPEC ? Content.ANY : estimated;
 	}
 
 	Estimate(Agent estimater, Agent estimated, Role role) {

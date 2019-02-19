@@ -50,7 +50,7 @@ class VoteMap {
 	 * @return
 	 */
 	boolean addVoteReason(Agent voter, Agent voted, Content reason) {
-		if (voter == Agent.ANY || voter == Agent.UNSPEC || voted == Agent.ANY || voted == Agent.UNSPEC) {
+		if (voter == Content.ANY || voter == Content.UNSPEC || voted == Content.ANY || voted == Content.UNSPEC) {
 			return false;
 		}
 		voteMap.put(voter, voted);
@@ -116,7 +116,7 @@ class VoteMap {
 		if (voteMap.containsKey(voter)) {
 			return voteMap.get(voter);
 		}
-		return Agent.UNSPEC;
+		return Content.UNSPEC;
 	}
 
 	/**

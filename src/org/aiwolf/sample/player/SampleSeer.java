@@ -48,7 +48,7 @@ public final class SampleSeer extends SampleBasePlayer {
 		blackList.clear();
 		grayList.clear();
 		possessedList.clear();
-		possessed = Agent.UNSPEC;
+		possessed = Content.UNSPEC;
 	}
 
 	@Override
@@ -80,11 +80,11 @@ public final class SampleSeer extends SampleBasePlayer {
 				voteCandidate = randomSelect(aliveWolves);
 				if (canTalk) {
 					Content myDivination = divinedContent(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult());
-					Content vote = voteContent(Agent.ANY, voteCandidate);
+					Content vote = voteContent(Content.ANY, voteCandidate);
 					Content reason = dayContent(me, myDivinationMap.get(voteCandidate).getDay(), myDivination);
-					Content request = requestContent(me, Agent.ANY, vote);
+					Content request = requestContent(me, Content.ANY, vote);
 					enqueueTalk(becauseContent(me, reason, request));
-					enqueueTalk(inquiryContent(me, Agent.ANY, vote));
+					enqueueTalk(inquiryContent(me, Content.ANY, vote));
 				}
 			}
 			return;
@@ -139,7 +139,7 @@ public final class SampleSeer extends SampleBasePlayer {
 		}
 		wolfCandidates = wolfCandidates.stream().filter(a -> !possessedList.contains(a)).collect(Collectors.toList());
 		if (!possessedList.isEmpty()) {
-			if (possessed == Agent.UNSPEC || !possessedList.contains(possessed)) {
+			if (possessed == Content.UNSPEC || !possessedList.contains(possessed)) {
 				possessed = randomSelect(possessedList);
 				Content reason1 = estimateMaps.getReason(me, possessed);
 				Content reason2 = divinedContent(me, possessed, Species.HUMAN);

@@ -86,7 +86,7 @@ public final class SampleMedium extends SampleBasePlayer {
 			if (isKilled(target) && result == Species.WEREWOLF) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					Content reason = andContent(me, attackedContent(Agent.ANY, target), hisDayDivination);
+					Content reason = andContent(me, attackedContent(Content.ANY, target), hisDayDivination);
 					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);

@@ -41,7 +41,7 @@ public final class SampleVillager extends SampleBasePlayer {
 			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
 				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
 					wolfCandidates.add(j.getAgent());
-					Content reason = andContent(me, attackedContent(Agent.ANY, j.getTarget()), dayDivination);
+					Content reason = andContent(me, attackedContent(Content.ANY, j.getTarget()), dayDivination);
 					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
 					estimate.addRole(Role.POSSESSED);
 					estimateMaps.addEstimate(estimate);

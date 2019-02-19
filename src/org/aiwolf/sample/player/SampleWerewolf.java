@@ -332,7 +332,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	}
 
 	void enqueueWhisper(Content content) {
-		if (content.getSubject() == Agent.UNSPEC) {
+		if (content.getSubject() == Content.UNSPEC) {
 			whisperQueue.offer(replaceSubject(content, me));
 		} else {
 			whisperQueue.offer(content);

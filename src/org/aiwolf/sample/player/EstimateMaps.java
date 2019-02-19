@@ -27,7 +27,7 @@ class EstimateMaps {
 	boolean addEstimate(Estimate estimate) {
 		Agent estimater = estimate.getEstimater();
 		Agent estimated = estimate.getEstimated();
-		if (estimater == Agent.ANY || estimater == Agent.UNSPEC || estimated == Agent.ANY || estimated == Agent.UNSPEC) {
+		if (estimater == Content.ANY || estimater == Content.UNSPEC || estimated == Content.ANY || estimated == Content.UNSPEC) {
 			return false;
 		}
 		if (!estimateMaps.containsKey(estimater)) {

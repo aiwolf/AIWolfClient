@@ -199,7 +199,7 @@ public class SampleBasePlayer implements Player {
 			Content content = new Content(talk.getText());
 
 			// subjectがUNSPECの場合は発話者に入れ替える
-			if (content.getSubject() == Agent.UNSPEC) {
+			if (content.getSubject() == Content.UNSPEC) {
 				content = replaceSubject(content, talker);
 			}
 
@@ -284,7 +284,7 @@ public class SampleBasePlayer implements Player {
 	}
 
 	void enqueueTalk(Content content) {
-		if (content.getSubject() == Agent.UNSPEC) {
+		if (content.getSubject() == Content.UNSPEC) {
 			talkQueue.offer(replaceSubject(content, me));
 		} else {
 			talkQueue.offer(content);
@@ -337,7 +337,7 @@ public class SampleBasePlayer implements Player {
 		if (content.getTopic() == Topic.SKIP || content.getTopic() == Topic.OVER) {
 			return content;
 		}
-		if (newSubject == Agent.UNSPEC) {
+		if (newSubject == Content.UNSPEC) {
 			return new Content(Content.stripSubject(content.getText()));
 		} else {
 			return new Content(newSubject + " " + Content.stripSubject(content.getText()));
