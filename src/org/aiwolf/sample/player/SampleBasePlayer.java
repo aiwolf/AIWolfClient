@@ -203,25 +203,56 @@ public class SampleBasePlayer implements Player {
 				content = replaceSubject(content, talker);
 			}
 
-			// 推測・投票発言があれば登録
-			if (!estimateMaps.addEstimate(content) && !voteMap.addVoteReason(content)) {
-				// それ以外の発言の処理
-				switch (content.getTopic()) {
-				case COMINGOUT:
-					comingoutMap.put(content.getTarget(), content.getRole());
-					break;
-				case DIVINED:
-					divinationList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
-					break;
-				case IDENTIFIED:
-					identList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
-					break;
-				default:
-					break;
-				}
-			}
+			parseSentence(content);
 		}
 		talkListHead = currentGameInfo.getTalkList().size();
+	}
+
+	// 再帰的に文を解析する
+	void parseSentence(Content content) {
+		if (estimateMaps.addEstimate(content)) {
+			return; // 理由付き推測文と解析できた
+		}
+		if (voteMap.addVoteReason(content)) {
+			return; // 理由付き投票宣言と解析できた
+		}
+		switch (content.getTopic()) {
+		case COMINGOUT:
+			comingoutMap.put(content.getTarget(), content.getRole());
+			return;
+		case DIVINED:
+			divinationList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
+			return;
+		case IDENTIFIED:
+			identList.add(new Judge(day, content.getSubject(), content.getTarget(), content.getResult()));
+			return;
+		case OPERATOR:
+			parseOperator(content);
+			return;
+		default:
+			break;
+		}
+	}
+
+	// 演算子文を解析する
+	void parseOperator(Content content) {
+		switch (content.getOperator()) {
+		case BECAUSE:
+			parseSentence(content.getContentList().get(1));
+			return;
+		case DAY:
+			parseSentence(content.getContentList().get(0));
+			return;
+		case AND:
+		case OR:
+		case XOR:
+			for (Content c : content.getContentList()) {
+				parseSentence(c);
+			}
+			return;
+		default:
+			break;
+		}
 	}
 
 	@Override
@@ -260,6 +291,8 @@ public class SampleBasePlayer implements Player {
 
 	/**
 	 * 投票先候補を選びvoteCandidateにセットする
+	 * 
+	 * <blockquote>talk()とvote()から呼ばれる</blockquote>
 	 */
 	void chooseVoteCandidate() {
 	}
