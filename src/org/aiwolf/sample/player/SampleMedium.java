@@ -6,9 +6,7 @@
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +15,7 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Vote;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
@@ -24,27 +23,36 @@ import org.aiwolf.common.net.GameSetting;
  * 霊媒師役エージェントクラス
  */
 public final class SampleMedium extends SampleBasePlayer {
-	int comingoutDay;
-	boolean isCameout;
-	Deque<Judge> identQueue = new LinkedList<>();
-	Map<Agent, Judge> myIdentMap = new HashMap<>();
+
+	/** COする日 */
+	private int comingoutDay;
+
+	/** CO済みならtrue */
+	private boolean isCameout;
+
+	/** 自分の霊媒結果の時系列 */
+	private List<Judge> myIdentList = new ArrayList<>();
+
+	/** 自分の霊媒結果のマップ */
+	private Map<Agent, Judge> myIdentMap = new HashMap<>();
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
 		comingoutDay = (int) (Math.random() * 3 + 1);
 		isCameout = false;
-		identQueue.clear();
+		myIdentList.clear();
 		myIdentMap.clear();
 	}
 
 	@Override
 	public void dayStart() {
 		super.dayStart();
+
 		// 霊媒結果を待ち行列に入れる
 		Judge ident = currentGameInfo.getMediumResult();
 		if (ident != null) {
-			identQueue.offer(ident);
+			myIdentList.add(ident);
 			myIdentMap.put(ident.getTarget(), ident);
 		}
 	}
@@ -52,79 +60,94 @@ public final class SampleMedium extends SampleBasePlayer {
 	@Override
 	void chooseVoteCandidate() {
 		Content iAm = isCameout ? coContent(me, me, Role.MEDIUM) : coContent(me, me, Role.VILLAGER);
+
 		List<Agent> wolfCandidates = new ArrayList<>();
-		// 霊媒師をカミングアウトしている他のエージェントは人狼候補
-		for (Agent agent : aliveOthers) {
-			if (comingoutMap.get(agent) == Role.MEDIUM) {
-				wolfCandidates.add(agent);
-				Estimate estimate = new Estimate(me, agent, Role.WEREWOLF);
-				estimate.addRole(Role.POSSESSED);
+		// 偽霊媒師は人狼か裏切り者
+		for (Agent he : aliveOthers) {
+			if (comingoutMap.get(he) == Role.MEDIUM) {
+				wolfCandidates.add(he);
+				// CO後なら理由を述べてよい
 				if (isCameout) {
-					Content heIs = coContent(agent, agent, Role.MEDIUM);
-					Content reason = andContent(me, iAm, heIs);
-					estimate.addReason(reason);
+					Content reason = andContent(me, iAm, coContent(he, he, Role.MEDIUM));
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
-				estimateMaps.addEstimate(estimate);
 			}
 		}
-		for (Judge j : divinationList) {
-			Agent he = j.getAgent();
-			Agent target = j.getTarget();
-			Species result = j.getResult();
-			Content hisDayDivination = dayContent(me, j.getDay(), divinedContent(he, target, result));
+
+		// 自分の判定と矛盾する偽占い師は人狼か裏切り者
+		for (Judge divination : divinationList) {
+			Agent he = divination.getAgent();
+			Agent target = divination.getTarget();
+			Species result = divination.getResult();
+			Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
+			Judge myJudge = myIdentMap.get(target);
+			if (myJudge != null && result != myJudge.getResult()) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					// CO後なら理由を述べてよい
+					if (isCameout) {
+						Content myIdent = dayContent(me, myJudge.getDay(), identContent(me, myJudge.getTarget(), myJudge.getResult()));
+						Content reason = andContent(me, myIdent, hisDivination);
+						estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
+					}
+				}
+			}
+		}
+
+		// 村人陣営共通の人狼候補決定アルゴリズム
+		for (Judge divination : divinationList) {
+			Agent he = divination.getAgent();
+			Agent target = divination.getTarget();
+			Species result = divination.getResult();
+			Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
 			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (target == me && result == Species.WEREWOLF) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					Content reason = andContent(me, iAm, hisDayDivination);
-					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
-					estimate.addRole(Role.POSSESSED);
-					estimateMaps.addEstimate(estimate);
+					Content reason = andContent(me, iAm, hisDivination);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
 			}
 			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
 			if (isKilled(target) && result == Species.WEREWOLF) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					Content reason = andContent(me, attackedContent(Content.ANY, target), hisDayDivination);
-					Estimate estimate = new Estimate(me, he, Role.WEREWOLF, reason);
-					estimate.addRole(Role.POSSESSED);
-					estimateMaps.addEstimate(estimate);
-				}
-			}
-			Judge myJudge = myIdentMap.get(target);
-			// 偽占い師
-			if (myJudge != null && result != myJudge.getResult()) {
-				if (isAlive(he) && !wolfCandidates.contains(he)) {
-					wolfCandidates.add(he);
-					Estimate estimate = new Estimate(me, he, Role.WEREWOLF);
-					estimate.addRole(Role.POSSESSED);
-					if (isCameout) {
-						Content myDayIdent = dayContent(me, myJudge.getDay(), identContent(me, myJudge.getTarget(), myJudge.getResult()));
-						Content reason = andContent(me, myDayIdent, hisDayDivination);
-						estimate.addReason(reason);
-					}
-					estimateMaps.addEstimate(estimate);
+					Content reason = andContent(me, attackedContent(Content.ANY, target), hisDivination);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
 			}
 		}
-		// 候補がいない場合はランダム
+		// 候補がいない場合
 		if (wolfCandidates.isEmpty()) {
-			if (!aliveOthers.contains(voteCandidate)) {
-				voteCandidate = randomSelect(aliveOthers);
+			if (!isRevote) {
+				// 初回投票はランダム
+				if (!aliveOthers.contains(voteCandidate)) {
+					voteCandidate = randomSelect(aliveOthers);
+				}
+			} else {
+				// 再投票の場合は自分以外の前回最多得票に入れる
+				VoteReasonMap vrmap = new VoteReasonMap();
+				for (Vote v : currentGameInfo.getLatestVoteList()) {
+					vrmap.put(v.getAgent(), v.getTarget(), null);
+				}
+				List<Agent> candidates = vrmap.getOrderedList();
+				candidates.remove(me);
+				if (candidates.isEmpty()) {
+					voteCandidate = randomSelect(aliveOthers);
+				} else {
+					voteCandidate = candidates.get(0);
+				}
 			}
 		} else {
 			if (!wolfCandidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(wolfCandidates);
-				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
+				Estimate estimate = estimateReasonMap.getEstimate(me, voteCandidate);
 				// 以前の投票先から変わる場合，新たに推測発言をする
-				if (canTalk) {
-					if (estimate != null) {
-						enqueueTalk(estimate.toContent());
-						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
-					} else {
-						voteMap.addVoteReason(me, voteCandidate, null);
-					}
+				if (estimate != null) {
+					enqueueTalk(estimate.toContent());
+					voteReasonMap.put(me, voteCandidate, estimate.getEstimateContent());
+				} else {
+					voteReasonMap.put(me, voteCandidate, null);
 				}
 			}
 		}
@@ -134,22 +157,44 @@ public final class SampleMedium extends SampleBasePlayer {
 	public String talk() {
 		// カミングアウトする日になったら，あるいは霊媒結果が人狼だったら
 		// あるいは霊媒師カミングアウトが出たらカミングアウト
-		if (!isCameout && (day >= comingoutDay || (!identQueue.isEmpty() && identQueue.peekLast().getResult() == Species.WEREWOLF) || isCo(Role.MEDIUM))) {
+		if (!isCameout && (day >= comingoutDay || isCo(Role.MEDIUM)
+				|| (!myIdentList.isEmpty() && myIdentList.get(myIdentList.size() - 1).getResult() == Species.WEREWOLF))) {
 			enqueueTalk(coContent(me, me, Role.MEDIUM));
 			isCameout = true;
 		}
 		// カミングアウトしたらこれまでの霊媒結果をすべて公開
 		if (isCameout) {
-			Content[] judges = identQueue.stream().map(j -> dayContent(me, j.getDay(), identContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
+			Content[] judges = myIdentList.stream().map(j -> dayContent(me, j.getDay(),
+					identContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
 			if (judges.length == 1) {
 				enqueueTalk(judges[0]);
 
 			} else if (judges.length > 1) {
 				enqueueTalk(andContent(me, judges));
 			}
-			identQueue.clear();
+			myIdentList.clear();
 		}
 		return super.talk();
+	}
+
+	@Override
+	public String whisper() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent attack() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent divine() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent guard() {
+		throw new UnsupportedOperationException();
 	}
 
 }

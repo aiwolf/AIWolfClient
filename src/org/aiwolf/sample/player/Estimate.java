@@ -6,6 +6,7 @@
 package org.aiwolf.sample.player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.aiwolf.client.lib.AndContentBuilder;
@@ -24,41 +25,76 @@ import org.aiwolf.common.data.Role;
  */
 class Estimate {
 
+	/**
+	 * 推測が何も見つからなかった場合はnullを返す
+	 * 
+	 * @param content
+	 * @return
+	 */
+	static List<Estimate> parseContent(Content content) {
+		if (content == null) {
+			return null;
+		}
+
+		if (content.getTopic() == Topic.ESTIMATE) {
+			return Arrays.asList(new Estimate(content.getSubject(), content.getTarget(), content.getRole()));
+		}
+
+		if (content.getOperator() == Operator.AND || content.getOperator() == Operator.OR || content.getOperator() == Operator.XOR) {
+			List<Estimate> estimates = new ArrayList<>();
+			for (Content c : content.getContentList()) {
+				if (c.getTopic() == Topic.ESTIMATE) {
+					estimates.add(new Estimate(c.getSubject(), c.getTarget(), c.getRole()));
+				}
+			}
+			if (estimates.size() == 0) {
+				return null;
+			}
+			return estimates;
+		}
+
+		if (content.getOperator() == Operator.BECAUSE) {
+			Content reason = content.getContentList().get(0);
+			List<Estimate> estimates = parseContent(content.getContentList().get(1));
+			if (estimates == null) {
+				return null;
+			}
+			for (Estimate e : estimates) {
+				e.addReason(reason);
+			}
+			return estimates;
+		}
+
+		return null;
+	}
+
 	private Agent estimater;
 	private Agent estimated;
 	private List<Role> roles = new ArrayList<>();
 	private List<Content> reasons = new ArrayList<>();
 
-	Estimate(Agent estimater, Agent estimated, Role role) {
+	Estimate(Agent estimater, Agent estimated, Role... roles) {
 		this.estimater = estimater;
 		this.estimated = estimated;
-		addRole(role);
-	}
-
-	Estimate(Agent estimater, Agent estimated, Role role, Content reason) {
-		this(estimater, estimated, role);
-		addReason(reason);
-	}
-
-	Estimate(Content content) {
-		if (content.getTopic() == Topic.ESTIMATE) {
-			estimater = content.getSubject();
-			estimated = content.getTarget();
-			addRole(content.getRole());
-		} else if (content.getOperator() == Operator.BECAUSE && content.getContentList().get(1).getTopic() == Topic.ESTIMATE) {
-			Content estimate = content.getContentList().get(1);
-			Content reason = content.getContentList().get(0);
-			estimater = estimate.getSubject();
-			estimated = estimate.getTarget();
-			addRole(estimate.getRole());
-			addReason(reason);
+		for (Role r : roles) {
+			addRole(r);
 		}
+	}
+
+	Estimate(Agent estimater, Agent estimated, Content reason, Role... roles) {
+		this(estimater, estimated, roles);
+		addReason(reason);
 	}
 
 	void addRole(Role role) {
 		if (!roles.contains(role)) {
 			roles.add(role);
 		}
+	}
+
+	void resetRole(Role role) {
+		roles.clear();
+		roles.add(role);
 	}
 
 	void addReason(Content reason) {

@@ -17,6 +17,7 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Vote;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
@@ -24,43 +25,54 @@ import org.aiwolf.common.net.GameSetting;
  * 裏切り者役エージェントクラス
  */
 public final class SamplePossessed extends SampleBasePlayer {
-	int numWolves;
-	boolean isCameout;
-	List<Judge> fakeDivinationList = new ArrayList<>();
-	List<Agent> divinedAgents = new ArrayList<>();
-	Map<Agent, Judge> myFakeDivinationMap = new HashMap<>();
-	List<Agent> fakeWhiteList = new ArrayList<>();
-	List<Agent> fakeBlackList = new ArrayList<>();
-	List<Agent> fakeGrayList = new ArrayList<>();
+
+	/** CO済みならtrue */
+	private boolean isCameout;
+
+	/** 偽占い結果の時系列 */
+	private List<Judge> fakeDivinationList = new ArrayList<>();
+
+	/** 偽占い済みエージェントと判定のマップ */
+	private Map<Agent, Judge> myFakeDivinationMap = new HashMap<>();
+
+	/** 偽白リスト */
+	private List<Agent> fakeWhiteList = new ArrayList<>();
+
+	/** 偽黒リスト */
+	private List<Agent> fakeBlackList = new ArrayList<>();
+
+	/** 偽灰リスト */
+	private List<Agent> fakeGrayList = new ArrayList<>();
+
+	/** 宣言済みの裏切り者 */
+	private Agent declaredFakePossessed;
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
 		super.initialize(gameInfo, gameSetting);
-		numWolves = gameSetting.getRoleNumMap().get(Role.WEREWOLF);
 		isCameout = false;
 		fakeDivinationList.clear();
-		divinedAgents.clear();
 		myFakeDivinationMap.clear();
 		fakeWhiteList.clear();
 		fakeBlackList.clear();
 		fakeGrayList = new ArrayList<>(aliveOthers);
+		declaredFakePossessed = null;
 	}
 
 	@Override
 	public void dayStart() {
 		super.dayStart();
+
 		// CO後は毎日偽の白判定
 		if (isCameout) {
 			Agent divined = randomSelect(fakeGrayList.stream()
 					.filter(a -> isAlive(a)).collect(Collectors.toList()));
 			if (divined == null) {
 				divined = me;
-				System.out.println();
 			}
 			Judge fakeDivination = new Judge(day, me, divined, Species.HUMAN);
 			fakeDivinationList.add(fakeDivination);
 			myFakeDivinationMap.put(divined, fakeDivination);
-			divinedAgents.add(divined);
 			fakeGrayList.remove(divined);
 			fakeWhiteList.add(divined);
 		}
@@ -76,14 +88,13 @@ public final class SamplePossessed extends SampleBasePlayer {
 		if (!aliveFakeWolves.isEmpty()) {
 			if (!aliveFakeWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveFakeWolves);
-				if (canTalk) {
+				if (isCameout) {
 					Content myDivination = divinedContent(me, voteCandidate, myFakeDivinationMap.get(voteCandidate).getResult());
 					Content vote = voteContent(Content.ANY, voteCandidate);
 					Content reason = dayContent(me, myFakeDivinationMap.get(voteCandidate).getDay(), myDivination);
 					Content request = requestContent(me, Content.ANY, vote);
 					enqueueTalk(becauseContent(me, reason, request));
-					enqueueTalk(inquiryContent(me, Content.ANY, vote));
-					voteMap.addVoteReason(me, voteCandidate, divinedContent(me, voteCandidate, Species.WEREWOLF));
+					voteReasonMap.put(me, voteCandidate, reason);
 				}
 			}
 			return;
@@ -92,93 +103,140 @@ public final class SamplePossessed extends SampleBasePlayer {
 		// 偽人狼がいない場合は占い師同様の推測
 		List<Agent> wolfCandidates = new ArrayList<>();
 
-		// 偽占い師
-		for (Agent a : aliveOthers) {
-			if (comingoutMap.get(a) == Role.SEER) {
-				wolfCandidates.add(a);
-				Estimate estimate = new Estimate(me, a, Role.WEREWOLF);
-				estimate.addRole(Role.POSSESSED);
+		// 自称占い師を人狼か裏切り者と推測する
+		for (Agent he : aliveOthers) {
+			if (comingoutMap.get(he) == Role.SEER) {
+				wolfCandidates.add(he);
+				// CO後なら理由を述べてよい
 				if (isCameout) {
-					Content heIs = coContent(a, a, Role.SEER);
+					Content heIs = coContent(he, he, Role.SEER);
 					Content reason = andContent(me, iAm, heIs);
-					estimate.addReason(reason);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
-				estimateMaps.addEstimate(estimate);
 			}
 		}
-		// 偽霊媒師
-		for (Judge j : identList) {
-			Agent he = j.getAgent();
-			Agent target = j.getTarget();
-			Species result = j.getResult();
-			Content hisDayIdent = dayContent(me, j.getDay(), identContent(he, target, result));
+		// 自分の占いと矛盾する自称霊媒師を人狼か裏切り者と推測する
+		for (Judge ident : identList) {
+			Agent he = ident.getAgent();
+			Agent target = ident.getTarget();
+			Species result = ident.getResult();
+			Content hisIdent = dayContent(me, ident.getDay(), identContent(he, target, result));
 			Judge myJudge = myFakeDivinationMap.get(target);
 			if ((myJudge != null && result != myJudge.getResult())) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					Estimate estimate = new Estimate(me, he, Role.WEREWOLF);
-					estimate.addRole(Role.POSSESSED);
+					// CO後なら理由を述べてよい
 					if (isCameout) {
-						Content myDayDivination = dayContent(me, myJudge.getDay(), divinedContent(me, myJudge.getTarget(), myJudge.getResult()));
-						Content reason = andContent(me, myDayDivination, hisDayIdent);
-						estimate.addReason(reason);
+						Content myDivination = dayContent(me, myJudge.getDay(), divinedContent(me, myJudge.getTarget(), myJudge.getResult()));
+						Content reason = andContent(me, myDivination, hisIdent);
+						estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 					}
-					estimateMaps.addEstimate(estimate);
 				}
 			}
 		}
 
-		for (Judge j : divinationList) {
-			Content dayDivination = dayContent(me, j.getDay(), divinedContent(j.getAgent(), j.getTarget(), j.getResult()));
-			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
-			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
-				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
-					wolfCandidates.add(j.getAgent());
-					Content reason = andContent(me, iAm, dayDivination);
-					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
-					estimate.addRole(Role.POSSESSED);
-					estimateMaps.addEstimate(estimate);
+		// 村人陣営共通の人狼候補決定アルゴリズム
+		// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
+		for (Judge divination : divinationList) {
+			Agent he = divination.getAgent();
+			Agent target = divination.getTarget();
+			Species result = divination.getResult();
+			Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
+			if (target == me && result == Species.WEREWOLF) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Content reason = andContent(me, iAm, hisDivination);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
 			}
 			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
-			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
-				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
-					wolfCandidates.add(j.getAgent());
-					Content reason = andContent(me, attackedContent(Content.ANY, j.getTarget()), dayDivination);
-					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
-					estimate.addRole(Role.POSSESSED);
-					estimateMaps.addEstimate(estimate);
+			if (isKilled(target) && result == Species.WEREWOLF) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Content reason = andContent(me, attackedContent(Content.ANY, target), hisDivination);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
 			}
 		}
-		if (!wolfCandidates.isEmpty()) {
-			if (!wolfCandidates.contains(voteCandidate)) {
-				voteCandidate = randomSelect(wolfCandidates);
-				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
-				// 以前の投票先から変わる場合，新たに推測発言をする
-				if (canTalk) {
+
+		// 偽裏切り者関連アルゴリズム
+		List<Agent> possessedList = new ArrayList<>();
+		for (Agent he : wolfCandidates) {
+			// 人狼候補なのに人間と偽判定⇒偽裏切り者
+			if (fakeWhiteList.contains(he)) {
+				possessedList.add(he);
+				// CO後なら理由を述べてよい
+				if (isCameout) {
+					Content heIs = dayContent(me, myFakeDivinationMap.get(he).getDay(), divinedContent(me, he, Species.HUMAN));
+					// 既存の推測理由があれば推測役職を裏切り者にする
+					Estimate estimate = estimateReasonMap.getEstimate(me, he);
 					if (estimate != null) {
-						enqueueTalk(estimate.toContent());
-						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
-					} else {
-						voteMap.addVoteReason(me, voteCandidate, null);
+						estimate.resetRole(Role.POSSESSED);
+						estimate.addReason(heIs);
 					}
 				}
 			}
 		}
-		// 人狼候補がいない場合はグレイからランダム
+		if (!possessedList.isEmpty()) {
+			// 偽裏切り者を偽人狼候補から除く
+			wolfCandidates.removeAll(possessedList);
+			// 裏切り者新発見の場合
+			if (declaredFakePossessed == null || !possessedList.contains(declaredFakePossessed)) {
+				declaredFakePossessed = randomSelect(possessedList);
+				// CO後なら理由を付けてESTIMATE
+				if (isCameout) {
+					Estimate estimate = estimateReasonMap.getEstimate(me, declaredFakePossessed);
+					if (estimate != null) {
+						enqueueTalk(estimateReasonMap.getEstimate(me, declaredFakePossessed).toContent());
+					}
+				}
+			}
+		}
+
+		if (!wolfCandidates.isEmpty()) {
+			if (!wolfCandidates.contains(voteCandidate)) {
+				voteCandidate = randomSelect(wolfCandidates);
+				Estimate estimate = estimateReasonMap.getEstimate(me, voteCandidate);
+				// 以前の投票先から変わる場合，新たに推測発言をする
+				if (estimate != null) {
+					enqueueTalk(estimate.toContent());
+					voteReasonMap.put(me, voteCandidate, estimate.getEstimateContent());
+				} else {
+					voteReasonMap.put(me, voteCandidate, null);
+				}
+			}
+		}
+		// 候補がいない場合
 		else {
-			if (!fakeGrayList.isEmpty()) {
-				if (!fakeGrayList.contains(voteCandidate)) {
-					voteCandidate = randomSelect(fakeGrayList);
+			if (!isRevote) {
+				// 初回投票
+				// まず灰からランダム
+				if (!fakeGrayList.isEmpty()) {
+					if (!fakeGrayList.contains(voteCandidate)) {
+						voteCandidate = randomSelect(fakeGrayList);
+					}
 				}
-			}
-			// グレイもいない場合ランダム
-			else {
-				if (!aliveOthers.contains(voteCandidate)) {
+				// 灰もいない場合ランダム
+				else {
+					if (!aliveOthers.contains(voteCandidate)) {
+						voteCandidate = randomSelect(aliveOthers);
+					}
+				}
+			} else {
+				// 再投票の場合は自分以外の前回最多得票に入れる
+				VoteReasonMap vrmap = new VoteReasonMap();
+				for (Vote v : currentGameInfo.getLatestVoteList()) {
+					vrmap.put(v.getAgent(), v.getTarget(), null);
+				}
+				List<Agent> candidates = vrmap.getOrderedList();
+				candidates.remove(me);
+				if (candidates.isEmpty()) {
 					voteCandidate = randomSelect(aliveOthers);
+				} else {
+					voteCandidate = candidates.get(0);
 				}
 			}
+			voteReasonMap.put(me, voteCandidate, null);
 		}
 	}
 
@@ -205,14 +263,12 @@ public final class SamplePossessed extends SampleBasePlayer {
 				Judge fakeJudge = new Judge(d, me, fakeHuman, Species.HUMAN);
 				fakeDivinationList.add(fakeJudge);
 				myFakeDivinationMap.put(fakeHuman, fakeJudge);
-				divinedAgents.add(fakeHuman);
 				fakeGrayList.remove(fakeHuman);
 				fakeWhiteList.add(fakeHuman);
 			}
 			Judge fakeJudge = new Judge(day, me, seer, Species.WEREWOLF);
 			fakeDivinationList.add(fakeJudge);
 			myFakeDivinationMap.put(seer, fakeJudge);
-			divinedAgents.add(seer);
 			fakeGrayList.remove(seer);
 			fakeBlackList.add(seer);
 		}
@@ -229,6 +285,26 @@ public final class SamplePossessed extends SampleBasePlayer {
 			fakeDivinationList.clear();
 		}
 		return super.talk();
+	}
+
+	@Override
+	public String whisper() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent attack() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent divine() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent guard() {
+		throw new UnsupportedOperationException();
 	}
 
 }

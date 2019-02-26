@@ -1,5 +1,5 @@
 /**
- * VoteMap.java
+ * VoteReasonMap.java
  * 
  * Copyright (c) 2019 人狼知能プロジェクト
  */
@@ -8,6 +8,7 @@ package org.aiwolf.sample.player;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.Content;
@@ -16,30 +17,25 @@ import org.aiwolf.client.lib.Topic;
 import org.aiwolf.common.data.Agent;
 
 /**
- * すべてのプレイヤーが宣言した投票先とその理由
+ * 各プレイヤーが宣言した投票先とその理由
  * 
  * @author otsuki
  */
-class VoteMap {
+class VoteReasonMap extends HashMap<Agent, Entry<Agent, Content>> {
 
-	// 投票先マップ
-	private Map<Agent, Agent> voteMap = new HashMap<>();
-
-	// 理由マップ
-	private Map<Agent, Content> voteReasonMap = new HashMap<>();
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5951357442022947347L;
 
 	// 得票数マップ
 	private Map<Agent, Integer> voteCountMap = new HashMap<>();
 
 	// 得票数をカウント
 	private void countVote() {
-		voteMap.keySet().stream().map(voter -> getTarget(voter)).distinct().forEach(voted -> {
-			voteCountMap.put(voted, (int) voteMap.keySet().stream().filter(a -> getTarget(a) == voted).count());
+		keySet().stream().map(voter -> get(voter).getKey()).distinct().forEach(voted -> {
+			voteCountMap.put(voted, (int) keySet().stream().filter(a -> get(a).getKey() == voted).count());
 		});
-	}
-
-	boolean isEmpty() {
-		return voteMap.isEmpty();
 	}
 
 	/**
@@ -49,15 +45,12 @@ class VoteMap {
 	 * @param reason
 	 * @return
 	 */
-	boolean addVoteReason(Agent voter, Agent voted, Content reason) {
+	boolean put(Agent voter, Agent voted, Content reason) {
 		if (voter == null || voted == null) {
 			return false;
 		}
-		voteMap.put(voter, voted);
+		put(voter, new SimpleEntry<Agent, Content>(voted, reason));
 		countVote();
-		if (reason != null) {
-			voteReasonMap.put(voter, reason);
-		}
 		return true;
 	}
 
@@ -67,11 +60,11 @@ class VoteMap {
 	 * @param reason
 	 * @return
 	 */
-	boolean addVoteReason(Content vote, Content reason) {
+	boolean put(Content vote, Content reason) {
 		if (vote.getTopic() == Topic.VOTE) {
 			Agent voter = vote.getSubject();
 			Agent voted = vote.getTarget();
-			return addVoteReason(voter, voted, reason);
+			return put(voter, voted, reason);
 		}
 		return false;
 	}
@@ -81,11 +74,11 @@ class VoteMap {
 	 * @param content
 	 * @return
 	 */
-	boolean addVoteReason(Content content) {
+	boolean put(Content content) {
 		if (content.getTopic() == Topic.VOTE) {
-			return addVoteReason(content, null);
+			return put(content, null);
 		} else if (content.getOperator() == Operator.BECAUSE && content.getContentList().get(1).getTopic() == Topic.VOTE) {
-			return addVoteReason(content.getContentList().get(1), content.getContentList().get(0));
+			return put(content.getContentList().get(1), content.getContentList().get(0));
 		}
 		return false;
 	}
@@ -95,7 +88,7 @@ class VoteMap {
 	 * @param voted
 	 * @return
 	 */
-	int getCount(Agent voted) {
+	int getVoteCount(Agent voted) {
 		return voteCountMap.get(voted) != null ? voteCountMap.get(voted) : 0;
 	}
 
@@ -104,7 +97,8 @@ class VoteMap {
 	 * @return
 	 */
 	List<Agent> getOrderedList() {
-		return voteCountMap.keySet().stream().map(voter -> getTarget(voter)).distinct().sorted((a1, a2) -> getCount(a2) - getCount(a1)).collect(Collectors.toList());
+		return voteCountMap.keySet().stream()
+				.sorted((a1, a2) -> getVoteCount(a2) - getVoteCount(a1)).collect(Collectors.toList());
 	}
 
 	/**
@@ -113,8 +107,8 @@ class VoteMap {
 	 * @return
 	 */
 	Agent getTarget(Agent voter) {
-		if (voteMap.containsKey(voter)) {
-			return voteMap.get(voter);
+		if (containsKey(voter)) {
+			return get(voter).getKey();
 		}
 		return null;
 	}
@@ -126,8 +120,8 @@ class VoteMap {
 	 * @return
 	 */
 	Content getReason(Agent voter) {
-		if (voteReasonMap.get(voter) != null) {
-			return voteReasonMap.get(voter);
+		if (containsKey(voter)) {
+			return get(voter).getValue();
 		}
 		return null;
 	}
@@ -139,18 +133,15 @@ class VoteMap {
 	 * @return
 	 */
 	Content getReason(Agent voter, Agent voted) {
-		if (getTarget(voter) == voted && voteReasonMap.get(voter) != null) {
-			return voteReasonMap.get(voter);
+		if (getTarget(voter) == voted) {
+			return getReason(voter);
 		}
 		return null;
 	}
 
-	/**
-	 * 
-	 */
-	void clear() {
-		voteMap.clear();
-		voteReasonMap.clear();
+	@Override
+	public void clear() {
+		super.clear();
 		voteCountMap.clear();
 	}
 

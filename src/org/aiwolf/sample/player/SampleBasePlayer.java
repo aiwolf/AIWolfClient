@@ -59,8 +59,8 @@ public class SampleBasePlayer implements Player {
 	/** 日付 */
 	int day;
 
-	/** talk()できるか時間帯か */
-	boolean canTalk;
+	/** 再投票のときtrue */
+	boolean isRevote;
 
 	/** 最新のゲーム情報 */
 	GameInfo currentGameInfo;
@@ -96,10 +96,10 @@ public class SampleBasePlayer implements Player {
 	int talkListHead;
 
 	/** 推測理由マップ */
-	EstimateMaps estimateMaps = new EstimateMaps();
+	EstimateReasonMap estimateReasonMap = new EstimateReasonMap();
 
 	/** 投票理由マップ */
-	VoteMap voteMap = new VoteMap();
+	VoteReasonMap voteReasonMap = new VoteReasonMap();
 
 	/** talk()のターン */
 	int talkTurn;
@@ -165,17 +165,18 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
+		currentGameInfo = gameInfo;
 		day = -1;
-		me = gameInfo.getAgent();
-		aliveOthers = new ArrayList<>(gameInfo.getAliveAgentList());
+		me = currentGameInfo.getAgent();
+		aliveOthers = new ArrayList<>(currentGameInfo.getAliveAgentList());
 		aliveOthers.remove(me);
 		executedAgents.clear();
 		killedAgents.clear();
 		divinationList.clear();
 		identList.clear();
 		comingoutMap.clear();
-		estimateMaps.clear();
-		voteMap.clear();
+		estimateReasonMap.clear();
+		voteReasonMap.clear();
 	}
 
 	@Override
@@ -210,10 +211,10 @@ public class SampleBasePlayer implements Player {
 
 	// 再帰的に文を解析する
 	void parseSentence(Content content) {
-		if (estimateMaps.addEstimate(content)) {
+		if (estimateReasonMap.put(content)) {
 			return; // 理由付き推測文と解析できた
 		}
-		if (voteMap.addVoteReason(content)) {
+		if (voteReasonMap.put(content)) {
 			return; // 理由付き投票宣言と解析できた
 		}
 		switch (content.getTopic()) {
@@ -257,7 +258,7 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public void dayStart() {
-		canTalk = true;
+		isRevote = false;
 		talkQueue.clear();
 		declaredVoteCandidate = null;
 		voteCandidate = null;
@@ -302,7 +303,7 @@ public class SampleBasePlayer implements Player {
 		talkTurn++;
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			Content reason = voteMap.getReason(me, voteCandidate);
+			Content reason = voteReasonMap.getReason(me, voteCandidate);
 			// ターン2以降，投票理由がある場合か話すことがない場合は投票先を宣言
 			if (talkTurn > 1 && (talkQueue.isEmpty() || reason != null)) {
 				if (reason != null) {
@@ -342,8 +343,8 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public Agent vote() {
-		canTalk = false;
 		chooseVoteCandidate();
+		isRevote = true;
 		return voteCandidate;
 	}
 

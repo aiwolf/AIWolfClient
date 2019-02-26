@@ -14,6 +14,7 @@ import org.aiwolf.common.data.Agent;
 import org.aiwolf.common.data.Judge;
 import org.aiwolf.common.data.Role;
 import org.aiwolf.common.data.Species;
+import org.aiwolf.common.data.Vote;
 import org.aiwolf.common.net.GameInfo;
 import org.aiwolf.common.net.GameSetting;
 
@@ -23,13 +24,13 @@ import org.aiwolf.common.net.GameSetting;
 public final class SampleBodyguard extends SampleBasePlayer {
 
 	/** 人狼候補リスト */
-	List<Agent> wolfCandidates = new ArrayList<>();
+	private List<Agent> wolfCandidates = new ArrayList<>();
 
 	/** 護衛したエージェント */
-	Agent guardedAgent;
+	private Agent guardedAgent;
 
 	/** 護衛に成功したエージェントのリスト */
-	List<Agent> guardedAgentList = new ArrayList<>();
+	private List<Agent> guardedAgentList = new ArrayList<>();
 
 	@Override
 	public void initialize(GameInfo gameInfo, GameSetting gameSetting) {
@@ -44,61 +45,73 @@ public final class SampleBodyguard extends SampleBasePlayer {
 		super.dayStart();
 		// 襲撃失敗の場合，護衛したエージェントを登録
 		if (currentGameInfo.getLastDeadAgentList().isEmpty()) {
-			guardedAgentList.add(guardedAgent);
+			if (!guardedAgentList.contains(guardedAgent)) {
+				guardedAgentList.add(guardedAgent);
+			}
 		}
 	}
 
 	@Override
 	void chooseVoteCandidate() {
 		wolfCandidates.clear();
-		for (Judge j : divinationList) {
-			Content dayDivination = dayContent(me, j.getDay(), divinedContent(j.getAgent(), j.getTarget(), j.getResult()));
+		// 村人陣営共通の人狼候補決定アルゴリズム
+		for (Judge divination : divinationList) {
+			Agent he = divination.getAgent();
+			Agent target = divination.getTarget();
+			Species result = divination.getResult();
+			Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
 			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
-			if (j.getTarget() == me && j.getResult() == Species.WEREWOLF) {
-				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
-					wolfCandidates.add(j.getAgent());
-					Content iAmVillager = coContent(me, me, Role.VILLAGER);
-					Content reason = andContent(me, iAmVillager, dayDivination);
-					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
-					estimate.addRole(Role.POSSESSED);
-					estimateMaps.addEstimate(estimate);
+			if (target == me && result == Species.WEREWOLF) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Content reason = andContent(me, coContent(me, me, Role.VILLAGER), hisDivination);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
 			}
 			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
-			if (isKilled(j.getTarget()) && j.getResult() == Species.WEREWOLF) {
-				if (isAlive(j.getAgent()) && !wolfCandidates.contains(j.getAgent())) {
-					wolfCandidates.add(j.getAgent());
-					Content reason = andContent(me, attackedContent(Content.ANY, j.getTarget()), dayDivination);
-					Estimate estimate = new Estimate(me, j.getAgent(), Role.WEREWOLF, reason);
-					estimate.addRole(Role.POSSESSED);
-					estimateMaps.addEstimate(estimate);
+			if (isKilled(target) && result == Species.WEREWOLF) {
+				if (isAlive(he) && !wolfCandidates.contains(he)) {
+					wolfCandidates.add(he);
+					Content reason = andContent(me, attackedContent(Content.ANY, target), hisDivination);
+					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 				}
 			}
 		}
-		// 候補がいない場合は護衛に成功した者以外からランダム
+		// 候補がいない場合
 		if (wolfCandidates.isEmpty()) {
-			List<Agent> candidates = aliveOthers.stream().filter(a -> !guardedAgentList.contains(a)).collect(Collectors.toList());
-			if (!candidates.isEmpty()) {
-				if (!candidates.contains(voteCandidate)) {
-					voteCandidate = randomSelect(candidates);
+			if (!isRevote) {
+				// 初回は護衛に成功したエージェント以外からランダム
+				List<Agent> candidates = aliveOthers.stream().filter(a -> !guardedAgentList.contains(a)).collect(Collectors.toList());
+				if (!candidates.isEmpty()) {
+					if (!candidates.contains(voteCandidate)) {
+						voteCandidate = randomSelect(candidates);
+					}
 				}
-			}
-			// 候補がいない場合はランダム
-			else {
-				voteCandidate = randomSelect(aliveOthers);
+			} else {
+				// 再投票の場合は護衛に成功したエージェント以外の前回最多得票に入れる
+				VoteReasonMap vrmap = new VoteReasonMap();
+				for (Vote v : currentGameInfo.getLatestVoteList()) {
+					vrmap.put(v.getAgent(), v.getTarget(), null);
+				}
+				List<Agent> candidates = vrmap.getOrderedList();
+				candidates.remove(me);
+				candidates.removeAll(guardedAgentList);
+				if (candidates.isEmpty()) {
+					voteCandidate = randomSelect(aliveOthers);
+				} else {
+					voteCandidate = candidates.get(0);
+				}
 			}
 		} else {
 			if (!wolfCandidates.contains(voteCandidate)) {
 				voteCandidate = randomSelect(wolfCandidates);
-				Estimate estimate = estimateMaps.getEstimate(me, voteCandidate);
+				Estimate estimate = estimateReasonMap.getEstimate(me, voteCandidate);
 				// 以前の投票先から変わる場合，新たに推測発言をする
-				if (canTalk) {
-					if (estimate != null) {
-						enqueueTalk(estimate.toContent());
-						voteMap.addVoteReason(me, voteCandidate, estimate.getEstimateContent());
-					} else {
-						voteMap.addVoteReason(me, voteCandidate, null);
-					}
+				if (estimate != null) {
+					enqueueTalk(estimate.toContent());
+					voteReasonMap.put(me, voteCandidate, estimate.getEstimateContent());
+				} else {
+					voteReasonMap.put(me, voteCandidate, null);
 				}
 			}
 		}
@@ -145,6 +158,21 @@ public final class SampleBodyguard extends SampleBasePlayer {
 		}
 		guardedAgent = guardCandidate;
 		return guardCandidate;
+	}
+
+	@Override
+	public String whisper() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent attack() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Agent divine() {
+		throw new UnsupportedOperationException();
 	}
 
 }
