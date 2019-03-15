@@ -101,6 +101,9 @@ public class SampleBasePlayer implements Player {
 	/** 投票理由マップ */
 	VoteReasonMap voteReasonMap = new VoteReasonMap();
 
+	/** 投票リクエストカウンタ */
+	VoteRequestCounter voteRequestCounter = new VoteRequestCounter();
+
 	/** talk()のターン */
 	int talkTurn;
 
@@ -176,7 +179,6 @@ public class SampleBasePlayer implements Player {
 		identList.clear();
 		comingoutMap.clear();
 		estimateReasonMap.clear();
-		voteReasonMap.clear();
 	}
 
 	@Override
@@ -206,16 +208,17 @@ public class SampleBasePlayer implements Player {
 
 			parseSentence(content);
 		}
+
 		talkListHead = currentGameInfo.getTalkList().size();
 	}
 
 	// 再帰的に文を解析する
 	void parseSentence(Content content) {
 		if (estimateReasonMap.put(content)) {
-			return; // 理由付き推測文と解析できた
+			return; // 推測文と解析できた
 		}
 		if (voteReasonMap.put(content)) {
-			return; // 理由付き投票宣言と解析できた
+			return; // 投票宣言と解析できた
 		}
 		switch (content.getTopic()) {
 		case COMINGOUT:
@@ -240,17 +243,24 @@ public class SampleBasePlayer implements Player {
 		switch (content.getOperator()) {
 		case BECAUSE:
 			parseSentence(content.getContentList().get(1));
-			return;
+			break;
 		case DAY:
 			parseSentence(content.getContentList().get(0));
-			return;
+			break;
 		case AND:
 		case OR:
 		case XOR:
 			for (Content c : content.getContentList()) {
 				parseSentence(c);
 			}
-			return;
+			break;
+		case REQUEST:
+			if (voteRequestCounter.add(content)) {
+				return; // 投票リクエストと解析できた
+			}
+			break;
+		case INQUIRE:
+			break;
 		default:
 			break;
 		}
@@ -264,6 +274,8 @@ public class SampleBasePlayer implements Player {
 		voteCandidate = null;
 		talkListHead = 0;
 		talkTurn = -1;
+		voteReasonMap.clear();
+		voteRequestCounter.clear();
 		// 前日に追放されたエージェントを登録
 		addExecutedAgent(currentGameInfo.getExecutedAgent());
 		// 昨夜死亡した（襲撃された）エージェントを登録
@@ -303,13 +315,16 @@ public class SampleBasePlayer implements Player {
 		talkTurn++;
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			Content reason = voteReasonMap.getReason(me, voteCandidate);
-			// ターン2以降，投票理由がある場合か話すことがない場合は投票先を宣言
-			if (talkTurn > 1 && (talkQueue.isEmpty() || reason != null)) {
-				if (reason != null) {
-					enqueueTalk(becauseContent(me, reason, voteContent(me, voteCandidate)));
+			// ターン2以降話すことがない場合は投票先を宣言
+			if (talkTurn > 1 && talkQueue.isEmpty()) {
+				Content vote = voteContent(me, voteCandidate);
+				Content request = requestContent(me, Content.ANY, voteContent(Content.ANY, voteCandidate));
+				Content reason = voteReasonMap.getReason(me, voteCandidate);
+				Content and = andContent(me, vote, request);
+				if (reason == null) {
+					enqueueTalk(and);
 				} else {
-					enqueueTalk(voteContent(me, voteCandidate));
+					enqueueTalk(becauseContent(me, reason, and));
 				}
 				declaredVoteCandidate = voteCandidate;
 			}

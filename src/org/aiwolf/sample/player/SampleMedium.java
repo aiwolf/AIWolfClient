@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.common.data.Agent;
@@ -94,34 +95,50 @@ public final class SampleMedium extends SampleBasePlayer {
 			}
 		}
 
-		// 村人陣営共通の人狼候補決定アルゴリズム
+		// 村人目線での人狼候補決定アルゴリズム
 		for (Judge divination : divinationList) {
+			// まず占い結果から人狼候補を見つける
 			Agent he = divination.getAgent();
-			Agent target = divination.getTarget();
 			Species result = divination.getResult();
-			Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
-			// 自分を人狼と判定していて，生存している自称占い師を投票先候補に追加
-			if (target == me && result == Species.WEREWOLF) {
-				if (isAlive(he) && !wolfCandidates.contains(he)) {
-					wolfCandidates.add(he);
-					Content reason = andContent(me, iAm, hisDivination);
-					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
-				}
+			if (!isAlive(he) || wolfCandidates.contains(he) || result == Species.HUMAN) {
+				continue;
 			}
-			// 殺されたエージェントを人狼と判定していて，生存している自称占い師を投票先候補に追加
-			if (isKilled(target) && result == Species.WEREWOLF) {
-				if (isAlive(he) && !wolfCandidates.contains(he)) {
-					wolfCandidates.add(he);
-					Content reason = andContent(me, attackedContent(Content.ANY, target), hisDivination);
-					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
-				}
+			Agent target = divination.getTarget();
+			if (target == me) {
+				// 自分を人狼と判定した自称占い師は人狼か裏切り者なので投票先候補に追加
+				wolfCandidates.add(he);
+				Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
+				Content reason = andContent(me, coContent(me, me, Role.VILLAGER), hisDivination);
+				estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
+			} else if (isKilled(target)) {
+				// 殺されたエージェントを人狼と判定した自称占い師は人狼か裏切り者なので投票先候補に追加
+				wolfCandidates.add(he);
+				Content hisDivination = dayContent(me, divination.getDay(), divinedContent(he, target, result));
+				Content reason = andContent(me, attackedContent(Content.ANY, target), hisDivination);
+				estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
 			}
 		}
-		// 候補がいない場合
-		if (wolfCandidates.isEmpty()) {
+
+		if (!wolfCandidates.isEmpty()) {
+			// 見つかった場合
+			if (!wolfCandidates.contains(voteCandidate)) {
+				// 新しい投票先の場合，推測発言をする
+				voteCandidate = randomSelect(wolfCandidates);
+				Estimate estimate = estimateReasonMap.getEstimate(me, voteCandidate);
+				if (estimate != null) {
+					enqueueTalk(estimate.toContent());
+					voteReasonMap.put(me, voteCandidate, estimate.getEstimateContent());
+				}
+			}
+		} else {
+			// 見つからなかった場合
 			if (!isRevote) {
-				// 初回投票はランダム
-				if (!aliveOthers.contains(voteCandidate)) {
+				// 初回投票では投票リクエストに応じた投票
+				if (voteRequestCounter.isChanged()) {
+					List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
+							.collect(Collectors.toList());
+					voteCandidate = randomSelect(candidates);
+				} else if (!isAlive(voteCandidate)) {
 					voteCandidate = randomSelect(aliveOthers);
 				}
 			} else {
@@ -136,18 +153,6 @@ public final class SampleMedium extends SampleBasePlayer {
 					voteCandidate = randomSelect(aliveOthers);
 				} else {
 					voteCandidate = candidates.get(0);
-				}
-			}
-		} else {
-			if (!wolfCandidates.contains(voteCandidate)) {
-				voteCandidate = randomSelect(wolfCandidates);
-				Estimate estimate = estimateReasonMap.getEstimate(me, voteCandidate);
-				// 以前の投票先から変わる場合，新たに推測発言をする
-				if (estimate != null) {
-					enqueueTalk(estimate.toContent());
-					voteReasonMap.put(me, voteCandidate, estimate.getEstimateContent());
-				} else {
-					voteReasonMap.put(me, voteCandidate, null);
 				}
 			}
 		}
