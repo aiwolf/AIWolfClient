@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.aiwolf.client.lib.Content;
 import org.aiwolf.common.data.Agent;
@@ -125,28 +126,34 @@ public final class SampleMedium extends SampleBasePlayer {
 				voteCandidate = randomSelect(wolfCandidates);
 				Estimate estimate = estimateReasonMap.getEstimate(me, voteCandidate);
 				if (estimate != null) {
-					enqueueTalk(estimate.getEstimateContent());
 					enqueueTalk(estimate.toContent());
 					voteReasonMap.put(me, voteCandidate, estimate.getEstimateContent());
 				}
 			}
 		} else {
 			// 見つからなかった場合
-			// 初回投票では自分以外の最多得票予測エージェントに
-			List<Agent> candidates = voteReasonMap.getOrderedList();
-			if (isRevote) {
+			if (!isRevote) {
+				// 初回投票では投票リクエストに応じた投票
+				if (voteRequestCounter.isChanged()) {
+					List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
+							.collect(Collectors.toList());
+					voteCandidate = randomSelect(candidates);
+				} else if (!isAlive(voteCandidate)) {
+					voteCandidate = randomSelect(aliveOthers);
+				}
+			} else {
 				// 再投票の場合は自分以外の前回最多得票に入れる
 				VoteReasonMap vrmap = new VoteReasonMap();
 				for (Vote v : currentGameInfo.getLatestVoteList()) {
 					vrmap.put(v.getAgent(), v.getTarget(), null);
 				}
-				candidates = vrmap.getOrderedList();
-			}
-			candidates.remove(me);
-			if (candidates.isEmpty()) {
-				voteCandidate = randomSelect(aliveOthers);
-			} else {
-				voteCandidate = candidates.get(0);
+				List<Agent> candidates = vrmap.getOrderedList();
+				candidates.remove(me);
+				if (candidates.isEmpty()) {
+					voteCandidate = randomSelect(aliveOthers);
+				} else {
+					voteCandidate = candidates.get(0);
+				}
 			}
 		}
 	}

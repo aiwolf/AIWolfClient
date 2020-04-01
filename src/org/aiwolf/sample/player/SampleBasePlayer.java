@@ -315,15 +315,15 @@ public class SampleBasePlayer implements Player {
 		talkTurn++;
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			// 話すことがない場合は投票先を宣言
-			if (talkQueue.isEmpty()) {
+			// ターン2以降話すことがない場合は投票先を宣言
+			if (talkTurn > 1 && talkQueue.isEmpty()) {
 				Content vote = voteContent(me, voteCandidate);
 				Content request = requestContent(me, Content.ANY, voteContent(Content.ANY, voteCandidate));
 				Content reason = voteReasonMap.getReason(me, voteCandidate);
 				Content and = andContent(me, vote, request);
-				enqueueTalk(vote);
-				enqueueTalk(request);
-				if (reason != null) {
+				if (reason == null) {
+					enqueueTalk(and);
+				} else {
 					enqueueTalk(becauseContent(me, reason, and));
 				}
 				declaredVoteCandidate = voteCandidate;
