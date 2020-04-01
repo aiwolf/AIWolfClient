@@ -35,6 +35,12 @@ public final class SamplePossessed extends SampleBasePlayer {
 	/** 偽占い済みエージェントと判定のマップ */
 	private Map<Agent, Judge> myFakeDivinationMap = new HashMap<>();
 
+	/** 生存偽人狼 */
+	private List<Agent> aliveFakeWolves;
+
+	/** 人狼候補 */
+	private List<Agent> wolfCandidates = new ArrayList<>();
+
 	/** 偽白リスト */
 	private List<Agent> fakeWhiteList = new ArrayList<>();
 
@@ -83,17 +89,15 @@ public final class SamplePossessed extends SampleBasePlayer {
 		Content iAm = isCameout ? coContent(me, me, Role.SEER) : coContent(me, me, Role.VILLAGER);
 
 		// 生存偽人狼がいれば当然投票
-		List<Agent> aliveFakeWolves = fakeBlackList.stream().filter(a -> isAlive(a)).collect(Collectors.toList());
+		aliveFakeWolves = fakeBlackList.stream().filter(a -> isAlive(a)).collect(Collectors.toList());
 		// 既定の投票先が生存偽人狼でない場合投票先を変える
 		if (!aliveFakeWolves.isEmpty()) {
 			if (!aliveFakeWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveFakeWolves);
+				// CO後なら投票理由を付ける
 				if (isCameout) {
 					Content myDivination = divinedContent(me, voteCandidate, myFakeDivinationMap.get(voteCandidate).getResult());
-					Content vote = voteContent(Content.ANY, voteCandidate);
 					Content reason = dayContent(me, myFakeDivinationMap.get(voteCandidate).getDay(), myDivination);
-					Content request = requestContent(me, Content.ANY, vote);
-					enqueueTalk(becauseContent(me, reason, request));
 					voteReasonMap.put(me, voteCandidate, reason);
 				}
 			}
@@ -101,13 +105,13 @@ public final class SamplePossessed extends SampleBasePlayer {
 		}
 
 		// 偽人狼がいない場合は占い師同様の推測
-		List<Agent> wolfCandidates = new ArrayList<>();
+		wolfCandidates.clear();
 
 		// 自称占い師を人狼か裏切り者と推測する
 		for (Agent he : aliveOthers) {
 			if (comingoutMap.get(he) == Role.SEER) {
 				wolfCandidates.add(he);
-				// CO後なら理由を述べてよい
+				// CO後なら推定理由をつける
 				if (isCameout) {
 					Content heIs = coContent(he, he, Role.SEER);
 					Content reason = andContent(me, iAm, heIs);
@@ -115,6 +119,7 @@ public final class SamplePossessed extends SampleBasePlayer {
 				}
 			}
 		}
+
 		// 自分の占いと矛盾する自称霊媒師を人狼か裏切り者と推測する
 		for (Judge ident : identList) {
 			Agent he = ident.getAgent();
@@ -125,7 +130,7 @@ public final class SamplePossessed extends SampleBasePlayer {
 			if ((myJudge != null && result != myJudge.getResult())) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					// CO後なら理由を述べてよい
+					// CO後なら推定理由をつける
 					if (isCameout) {
 						Content myDivination = dayContent(me, myJudge.getDay(), divinedContent(me, myJudge.getTarget(), myJudge.getResult()));
 						Content reason = andContent(me, myDivination, hisIdent);
@@ -165,7 +170,7 @@ public final class SamplePossessed extends SampleBasePlayer {
 			// 人狼候補なのに人間と偽判定⇒偽裏切り者
 			if (fakeWhiteList.contains(he)) {
 				possessedList.add(he);
-				// CO後なら理由を述べてよい
+				// CO後なら推定理由をつける
 				if (isCameout) {
 					Content heIs = dayContent(me, myFakeDivinationMap.get(he).getDay(), divinedContent(me, he, Species.HUMAN));
 					// 既存の推測理由があれば推測役職を裏切り者にする
@@ -206,39 +211,42 @@ public final class SamplePossessed extends SampleBasePlayer {
 			}
 		} else {
 			// 見つからなかった場合
-			if (!isRevote) {
-				// 初回投票
+			if (voteCandidate == null || !isAlive(voteCandidate)) {
 				if (!fakeGrayList.isEmpty()) {
-					// まず灰からランダム
-					if (!fakeGrayList.contains(voteCandidate)) {
-						voteCandidate = randomSelect(fakeGrayList);
-					}
+					// 灰がいたら灰からランダム
+					voteCandidate = randomSelect(fakeGrayList);
 				} else {
-					// 灰もいない場合は投票リクエストに応じた投票
-					if (voteRequestCounter.isChanged()) {
-						List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
-								.collect(Collectors.toList());
-						voteCandidate = randomSelect(candidates);
-					} else if (!isAlive(voteCandidate)) {
-						voteCandidate = randomSelect(aliveOthers);
-					}
-				}
-			} else {
-				// 再投票の場合は自分以外の前回最多得票に入れる
-				VoteReasonMap vrmap = new VoteReasonMap();
-				for (Vote v : currentGameInfo.getLatestVoteList()) {
-					vrmap.put(v.getAgent(), v.getTarget(), null);
-				}
-				List<Agent> candidates = vrmap.getOrderedList();
-				candidates.remove(me);
-				if (candidates.isEmpty()) {
 					voteCandidate = randomSelect(aliveOthers);
-				} else {
-					voteCandidate = candidates.get(0);
 				}
 			}
 		}
+	}
 
+	@Override
+	void chooseFinalVoteCandidate() {
+		if (!isRevote) {
+			// 人狼（候補）が見つけられなかった場合，初回投票では投票リクエストに応じる
+			if (aliveFakeWolves.isEmpty() && wolfCandidates.isEmpty()) {
+				voteCandidate = randomSelect(voteRequestCounter.getRequestMap().values().stream()
+						.filter(a -> a != me).collect(Collectors.toList()));
+				if (voteCandidate == null || !isAlive(voteCandidate)) {
+					voteCandidate = randomSelect(aliveOthers);
+				}
+			}
+		} else {
+			// 再投票の場合は自分以外の前回最多得票に入れる
+			VoteReasonMap vrmap = new VoteReasonMap();
+			for (Vote v : currentGameInfo.getLatestVoteList()) {
+				vrmap.put(v.getAgent(), v.getTarget(), null);
+			}
+			List<Agent> candidates = vrmap.getOrderedList();
+			candidates.remove(me);
+			if (candidates.isEmpty()) {
+				voteCandidate = randomSelect(aliveOthers);
+			} else {
+				voteCandidate = candidates.get(0);
+			}
+		}
 	}
 
 	@Override
@@ -279,9 +287,12 @@ public final class SamplePossessed extends SampleBasePlayer {
 					divinedContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
 			if (judges.length == 1) {
 				enqueueTalk(judges[0]);
-
+				enqueueTalk(judges[0].getContentList().get(0));
 			} else if (judges.length > 1) {
 				enqueueTalk(andContent(me, judges));
+				for (Content c : judges) {
+					enqueueTalk(c.getContentList().get(0));
+				}
 			}
 			fakeDivinationList.clear();
 		}
