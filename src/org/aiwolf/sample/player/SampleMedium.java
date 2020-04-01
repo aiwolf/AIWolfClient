@@ -25,6 +25,9 @@ import org.aiwolf.common.net.GameSetting;
  */
 public final class SampleMedium extends SampleBasePlayer {
 
+	/** 人狼候補リスト */
+	private List<Agent> wolfCandidates = new ArrayList<>();
+
 	/** COする日 */
 	private int comingoutDay;
 
@@ -62,12 +65,12 @@ public final class SampleMedium extends SampleBasePlayer {
 	void chooseVoteCandidate() {
 		Content iAm = isCameout ? coContent(me, me, Role.MEDIUM) : coContent(me, me, Role.VILLAGER);
 
-		List<Agent> wolfCandidates = new ArrayList<>();
+		wolfCandidates.clear();
 		// 偽霊媒師は人狼か裏切り者
 		for (Agent he : aliveOthers) {
 			if (comingoutMap.get(he) == Role.MEDIUM) {
 				wolfCandidates.add(he);
-				// CO後なら理由を述べてよい
+				// CO後なら理由をつける
 				if (isCameout) {
 					Content reason = andContent(me, iAm, coContent(he, he, Role.MEDIUM));
 					estimateReasonMap.put(new Estimate(me, he, reason, Role.WEREWOLF, Role.POSSESSED));
@@ -85,7 +88,7 @@ public final class SampleMedium extends SampleBasePlayer {
 			if (myJudge != null && result != myJudge.getResult()) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					// CO後なら理由を述べてよい
+					// CO後なら推定理由をつける
 					if (isCameout) {
 						Content myIdent = dayContent(me, myJudge.getDay(), identContent(me, myJudge.getTarget(), myJudge.getResult()));
 						Content reason = andContent(me, myIdent, hisDivination);
@@ -131,29 +134,36 @@ public final class SampleMedium extends SampleBasePlayer {
 				}
 			}
 		} else {
-			// 見つからなかった場合
-			if (!isRevote) {
-				// 初回投票では投票リクエストに応じた投票
-				if (voteRequestCounter.isChanged()) {
-					List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
-							.collect(Collectors.toList());
-					voteCandidate = randomSelect(candidates);
-				} else if (!isAlive(voteCandidate)) {
+			// 見つからなかった場合ランダム
+			if (voteCandidate == null || !isAlive(voteCandidate)) {
+				voteCandidate = randomSelect(aliveOthers);
+			}
+		}
+	}
+
+	@Override
+	void chooseFinalVoteCandidate() {
+		if (!isRevote) {
+			// 人狼候補が見つけられなかった場合，初回投票では投票リクエストに応じる
+			if (wolfCandidates.isEmpty()) {
+				voteCandidate = randomSelect(voteRequestCounter.getRequestMap().values().stream()
+						.filter(a -> a != me).collect(Collectors.toList()));
+				if (voteCandidate == null || !isAlive(voteCandidate)) {
 					voteCandidate = randomSelect(aliveOthers);
 				}
+			}
+		} else {
+			// 再投票の場合は自分以外の前回最多得票に入れる
+			VoteReasonMap vrmap = new VoteReasonMap();
+			for (Vote v : currentGameInfo.getLatestVoteList()) {
+				vrmap.put(v.getAgent(), v.getTarget(), null);
+			}
+			List<Agent> candidates = vrmap.getOrderedList();
+			candidates.remove(me);
+			if (candidates.isEmpty()) {
+				voteCandidate = randomSelect(aliveOthers);
 			} else {
-				// 再投票の場合は自分以外の前回最多得票に入れる
-				VoteReasonMap vrmap = new VoteReasonMap();
-				for (Vote v : currentGameInfo.getLatestVoteList()) {
-					vrmap.put(v.getAgent(), v.getTarget(), null);
-				}
-				List<Agent> candidates = vrmap.getOrderedList();
-				candidates.remove(me);
-				if (candidates.isEmpty()) {
-					voteCandidate = randomSelect(aliveOthers);
-				} else {
-					voteCandidate = candidates.get(0);
-				}
+				voteCandidate = candidates.get(0);
 			}
 		}
 	}
@@ -173,9 +183,12 @@ public final class SampleMedium extends SampleBasePlayer {
 					identContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
 			if (judges.length == 1) {
 				enqueueTalk(judges[0]);
-
+				enqueueTalk(judges[0].getContentList().get(0));
 			} else if (judges.length > 1) {
 				enqueueTalk(andContent(me, judges));
+				for (Content c : judges) {
+					enqueueTalk(c.getContentList().get(0));
+				}
 			}
 			myIdentList.clear();
 		}
