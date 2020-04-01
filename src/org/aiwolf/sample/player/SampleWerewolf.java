@@ -77,6 +77,12 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	/** 村人リスト */
 	private List<Agent> villagers = new ArrayList<>();
 
+	/** 生存偽人狼 */
+	private List<Agent> aliveFakeWolves;
+
+	/** 偽人狼候補 */
+	private List<Agent> fakeWolfCandidates = new ArrayList<>();
+
 	/** 偽白のリスト */
 	private List<Agent> fakeWhiteList = new ArrayList<>();
 
@@ -289,11 +295,10 @@ public final class SampleWerewolf extends SampleBasePlayer {
 	@Override
 	void chooseVoteCandidate() {
 		Content iAm = isCameout ? coContent(me, me, fakeRole) : coContent(me, me, Role.VILLAGER);
-		List<Agent> fakeWolfCandidates = new ArrayList<>();
 
 		if (fakeRole == Role.SEER) {
 			// 生存偽人狼がいれば当然投票（できれば裏切り者は除く）
-			List<Agent> aliveFakeWolves = fakeBlackList.stream()
+			aliveFakeWolves = fakeBlackList.stream()
 					.filter(a -> isAlive(a) && !possessedList.contains(a)).collect(Collectors.toList());
 			if (aliveFakeWolves.isEmpty()) {
 				aliveFakeWolves = fakeBlackList.stream()
@@ -303,12 +308,10 @@ public final class SampleWerewolf extends SampleBasePlayer {
 			if (!aliveFakeWolves.isEmpty()) {
 				if (!aliveFakeWolves.contains(voteCandidate)) {
 					voteCandidate = randomSelect(aliveFakeWolves);
+					// CO後なら投票理由を付ける
 					if (isCameout) {
 						Content myDivination = divinedContent(me, voteCandidate, myFakeJudgeMap.get(voteCandidate).getResult());
-						Content vote = voteContent(Content.ANY, voteCandidate);
 						Content reason = dayContent(me, myFakeJudgeMap.get(voteCandidate).getDay(), myDivination);
-						Content request = requestContent(me, Content.ANY, vote);
-						enqueueTalk(becauseContent(me, reason, request));
 						voteReasonMap.put(me, voteCandidate, reason);
 					}
 				}
@@ -316,6 +319,8 @@ public final class SampleWerewolf extends SampleBasePlayer {
 			}
 
 			// これ以降は生存偽人狼がいない場合
+			fakeWolfCandidates.clear();
+
 			// 自称占い師を人狼か裏切り者と推測する
 			for (Agent he : aliveOthers) {
 				if (comingoutMap.get(he) == Role.SEER) {
@@ -327,6 +332,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 					}
 				}
 			}
+
 			// 自分の占いと矛盾する自称霊媒師を人狼か裏切り者と推測する
 			for (Judge ident : identList) {
 				Agent he = ident.getAgent();
@@ -350,6 +356,7 @@ public final class SampleWerewolf extends SampleBasePlayer {
 			for (Agent he : aliveOthers) {
 				if (comingoutMap.get(he) == Role.MEDIUM) {
 					fakeWolfCandidates.add(he);
+					// CO後なら理由を付ける
 					if (isCameout) {
 						Content heIs = coContent(he, he, Role.MEDIUM);
 						Content reason = andContent(me, iAm, heIs);
@@ -426,16 +433,12 @@ public final class SampleWerewolf extends SampleBasePlayer {
 				}
 			}
 		} else {
-			// 見つからなかった場合
-			if (!isRevote) {
-				// 初回投票
-				// まず灰からランダム
-				// できれば仲間は除く
+			// 見つからなかった場合灰からランダム（できれば仲間や裏切り者は除く）
+			if (voteCandidate == null || !isAlive(voteCandidate)) {
 				List<Agent> fakeGrayList0 = fakeGrayList.stream()
 						.filter(a -> isAlive(a) && !werewolves.contains(a)).collect(Collectors.toList());
 				if (!fakeGrayList0.isEmpty()) {
 					fakeGrayList = fakeGrayList0;
-					// できれば裏切り者は除く
 					List<Agent> fakeGrayList1 = fakeGrayList.stream()
 							.filter(a -> !possessedList.contains(a)).collect(Collectors.toList());
 					if (!fakeGrayList1.isEmpty()) {
@@ -443,46 +446,50 @@ public final class SampleWerewolf extends SampleBasePlayer {
 					}
 				}
 				if (!fakeGrayList.isEmpty()) {
-					if (!fakeGrayList.contains(voteCandidate)) {
-						voteCandidate = randomSelect(fakeGrayList);
-					}
+					voteCandidate = randomSelect(fakeGrayList);
 				} else {
-					// 灰もいない場合は投票リクエストに応じた投票
-					List<Agent> candidates = null;
-					if (voteRequestCounter.isChanged()) {
-						candidates = voteRequestCounter.getRequestMap().values().stream()
-								.filter(a -> !werewolves.contains(a)).collect(Collectors.toList());
-					}
-					if (candidates != null && !candidates.isEmpty()) {
-						voteCandidate = randomSelect(candidates);
-					} else {
-						candidates = aliveOthers;
-						List<Agent> candidates0 = candidates.stream()
-								.filter(a -> !werewolves.contains(a)).collect(Collectors.toList());
-						if (!candidates0.isEmpty()) {
-							candidates = candidates0;
-							List<Agent> candidates1 = candidates.stream()
-									.filter(a -> !possessedList.contains(a)).collect(Collectors.toList());
-							if (!candidates1.isEmpty()) {
-								candidates = candidates1;
-							}
-						}
-						voteCandidate = randomSelect(candidates);
-					}
-				}
-			} else {
-				// 再投票の場合は自分以外の前回最多得票に入れる
-				VoteReasonMap vrmap = new VoteReasonMap();
-				for (Vote v : currentGameInfo.getLatestVoteList()) {
-					vrmap.put(v.getAgent(), v.getTarget(), null);
-				}
-				List<Agent> candidates = vrmap.getOrderedList();
-				candidates.remove(me);
-				if (candidates.isEmpty()) {
 					voteCandidate = randomSelect(aliveOthers);
-				} else {
-					voteCandidate = candidates.get(0);
 				}
+			}
+		}
+	}
+
+	@Override
+	void chooseFinalVoteCandidate() {
+		if (!isRevote) {
+			// 偽人狼（候補）も偽灰も見つからなかった場合，初回投票では投票リクエストに応じる
+			if ((fakeRole == Role.SEER && aliveFakeWolves.isEmpty()) && fakeWolfCandidates.isEmpty() && fakeGrayList.isEmpty()) {
+				List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
+						.filter(a -> !werewolves.contains(a)).collect(Collectors.toList());
+				if (candidates != null && !candidates.isEmpty()) {
+					voteCandidate = randomSelect(candidates);
+				} else {
+					candidates = aliveOthers;
+					List<Agent> candidates0 = candidates.stream()
+							.filter(a -> !werewolves.contains(a)).collect(Collectors.toList());
+					if (!candidates0.isEmpty()) {
+						candidates = candidates0;
+						List<Agent> candidates1 = candidates.stream()
+								.filter(a -> !possessedList.contains(a)).collect(Collectors.toList());
+						if (!candidates1.isEmpty()) {
+							candidates = candidates1;
+						}
+					}
+					voteCandidate = randomSelect(candidates);
+				}
+			}
+		} else {
+			// 再投票の場合は自分以外の前回最多得票に入れる
+			VoteReasonMap vrmap = new VoteReasonMap();
+			for (Vote v : currentGameInfo.getLatestVoteList()) {
+				vrmap.put(v.getAgent(), v.getTarget(), null);
+			}
+			List<Agent> candidates = vrmap.getOrderedList();
+			candidates.remove(me);
+			if (candidates.isEmpty()) {
+				voteCandidate = randomSelect(aliveOthers);
+			} else {
+				voteCandidate = candidates.get(0);
 			}
 		}
 	}
@@ -518,8 +525,12 @@ public final class SampleWerewolf extends SampleBasePlayer {
 				}
 				if (judges.size() == 1) {
 					enqueueTalk(judges.get(0));
+					enqueueTalk(judges.get(0).getContentList().get(0));
 				} else if (judges.size() > 1) {
 					enqueueTalk(andContent(me, judges.toArray(new Content[0])));
+					for (Content c : judges) {
+						enqueueTalk(c.getContentList().get(0));
+					}
 				}
 			}
 		}
@@ -576,9 +587,8 @@ public final class SampleWerewolf extends SampleBasePlayer {
 				Content reason = attackVoteReasonMap.getReason(me, attackVoteCandidate);
 				if (reason != null) {
 					enqueueWhisper(becauseContent(me, reason, attackContent(me, attackVoteCandidate)));
-				} else {
-					enqueueWhisper(attackContent(me, attackVoteCandidate));
 				}
+				enqueueWhisper(attackContent(me, attackVoteCandidate));
 				declaredAttackVoteCandidate = attackVoteCandidate;
 			}
 		}
