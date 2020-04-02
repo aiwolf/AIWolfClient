@@ -23,9 +23,13 @@ import org.aiwolf.common.data.Vote;
  */
 public final class SampleVillager extends SampleBasePlayer {
 
+	/** 人狼候補リスト */
+	private List<Agent> wolfCandidates = new ArrayList<>();
+
 	@Override
 	void chooseVoteCandidate() {
-		List<Agent> wolfCandidates = new ArrayList<>();
+		wolfCandidates.clear();
+
 		// 村人目線での人狼候補決定アルゴリズム
 		for (Judge divination : divinationList) {
 			// まず占い結果から人狼候補を見つける
@@ -62,32 +66,38 @@ public final class SampleVillager extends SampleBasePlayer {
 				}
 			}
 		} else {
-			// 見つからなかった場合
-			if (!isRevote) {
-				// 初回投票では投票リクエストに応じた投票
-				if (voteRequestCounter.isChanged()) {
-					List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
-							.collect(Collectors.toList());
-					voteCandidate = randomSelect(candidates);
-				} else if (!isAlive(voteCandidate)) {
-					voteCandidate = randomSelect(aliveOthers);
-				}
-			} else {
-				// 再投票の場合は自分以外の前回最多得票に入れる
-				VoteReasonMap vrmap = new VoteReasonMap();
-				for (Vote v : currentGameInfo.getLatestVoteList()) {
-					vrmap.put(v.getAgent(), v.getTarget(), null);
-				}
-				List<Agent> candidates = vrmap.getOrderedList();
-				candidates.remove(me);
-				if (candidates.isEmpty()) {
-					voteCandidate = randomSelect(aliveOthers);
-				} else {
-					voteCandidate = candidates.get(0);
-				}
+			// 見つからなかった場合ランダム
+			if (voteCandidate == null || !isAlive(voteCandidate)) {
+				voteCandidate = randomSelect(aliveOthers);
 			}
 		}
+	}
 
+	@Override
+	void chooseFinalVoteCandidate() {
+		if (!isRevote) {
+			// 人狼候補が見つけられなかった場合，初回投票では投票リクエストに応じる
+			if (wolfCandidates.isEmpty()) {
+				voteCandidate = randomSelect(voteRequestCounter.getRequestMap().values().stream()
+						.filter(a -> a != me).collect(Collectors.toList()));
+				if (voteCandidate == null || !isAlive(voteCandidate)) {
+					voteCandidate = randomSelect(aliveOthers);
+				}
+			}
+		} else {
+			// 再投票の場合は自分以外の前回最多得票に入れる
+			VoteReasonMap vrmap = new VoteReasonMap();
+			for (Vote v : currentGameInfo.getLatestVoteList()) {
+				vrmap.put(v.getAgent(), v.getTarget(), null);
+			}
+			List<Agent> candidates = vrmap.getOrderedList();
+			candidates.remove(me);
+			if (candidates.isEmpty()) {
+				voteCandidate = randomSelect(aliveOthers);
+			} else {
+				voteCandidate = candidates.get(0);
+			}
+		}
 	}
 
 	@Override

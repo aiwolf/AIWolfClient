@@ -305,9 +305,17 @@ public class SampleBasePlayer implements Player {
 	/**
 	 * 投票先候補を選びvoteCandidateにセットする
 	 * 
-	 * <blockquote>talk()とvote()から呼ばれる</blockquote>
+	 * <blockquote>talk()から呼ばれる</blockquote>
 	 */
 	void chooseVoteCandidate() {
+	}
+
+	/**
+	 * 投票先候補を選びvoteCandidateにセットする
+	 * 
+	 * <blockquote>vote()から呼ばれる</blockquote>
+	 */
+	void chooseFinalVoteCandidate() {
 	}
 
 	@Override
@@ -315,17 +323,17 @@ public class SampleBasePlayer implements Player {
 		talkTurn++;
 		chooseVoteCandidate();
 		if (voteCandidate != null && voteCandidate != declaredVoteCandidate) {
-			// ターン2以降話すことがない場合は投票先を宣言
-			if (talkTurn > 1 && talkQueue.isEmpty()) {
+			// 話すことがない場合は投票先を宣言
+			if (talkQueue.isEmpty()) {
 				Content vote = voteContent(me, voteCandidate);
 				Content request = requestContent(me, Content.ANY, voteContent(Content.ANY, voteCandidate));
 				Content reason = voteReasonMap.getReason(me, voteCandidate);
 				Content and = andContent(me, vote, request);
-				if (reason == null) {
-					enqueueTalk(and);
-				} else {
+				if (reason != null) {
 					enqueueTalk(becauseContent(me, reason, and));
 				}
+				enqueueTalk(vote);
+				enqueueTalk(request);
 				declaredVoteCandidate = voteCandidate;
 			}
 		}
@@ -358,7 +366,7 @@ public class SampleBasePlayer implements Player {
 
 	@Override
 	public Agent vote() {
-		chooseVoteCandidate();
+		chooseFinalVoteCandidate();
 		isRevote = true;
 		return voteCandidate;
 	}

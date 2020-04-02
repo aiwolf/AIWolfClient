@@ -37,6 +37,9 @@ public final class SampleSeer extends SampleBasePlayer {
 	/** 自分の占い済みエージェントと判定のマップ */
 	private Map<Agent, Judge> myDivinationMap = new HashMap<>();
 
+	/** 生存人狼 */
+	private List<Agent> aliveWolves;
+
 	/** 人狼候補 */
 	private List<Agent> wolfCandidates = new ArrayList<>();
 
@@ -90,18 +93,15 @@ public final class SampleSeer extends SampleBasePlayer {
 		Content iAm = isCameout ? coContent(me, me, Role.SEER) : coContent(me, me, Role.VILLAGER);
 
 		// 生存人狼がいれば当然投票
-		List<Agent> aliveWolves = blackList.stream().filter(a -> isAlive(a)).collect(Collectors.toList());
+		aliveWolves = blackList.stream().filter(a -> isAlive(a)).collect(Collectors.toList());
 		// 既定の投票先が生存人狼でない場合投票先を変える
 		if (!aliveWolves.isEmpty()) {
 			if (!aliveWolves.contains(voteCandidate)) {
 				voteCandidate = randomSelect(aliveWolves);
-				// CO後なら理由を付けて投票を呼びかける
+				// CO後なら投票理由を付ける
 				if (isCameout) {
 					Content myDivination = divinedContent(me, voteCandidate, myDivinationMap.get(voteCandidate).getResult());
-					Content vote = voteContent(Content.ANY, voteCandidate);
 					Content reason = dayContent(me, myDivinationMap.get(voteCandidate).getDay(), myDivination);
-					Content request = requestContent(me, Content.ANY, vote);
-					enqueueTalk(becauseContent(me, reason, request));
 					voteReasonMap.put(me, voteCandidate, reason);
 				}
 			}
@@ -115,7 +115,7 @@ public final class SampleSeer extends SampleBasePlayer {
 		for (Agent he : aliveOthers) {
 			if (comingoutMap.get(he) == Role.SEER) {
 				wolfCandidates.add(he);
-				// CO後なら理由を述べてよい
+				// CO後なら推定理由をつける
 				if (isCameout) {
 					Content heIs = coContent(he, he, Role.SEER);
 					Content reason = andContent(me, iAm, heIs);
@@ -134,7 +134,7 @@ public final class SampleSeer extends SampleBasePlayer {
 			if ((myJudge != null && result != myJudge.getResult())) {
 				if (isAlive(he) && !wolfCandidates.contains(he)) {
 					wolfCandidates.add(he);
-					// CO後なら理由を述べてよい
+					// CO後なら推定理由をつける
 					if (isCameout) {
 						Content myDivination = dayContent(me, myJudge.getDay(), divinedContent(me, myJudge.getTarget(), myJudge.getResult()));
 						Content reason = andContent(me, myDivination, hisIdent);
@@ -174,7 +174,7 @@ public final class SampleSeer extends SampleBasePlayer {
 			// 人狼候補なのに人間⇒裏切り者
 			if (whiteList.contains(he)) {
 				possessedList.add(he);
-				// CO後なら理由を述べてよい
+				// CO後なら推定理由をつける
 				if (isCameout) {
 					Content heIs = dayContent(me, myDivinationMap.get(he).getDay(), divinedContent(me, he, Species.HUMAN));
 					// 既存の推測理由があれば推測役職を裏切り者にする
@@ -215,36 +215,40 @@ public final class SampleSeer extends SampleBasePlayer {
 			}
 		} else {
 			// 見つからなかった場合
-			if (!isRevote) {
-				// 初回投票
+			if (voteCandidate == null || !isAlive(voteCandidate)) {
 				if (!grayList.isEmpty()) {
-					// まず灰からランダム
-					if (!grayList.contains(voteCandidate)) {
-						voteCandidate = randomSelect(grayList);
-					}
+					// 灰がいたら灰からランダム
+					voteCandidate = randomSelect(grayList);
 				} else {
-					// 灰もいない場合は投票リクエストに応じた投票
-					if (voteRequestCounter.isChanged()) {
-						List<Agent> candidates = voteRequestCounter.getRequestMap().values().stream()
-								.collect(Collectors.toList());
-						voteCandidate = randomSelect(candidates);
-					} else if (!isAlive(voteCandidate)) {
-						voteCandidate = randomSelect(aliveOthers);
-					}
-				}
-			} else {
-				// 再投票の場合は自分以外の前回最多得票に入れる
-				VoteReasonMap vrmap = new VoteReasonMap();
-				for (Vote v : currentGameInfo.getLatestVoteList()) {
-					vrmap.put(v.getAgent(), v.getTarget(), null);
-				}
-				List<Agent> candidates = vrmap.getOrderedList();
-				candidates.remove(me);
-				if (candidates.isEmpty()) {
 					voteCandidate = randomSelect(aliveOthers);
-				} else {
-					voteCandidate = candidates.get(0);
 				}
+			}
+		}
+	}
+
+	@Override
+	void chooseFinalVoteCandidate() {
+		if (!isRevote) {
+			// 人狼（候補）が見つけられなかった場合，初回投票では投票リクエストに応じる
+			if (aliveWolves.isEmpty() && wolfCandidates.isEmpty()) {
+				voteCandidate = randomSelect(voteRequestCounter.getRequestMap().values().stream()
+						.filter(a -> a != me).collect(Collectors.toList()));
+				if (voteCandidate == null || !isAlive(voteCandidate)) {
+					voteCandidate = randomSelect(aliveOthers);
+				}
+			}
+		} else {
+			// 再投票の場合は自分以外の前回最多得票に入れる
+			VoteReasonMap vrmap = new VoteReasonMap();
+			for (Vote v : currentGameInfo.getLatestVoteList()) {
+				vrmap.put(v.getAgent(), v.getTarget(), null);
+			}
+			List<Agent> candidates = vrmap.getOrderedList();
+			candidates.remove(me);
+			if (candidates.isEmpty()) {
+				voteCandidate = randomSelect(aliveOthers);
+			} else {
+				voteCandidate = candidates.get(0);
 			}
 		}
 	}
@@ -264,9 +268,12 @@ public final class SampleSeer extends SampleBasePlayer {
 					divinedContent(me, j.getTarget(), j.getResult()))).toArray(size -> new Content[size]);
 			if (judges.length == 1) {
 				enqueueTalk(judges[0]);
-
+				enqueueTalk(judges[0].getContentList().get(0));
 			} else if (judges.length > 1) {
 				enqueueTalk(andContent(me, judges));
+				for (Content c : judges) {
+					enqueueTalk(c.getContentList().get(0));
+				}
 			}
 			myDivinationList.clear();
 		}
